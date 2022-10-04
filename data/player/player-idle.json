@@ -1,0 +1,14 @@
+{
+    "sheetsize": {"width": 160, "height": 32},
+    "spritesize": {"width": 32, "height": 32},
+    "priority": 1,
+
+    "frames": 
+    {
+        "0": {"duration": 18},
+        "1": {"duration": 12},
+        "2": {"duration": 15},
+        "3": {"duration": 12},
+        "4": {"duration": 18}
+    }
+}

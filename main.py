@@ -1,0 +1,32 @@
+def main(screen, clock, scene_handler):
+    quit = False
+
+    while not quit:
+        screen.fill(SCREEN_COLOR)
+
+        quit = scene_handler.update()
+        pygame.display.update()
+
+        clock.tick(FRAME_RATE)
+
+if __name__ == '__main__':
+    from src.constants import (
+        TITLE,
+        FRAME_RATE,
+        SCREEN_DIMENSIONS,
+        SCREEN_COLOR
+    )
+    from src.scenes.handler import Handler
+
+    import pygame
+    import sys
+
+    pygame.mixer.init()
+    pygame.init()
+
+    pygame.display.set_caption(TITLE)
+
+    screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
+    main(screen, pygame.time.Clock(), Handler(screen))
+    pygame.quit()
+    sys.exit()
