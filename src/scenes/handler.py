@@ -1,5 +1,6 @@
 from src.constants import (
-    SCREEN_COLOR
+    SCREEN_COLOR,
+    FRAME_RATE
 )
 from src.scenes.sandbox import Sandbox
 
@@ -23,7 +24,7 @@ class Handler():
         ...
 
     def update(self):
-        # delta_time = (time.time() - self.last_time) * FRAME_RATE
+        delta_time = (time.time() - self.last_time) * FRAME_RATE
         self.last_time = time.time()
 
         for event in pygame.event.get():
@@ -43,6 +44,6 @@ class Handler():
                 self.current_scene.on_keyup(event)
 
         self.screen.fill(SCREEN_COLOR)
-        self.current_scene.display(self.screen)
+        self.current_scene.display(self.screen, delta_time)
 
         return False

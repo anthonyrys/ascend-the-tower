@@ -41,15 +41,20 @@ class PlayerFrames():
 
             self.frames[name] = 0
 
+        self.dt_frame_counter = 0
+
         self.scale = 2
         self.state = 'idle'
 
-    def iterate_frame(self):
+    def iterate_frame(self, dt):
         img = None
-        if len(self.imgs[self.state]) == self.frames[self.state]:
+        if len(self.imgs[self.state]) <= self.frames[self.state]:
             self.frames[self.state] = 0
+            self.dt_frame_counter = 0
 
         img = self.imgs[self.state][self.frames[self.state]]
-        self.frames[self.state] += 1
+
+        self.dt_frame_counter += 1 * dt
+        self.frames[self.state] = round(self.dt_frame_counter)
 
         return pygame.transform.scale(img, pygame.Vector2(img.get_width() * self.scale, img.get_height() * self.scale))

@@ -28,8 +28,8 @@ class Outline(Entity):
         self.info = info
         self.frame_count = 0
 
-    def display(self, scene):
-        if self.frame_count != self.info.speed:
+    def display(self, scene, dt):
+        if self.frame_count <= self.info.speed:
             abs_prog = self.frame_count / self.info.speed
 
             self.image = pygame.transform.scale(
@@ -50,7 +50,7 @@ class Outline(Entity):
 
             pygame.draw.polygon(scene.sprite_surface, self.color, outline, self.size)
 
-            self.frame_count += 1
+            self.frame_count += 1 * dt
 
         else:
             scene.del_sprites(self)
@@ -82,8 +82,8 @@ class Circle(Entity):
         self.info = info
         self.frame_count = 0
 
-    def display(self, scene):
-        if self.frame_count != self.info.speed:
+    def display(self, scene, dt):
+        if self.frame_count <= self.info.speed:
             abs_prog = self.frame_count / self.info.speed
 
             self.rect.center = self.base_position + pygame.Vector2(
@@ -102,7 +102,7 @@ class Circle(Entity):
                 self.color, self.rect.center, self.radius, self.width
             )
 
-            self.frame_count += 1
+            self.frame_count += 1 * dt
 
         else:
             scene.del_sprites(self)

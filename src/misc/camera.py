@@ -4,13 +4,15 @@ import pygame
 import random
 import math
 
-class CenterCamera():
-    ...
-
+class TweenCamera():
+    def __init__(self, position, camera, frames):
+        ...
+        
+    def update(self, scene):
+        ...
+        
 class BoxCamera():
     def __init__(self, focus):
-        self.camera_offset = pygame.Vector2()
-
         self.focus = focus
 
         self.box_dimensions = pygame.Vector2(555, 265)
@@ -23,13 +25,13 @@ class BoxCamera():
         )
 
         self.camera_shake_frames_max, self.camera_shake_frames = 0, 0
-        self.camera_shake_intensity = 5
+        self.camera_shake_intensity = 10
 
     def set_camera_shake(self, frames):
         self.camera_shake_frames_max = frames
         self.camera_shake_frames = frames
 
-    def update(self):
+    def update(self, scene, dt):
         camera_shake = pygame.Vector2()
 
         if self.focus.rect.left < self.box.left:
@@ -51,7 +53,7 @@ class BoxCamera():
             camera_shake.x = random.randint(-intensity, intensity)
             camera_shake.y = random.randint(-intensity, intensity)
 
-            self.camera_shake_frames -= 1
+            self.camera_shake_frames -= 1 * dt
             
         return pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake
         
