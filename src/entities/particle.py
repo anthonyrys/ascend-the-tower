@@ -57,7 +57,7 @@ class Outline(Entity):
 
 class Circle(Entity):
     class Info():
-        def __init__(self, position, speed, radius=..., width=...):
+        def __init__(self, position, speed, radius, width):
             if speed == 0: 
                 speed = 1
 
@@ -66,6 +66,10 @@ class Circle(Entity):
             self.width = width
 
             self.speed = speed
+
+            self.position, self.base_position = position, position
+            self.radius, self.base_radius = radius, radius
+            self.width, self.base_width = width, width
 
     def __init__(self, info, position, color, radius, width, strata):
         super().__init__(position, pygame.Color(0, 0, 0, 0), pygame.Vector2(info.radius * 2, info.radius * 2), strata)
@@ -103,6 +107,40 @@ class Circle(Entity):
             )
 
             self.frame_count += 1 * dt
+
+        else:
+            scene.del_sprites(self)
+
+class Image(Entity):
+    class Info():
+        def __init__(self, position, speed, alpha):
+            if speed == 0: 
+                speed = 1
+
+            self.position = position
+            self.alpha = alpha
+
+            self.speed = speed
+
+    def __init__(self, info, position, color, dimensions, alpha, strata):
+        super().__init__(position, color, dimensions, strata, alpha)
+
+        self.add_tags(Tags.PARTICLE)
+
+        self.base_position = position
+        self.base_alpha = alpha
+
+        self.info = info
+        self.frame_count = 0
+
+    def display(self, scene, dt):
+        if self.frame_count <= self.info.speed:
+            abs_prog = self.frame_count / self.info.speed
+
+            self.image.set_alpha(self.base_alpha + ((self.info.alpha - self.base_alpha) * math.pow(abs_prog, 4)))
+
+            self.frame_count += 1 * dt
+            scene.sprite_surface.blit(self.image, self.rect)
 
         else:
             scene.del_sprites(self)

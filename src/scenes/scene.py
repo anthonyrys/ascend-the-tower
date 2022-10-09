@@ -45,6 +45,23 @@ class Scene():
         
         return collision
 
+    @staticmethod
+    def get_closest_sprite(primary_sprite, sprite_list):
+        if len(sprite_list) == 1:
+            return sprite_list[0]
+            
+        sprite_area = dict()
+
+        for sprite in sprite_list:
+            sprite_area[sprite] = (abs(sprite.rect.x - primary_sprite.rect.x)) * abs(sprite.rect.y - primary_sprite.rect.y)
+        
+        min_value = min(sprite_area.values())
+        for sprite, area in sprite_area.items():
+            if area == min_value:
+                return sprite
+
+        return None
+        
     # <overridden by child classes>
     def display(self, screen):
         ...

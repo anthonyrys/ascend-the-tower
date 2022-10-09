@@ -19,11 +19,14 @@ class Sandbox(Scene):
         super().__init__(surfaces, sprites)
 
         player = Player(pygame.Vector2(600, 1125), 2)
-        floor = Collidable(pygame.Vector2(500, 1500), pygame.Color(255, 255, 255), pygame.Vector2(3000, 20)) 
+        floor = Collidable(pygame.Vector2(500, 1500), pygame.Color(255, 255, 255), pygame.Vector2(5000, 20)) 
 
         block_a = Collidable(pygame.Vector2(700, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
         block_b = Collidable(pygame.Vector2(900, 1350), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
         
+        block_c = Collidable(pygame.Vector2(2500, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
+        block_d = Collidable(pygame.Vector2(2750, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
+
         barrier_a = ColorBarrier(pygame.Vector2(500, 1200), pygame.Vector2(250, 100), COLORS[0], player)
         barrier_b = ColorBarrier(pygame.Vector2(950, 1200), pygame.Vector2(250, 50), COLORS[1], player)
         barrier_c = ColorBarrier(pygame.Vector2(1300, 1250), pygame.Vector2(75, 250), COLORS[2], player)
@@ -39,7 +42,7 @@ class Sandbox(Scene):
 
         self.add_sprites(
             player, floor, 
-            block_a, block_b, 
+            block_a, block_b, block_c, block_d,
             barrier_a, barrier_b, barrier_c, 
             barrier_d, barrier_e, barrier_f
         )
@@ -48,7 +51,7 @@ class Sandbox(Scene):
         dt = 2 if dt > 2 else dt
         dt = round(dt, 1)
 
-        cam = self.camera.update(self, dt)
+        cam = self.camera.update(dt)
         self.sprite_view.x, self.sprite_view.y = cam
 
         self.background_surface.fill(pygame.Color(0, 0, 0, 0), self.view)

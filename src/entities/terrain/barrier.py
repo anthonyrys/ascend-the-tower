@@ -40,13 +40,7 @@ class ColorBarrier(Entity):
 
         else:
             if not self.prev_state:
-                pos = pygame.Vector2(self.rect.centerx, self.rect.centery)
-                particles = Outline(
-                    Outline.Info(pygame.Vector2(self.image.get_width() * 1.5, self.image.get_height() * 1.5), 30, 1),
-                    pos, COLOR_VALUES[self.color], 3, self.image.copy(), self.strata + 1
-                )
-                
-                scene.add_sprites(particles)
+                ...
 
             self.image.set_alpha(self.color_alpha)
 
