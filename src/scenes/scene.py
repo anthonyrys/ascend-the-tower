@@ -1,4 +1,5 @@
 import pygame
+import math
 
 class Scene():
     def __init__(self, surfaces, sprites=...):
@@ -53,8 +54,12 @@ class Scene():
         sprite_area = dict()
 
         for sprite in sprite_list:
-            sprite_area[sprite] = (abs(sprite.rect.x - primary_sprite.rect.x)) * abs(sprite.rect.y - primary_sprite.rect.y)
-        
+            rx = abs(sprite.rect.x - primary_sprite.rect.x)
+            ry = abs(sprite.rect.y - primary_sprite.rect.y)
+
+            distance = math.sqrt(((rx **2) + (ry **2)))
+            sprite_area[sprite] = distance
+
         min_value = min(sprite_area.values())
         for sprite, area in sprite_area.items():
             if area == min_value:

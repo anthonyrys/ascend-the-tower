@@ -203,12 +203,23 @@ class Player(Entity):
             particles = list()
             
             img = self.image.copy()
+            offset = pygame.Vector2(self.image.get_size()[0] / 2, self.image.get_size()[1] / 2)
+
+
             particles.append(
                 Image(
-                    Image.Info(pygame.Vector2(self.image.get_size()[0] / 2, self.image.get_size()[1] / 2), 25, 0),
-                    start_pos - pygame.Vector2(self.image.get_size()[0] / 2, self.image.get_size()[1] / 2), img, ..., 75, self.strata
+                    Image.Info(start_pos - offset, 25, 0),
+                    start_pos - offset, img, ..., 75, self.strata
                 )
             )
+
+            for i in range(2):
+                particles.append(
+                    Image(
+                        Image.Info(start_pos + ((end_pos - start_pos) / ((i + 1) * 2)) - offset, 35 - ((i + 1) * 5), 0),
+                        start_pos + ((end_pos - start_pos) / ((i + 1) * 2)) - offset, img, ..., 75, self.strata
+                    )
+                )
 
             for _ in range(25):
                 particles.append(
@@ -290,24 +301,48 @@ class Player(Entity):
 
             if self.rect.centerx - barrier.rect.centerx < 0:
                 if (self.rect.left) > left_x:
-                    self.on_death(scene)
-                    return
+                    if self.rect.centery - barrier.rect.centery < 0:
+                        if (self.rect.top >= barrier.rect.top):
+                            self.on_death(scene)
+                            return
+
+                        else:
+                            self.rect.bottom = self.rect.top - 1
+
+                    if self.rect.centery - barrier.rect.centery > 0:
+                        if (self.rect.bottom <= barrier.rect.bottom):
+                            self.on_death(scene)
+                            return
+
+                        else:
+                            self.rect.top = self.rect.bottom + 1
+                            self.velocity.y = 0
 
                 else:
                     self.rect.right = barrier.rect.left
-                    self.collide_points['right'] = True
-
                     self.velocity.x = 0
 
             elif self.rect.centerx - barrier.rect.centerx > 0:
                 if (self.rect.right) < right_x:
-                    self.on_death(scene)
-                    return
+                    if self.rect.centery - barrier.rect.centery < 0:
+                        if (self.rect.top >= barrier.rect.top):
+                            self.on_death(scene)
+                            return
+
+                        else:
+                            self.rect.bottom = self.rect.top - 1
+
+                    if self.rect.centery - barrier.rect.centery > 0:
+                        if (self.rect.bottom <= barrier.rect.bottom):
+                            self.on_death(scene)
+                            return
+
+                        else:
+                            self.rect.top = self.rect.bottom + 1
+                            self.velocity.y = 0
 
                 else:
                     self.rect.left = barrier.rect.right
-                    self.collide_points['left'] = True
-
                     self.velocity.x = 0
                     
             else:
