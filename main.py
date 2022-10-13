@@ -16,7 +16,7 @@ if __name__ == '__main__':
         SCREEN_DIMENSIONS,
         SCREEN_COLOR
     )
-    from src.scenes.handler import Handler
+    from src.scenes.scene_handler import SceneHandler
 
     import pygame
     import sys
@@ -27,6 +27,6 @@ if __name__ == '__main__':
     pygame.display.set_caption(TITLE)
 
     screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
-    main(screen, pygame.time.Clock(), Handler(screen))
+    main(screen, pygame.time.Clock(), SceneHandler(screen))
     pygame.quit()
     sys.exit()

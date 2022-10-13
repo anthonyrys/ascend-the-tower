@@ -1,7 +1,6 @@
 {
     "sheetsize": {"width": 160, "height": 32},
     "spritesize": {"width": 32, "height": 32},
-    "priority": 1,
 
     "frames": 
     {

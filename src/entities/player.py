@@ -6,7 +6,7 @@ from src.constants import (
 )
 from src.entities.entity import Entity, Tags
 from src.entities.particle import Circle, Image
-from src.misc.keyframes import PlayerFrames
+from src.keyframes import PlayerFrames
 
 import pygame
 import random
@@ -201,33 +201,22 @@ class Player(Entity):
             self.velocity.y = 0 if self.velocity.y > 0 else self.velocity.y
 
             particles = list()
-            
-            img = self.image.copy()
             offset = pygame.Vector2(self.image.get_size()[0] / 2, self.image.get_size()[1] / 2)
-
-
+            
             particles.append(
                 Image(
-                    Image.Info(start_pos - offset, 25, 0),
-                    start_pos - offset, img, ..., 75, self.strata
+                    Image.Info(start_pos - offset, 50, 0),
+                    start_pos - offset, self.image.copy(), ..., 75, self.strata
                 )
             )
 
-            for i in range(2):
-                particles.append(
-                    Image(
-                        Image.Info(start_pos + ((end_pos - start_pos) / ((i + 1) * 2)) - offset, 35 - ((i + 1) * 5), 0),
-                        start_pos + ((end_pos - start_pos) / ((i + 1) * 2)) - offset, img, ..., 75, self.strata
-                    )
-                )
-
-            for _ in range(25):
+            for _ in range(15):
                 particles.append(
                     Circle(
                         Circle.Info(
-                            (end_pos + pygame.Vector2(random.randint(-250, 250), random.randint(-250, 250))) + self.velocity * 50, 
-                            80, radius=0, width=0),
-                        start_pos, COLOR_VALUES[self.color], 10, 0, self.strata + 1
+                            (end_pos + pygame.Vector2(random.randint(-250, 250), random.randint(-250, 250))) + self.velocity * 25, 
+                            100, radius=0, width=0),
+                        end_pos, COLOR_VALUES[self.color], 10, 0, self.strata + 1
                     )
                 )
 

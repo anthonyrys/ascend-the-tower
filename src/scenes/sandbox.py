@@ -5,11 +5,11 @@ from src.constants import (
 
 from src.entities.entity import Tags
 from src.entities.player import Player
-from src.entities.terrain.collidable import Collidable
-from src.entities.terrain.barrier import ColorBarrier
+from src.entities.collidable import Collidable
+from src.entities.barrier import ColorBarrier
 
-from src.misc.camera import BoxCamera
-from src.misc.background import Background
+from src.camera import BoxCamera
+from src.background import Background
 from src.scenes.scene import Scene
 
 import pygame
@@ -19,13 +19,13 @@ class Sandbox(Scene):
         super().__init__(surfaces, sprites)
 
         player = Player(pygame.Vector2(600, 1125), 2)
-        floor = Collidable(pygame.Vector2(500, 1500), pygame.Color(255, 255, 255), pygame.Vector2(5000, 20)) 
+        floor = Collidable(pygame.Vector2(0, 1500), pygame.Color(255, 255, 255), pygame.Vector2(5000, 20)) 
 
         block_a = Collidable(pygame.Vector2(700, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
         block_b = Collidable(pygame.Vector2(900, 1350), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
         
-        block_c = Collidable(pygame.Vector2(2500, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
-        block_d = Collidable(pygame.Vector2(2750, 1450), pygame.Color(255, 255, 255), pygame.Vector2(50, 50))  
+        block_c = Collidable(pygame.Vector2(2500, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
+        block_d = Collidable(pygame.Vector2(2750, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
 
         barrier_a = ColorBarrier(pygame.Vector2(500, 1200), pygame.Vector2(250, 100), COLORS[0], player)
         barrier_b = ColorBarrier(pygame.Vector2(950, 1200), pygame.Vector2(250, 50), COLORS[1], player)
