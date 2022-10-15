@@ -2,11 +2,13 @@ from src.constants import (
     GRAVITY, 
     MAX_GRAVITY,
     COLORS,
-    COLOR_VALUES,
+    COLOR_VALUES
 )
+
 from src.entities.entity import Entity, Tags
 from src.entities.particle import Circle, Image
-from src.keyframes import PlayerFrames
+
+from src.frame_iterator import PlayerFrames
 
 import pygame
 import random
@@ -14,6 +16,7 @@ import random
 class Player(Entity):
     def __init__(self, position, strata=...):
         super().__init__(position, pygame.Surface((32, 64)), ..., strata)
+
         self.add_tags(Tags.PLAYER)
         self.keyframes = PlayerFrames()
 
@@ -28,20 +31,29 @@ class Player(Entity):
         self.jump = 0
         self.max_jump = 2
 
-        self.ability_properties = {
-            'dash_range': 60
+        self.keybinds = {
+            'left': [pygame.K_a, pygame.K_LEFT],
+            'right': [pygame.K_d, pygame.K_RIGHT],
+            'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
+
+            'ability': pygame.K_f,
+            'color_forward': pygame.K_e,
+            'color_backward': pygame.K_q
+        }
+
+        self.pressed = dict()
+        for keybind in self.keybinds.keys():
+            self.pressed[keybind] = False
+
+        self.interact_range = 65
+        self.interact = {
+            'type': None,
+            'object': None,
         }
 
         self.states = {
-            'facing': 0,
-            'dead': False
-        }
-
-        self.collide_points = {
-            'top': False, 
-            'bottom': False, 
-            'left': False, 
-            'right': False
+            'dead': False,
+            'interacting': False
         }
 
         self.ability_data = {
@@ -52,6 +64,9 @@ class Player(Entity):
                 'range': 40
             }
         }
+
+        self.color = COLORS[0]
+        self.prev_color = self.color
 
         self.event_timers = { 
             'color_swap': 25,
@@ -64,10 +79,56 @@ class Player(Entity):
         for event in self.event_timers.keys():
             self.events[event] = 0
 
-        self.color = COLORS[0]
-        self.prev_color = self.color
+    def get_keys_pressed(self):
+        keys = pygame.key.get_pressed()
+
+        for action in self.pressed.keys():
+            self.pressed[action] = False
+
+            if not isinstance(self.keybinds[action], list):
+                self.pressed[action] = keys[self.keybinds[action]]
+                continue
+
+            for val in self.keybinds[action]:
+                if not keys[val]:
+                    continue
+
+                self.pressed[action] = keys[val]
+                break
+
+    def on_mouse_down(self, scene):
+        if self.states['dead']:
+            return
+
+        interactables = scene.check_mouse()
+        if len(interactables) == 0:
+            return
+
+        intr = scene.get_closest_sprite(scene.mouse, interactables) if len(interactables) > 1 else interactables[0]
+        if intr is None:
+            return
+
+        if round(scene.get_distance(self, intr)) > self.interact_range:
+            return
+
+        self.interact['object'] = intr
+        self.interact['type'] = intr.on_interact(self)
+
+        self.states['interacting'] = True
+        
+    def on_mouse_up(self, scene):
+        if not self.states['interacting']:
+            return
+
+        self.states['interacting'] = False
+
+        self.interact['object'].on_release()
+        self.interact['object'] = None
+        self.interact['type'] = None
 
     def on_death(self, scene):
+        self.on_mouse_up(scene)
+
         self.states['dead'] = True
         self.image.set_alpha(0)
 
@@ -83,6 +144,16 @@ class Player(Entity):
                 )
             )
 
+        particles.append(
+            Circle(
+                Circle.Info(pos, 45, radius=250, width=1),
+                pos, 
+                pygame.Color(255, 255, 255),
+                5,
+                15,
+                self.strata + 1
+            )
+        )
         scene.add_sprites(particles)
 
         self.events['respawn'] = scene.frames
@@ -127,9 +198,6 @@ class Player(Entity):
             scene.add_sprites(particles)    
 
     def on_ability(self, scene, dt):
-        if self.states['dead']:
-            return 
-        
         if self.color == COLORS[0]:
             ...
 
@@ -223,27 +291,27 @@ class Player(Entity):
             scene.add_sprites(particles)
             scene.camera.set_camera_tween(25)
             
-    def apply_movement(self, scene, keys, dt):
+    def apply_movement(self, scene, dt):
         if self.velocity.x > self.max_movespeed:
             self.velocity.x -= (self.per_frame_movespeed)
 
         elif self.velocity.x < -(self.max_movespeed):
             self.velocity.x += (self.per_frame_movespeed)
 
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+        if self.pressed['right']:
             self.velocity.x += (self.per_frame_movespeed) if self.velocity.x < self.max_movespeed else 0
         
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+        if self.pressed['left']:
            self.velocity.x -= (self.per_frame_movespeed) if self.velocity.x > -(self.max_movespeed) else 0
 
-        if not keys[pygame.K_d] and not keys[pygame.K_a] and not keys[pygame.K_RIGHT] and not keys[pygame.K_LEFT]:
+        if not self.pressed['right'] and not self.pressed['left']:
             if self.velocity.x > 0:
                 self.velocity.x -= (self.per_frame_movespeed)
 
             elif self.velocity.x < 0:
                 self.velocity.x += (self.per_frame_movespeed)
 
-        if keys[pygame.K_w] or keys[pygame.K_SPACE] or keys[pygame.K_UP]:
+        if self.pressed['jump']:
             self.on_jump(scene, dt)
 
     def apply_gravity(self, dt):
@@ -254,9 +322,6 @@ class Player(Entity):
             self.velocity.y = GRAVITY * dt
 
     def apply_collision_x(self, scene):
-        if self.states['dead']:
-            return
-
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
@@ -285,63 +350,50 @@ class Player(Entity):
             if self.color != barrier.color:
                 continue
 
-            right_x = barrier.rect.centerx + (barrier.image.get_width() / 2)
-            left_x = barrier.rect.centerx - (barrier.image.get_width() / 2)
-
             if self.rect.centerx - barrier.rect.centerx < 0:
-                if (self.rect.left) > left_x:
+                if self.rect.left > barrier.rect.midleft[0]:
                     if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.top >= barrier.rect.top):
-                            self.on_death(scene)
-                            return
+                        if (self.rect.centery >= barrier.rect.top):
+                            return True
 
                         else:
                             self.rect.bottom = self.rect.top - 1
 
                     if self.rect.centery - barrier.rect.centery > 0:
                         if (self.rect.bottom <= barrier.rect.bottom):
-                            self.on_death(scene)
-                            return
+                            return True
 
                         else:
                             self.rect.top = self.rect.bottom + 1
-                            self.velocity.y = 0
 
                 else:
                     self.rect.right = barrier.rect.left
                     self.velocity.x = 0
 
             elif self.rect.centerx - barrier.rect.centerx > 0:
-                if (self.rect.right) < right_x:
+                if self.rect.right < barrier.rect.midright[0]:
                     if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.top >= barrier.rect.top):
-                            self.on_death(scene)
-                            return
+                        if (self.rect.centery >= barrier.rect.top):
+                            return True
 
                         else:
                             self.rect.bottom = self.rect.top - 1
 
                     if self.rect.centery - barrier.rect.centery > 0:
                         if (self.rect.bottom <= barrier.rect.bottom):
-                            self.on_death(scene)
-                            return
+                            return True
 
                         else:
                             self.rect.top = self.rect.bottom + 1
-                            self.velocity.y = 0
 
                 else:
                     self.rect.left = barrier.rect.right
                     self.velocity.x = 0
                     
             else:
-                self.on_death(scene)
-                return
+                return True
 
     def apply_collision_y(self, scene):
-        if self.states['dead']:
-            return
-
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
@@ -388,16 +440,13 @@ class Player(Entity):
 
                 self.velocity.y = 0
 
-    def set_color(self, scene, keys, dt):
-        if self.states['dead']:
-            return
-
+    def set_color(self, scene, dt):
         frames = scene.frames
 
         if not (frames - self.events['color_swap']) * dt >= self.event_timers['color_swap']:
             return
 
-        if keys[pygame.K_e]:
+        if self.pressed['color_forward']:
             if COLORS.index(self.color) + 1 == len(COLORS):
                 self.color = COLORS[0]
             else:
@@ -405,7 +454,7 @@ class Player(Entity):
 
             self.events['color_swap'] = frames
 
-        elif keys[pygame.K_q]:
+        elif self.pressed['color_backward']:
             if COLORS.index(self.color) == 0:
                 self.color = COLORS[-1]
             else:
@@ -413,10 +462,7 @@ class Player(Entity):
 
             self.events['color_swap'] = frames
 
-    def set_keyframe_state(self):
-        if self.states['dead']:
-            return
-
+    def set_frame_state(self):
         if not self.collide_points['bottom']:
             if self.velocity.y < 0:
                 self.keyframes.state = 'jump'
@@ -430,16 +476,19 @@ class Player(Entity):
             self.keyframes.state = 'idle'
 
     def set_image(self, scene, dt):
-        if self.states['dead']:
-            return
+        if self.velocity.x > 0:
+            self.direction = 1
 
-        self.image = self.keyframes.iterate_frame(dt)
+        elif self.velocity.x < 0:
+            self.direction = -1
 
-        if self.states['facing'] < 0:
-            self.image = pygame.transform.flip(self.image, True, False).convert_alpha()
+        if self.keyframes.state == 'run':
+            self.image = self.keyframes.iterate(dt, abs(self.velocity.x / self.max_movespeed))
 
         else:
-            self.image = pygame.transform.flip(self.image, False, False).convert_alpha()
+            self.image = self.keyframes.iterate(dt, 1)
+
+        self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.direction < 0 else self.image
 
         if self.color != self.prev_color:
             pos = pygame.Vector2(self.rect.centerx, self.rect.centery)
@@ -470,31 +519,32 @@ class Player(Entity):
                 self.on_respawn(scene)
 
         else:
-            keys = pygame.key.get_pressed()
+            self.get_keys_pressed()
 
             self.apply_gravity(dt)
-            self.apply_movement(scene, keys, dt)
+            self.apply_movement(scene, dt)
+
+            if self.pressed['ability']:
+                self.on_ability(scene, dt)
 
             self.rect.x += self.velocity.x * dt
-            self.apply_collision_x(scene)
+            if (self.apply_collision_x(scene)):
+                self.on_death(scene)
+                scene.entity_surface.blit(
+                    self.image, 
+                    (self.rect.x - self.rect_offset.x, self.rect.y - self.rect_offset.y, 0, 0),
+                )
+                
+                return
 
             self.rect.y += self.velocity.y * dt
             self.apply_collision_y(scene)
-            
-            if self.velocity.x > 0:
-                self.states['facing'] = 1
 
-            elif self.velocity.x < 0:
-                self.states['facing'] = -1
-
-            self.set_keyframe_state()
-            self.set_color(scene, keys, dt)
+            self.set_frame_state()
+            self.set_color(scene, dt)
             self.set_image(scene, dt)
 
-            if keys[pygame.K_f]:
-                self.on_ability(scene, dt)
-
-        scene.sprite_surface.blit(
+        scene.entity_surface.blit(
             self.image, 
             (self.rect.x - self.rect_offset.x, self.rect.y - self.rect_offset.y, 0, 0),
         )

@@ -2,7 +2,10 @@ from src.constants import (
     SCREEN_COLOR,
     FRAME_RATE
 )
+
 from src.scenes.sandbox import Sandbox
+
+from src.ui.mouse import Mouse
 
 import pygame
 import time
@@ -10,12 +13,13 @@ import time
 class SceneHandler():
     def __init__(self, screen):
         self.screen = screen
+        self.mouse = Mouse()
 
         self.background_surface = pygame.Surface(pygame.Vector2(2500, 2500), pygame.SRCALPHA).convert_alpha()
-        self.sprite_surface = pygame.Surface(pygame.Vector2(5000, 5000), pygame.SRCALPHA).convert_alpha()
+        self.entity_surface = pygame.Surface(pygame.Vector2(5000, 5000), pygame.SRCALPHA).convert_alpha()
         self.ui_surface = pygame.Surface(pygame.Vector2(2000, 2000), pygame.SRCALPHA).convert_alpha()
 
-        self.current_scene = Sandbox([self.background_surface, self.sprite_surface, self.ui_surface])
+        self.current_scene = Sandbox([self.background_surface, self.entity_surface, self.ui_surface], self.mouse)
         self.stored_scenes = list()
 
         self.last_time = time.time()
@@ -32,16 +36,10 @@ class SceneHandler():
                 return True
 
             if event.type == pygame.MOUSEBUTTONDOWN: 
-                ...
+                self.current_scene.mouse_down()
 
             if event.type == pygame.MOUSEBUTTONUP: 
-                ...
-
-            if event.type == pygame.KEYDOWN:
-                self.current_scene.on_keydown(event)
-
-            if event.type == pygame.KEYUP:
-                self.current_scene.on_keyup(event)
+                self.current_scene.mouse_up()
 
         self.screen.fill(SCREEN_COLOR)
         self.current_scene.display(self.screen, delta_time)

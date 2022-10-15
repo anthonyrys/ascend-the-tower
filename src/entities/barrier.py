@@ -1,8 +1,9 @@
 from src.constants import (
     COLORS,
     COLOR_VALUES,
-    COLOR_VALUES_SECONDARY,
+    COLOR_VALUES_SECONDARY
 )
+
 from src.entities.entity import Entity, Tags
 from src.entities.particle import Outline
 
@@ -48,4 +49,4 @@ class ColorBarrier(Entity):
 
     def display(self, scene, dt):
         self.set_color(scene)
-        scene.sprite_surface.blit(self.image, self.rect)
+        scene.entity_surface.blit(self.image, self.rect)

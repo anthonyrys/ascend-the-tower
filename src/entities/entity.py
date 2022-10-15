@@ -5,7 +5,7 @@ class Tags(Enum):
     PLAYER = auto()
     PARTICLE = auto()
     COLLIDABLE  = auto()
-
+    INTERACTABLE = auto()
     BARRIER = auto()
 
 class Entity(pygame.sprite.Sprite):
@@ -31,6 +31,13 @@ class Entity(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = position
 
+        self.collide_points = {
+            'top': False, 
+            'bottom': False, 
+            'left': False, 
+            'right': False
+        }
+
         self.velocity = pygame.Vector2()
 
     @property
@@ -38,7 +45,7 @@ class Entity(pygame.sprite.Sprite):
         return pygame.mask.from_surface(self.image)
 
     # <overridden by child classes>
-    def display(self, display_surface):
+    def display(self, scene):
         ...
         
     def add_tags(self, tags, *args):

@@ -48,7 +48,7 @@ class Outline(Entity):
             for i, pixel in enumerate(outline):
                 outline[i] = (pixel[0] + self.rect.x, pixel[1] + self.rect.y)
 
-            pygame.draw.polygon(scene.sprite_surface, self.color, outline, self.size)
+            pygame.draw.polygon(scene.entity_surface, self.color, outline, self.size)
 
             self.frame_count += 1 * dt
 
@@ -102,7 +102,7 @@ class Circle(Entity):
                 self.width = self.base_width + round((self.info.width - self.base_width) * (1 - math.cos((abs_prog * math.pi) / 2)))
 
             pygame.draw.circle(
-                scene.sprite_surface, 
+                scene.entity_surface, 
                 self.color, self.rect.center, self.radius, self.width
             )
 
@@ -140,7 +140,7 @@ class Image(Entity):
             self.image.set_alpha(self.base_alpha + ((self.info.alpha - self.base_alpha) * math.pow(abs_prog, 4)))
 
             self.frame_count += 1 * dt
-            scene.sprite_surface.blit(self.image, self.rect)
+            scene.entity_surface.blit(self.image, self.rect)
 
         else:
             scene.del_sprites(self)

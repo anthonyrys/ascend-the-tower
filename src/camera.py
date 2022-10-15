@@ -7,6 +7,7 @@ import math
 class BoxCamera():
     def __init__(self, focus):
         self.focus = focus
+        self.offset = pygame.Vector2()
 
         self.box_dimensions = pygame.Vector2(555, 265)
         self.box = pygame.Rect(
@@ -66,8 +67,11 @@ class BoxCamera():
             )
 
             self.camera_tween_frames += 1 * dt
+
+            self.offset = tweened_offset
             return tweened_offset
 
         else:
+            self.offset = offset
             return offset
         

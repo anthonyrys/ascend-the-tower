@@ -1,10 +1,15 @@
+from src.entities.entity import Tags
+
+from src.ui.mouse import Mouse
+
 import pygame
 import math
 
 class Scene():
-    def __init__(self, surfaces, sprites=...):
+    def __init__(self, surfaces, mouse, sprites=...):
         self.surfaces = surfaces
-        self.background_surface, self.sprite_surface, self.ui_surface = self.surfaces
+        self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
+        self.mouse = mouse
 
         self.sprites = sprites if isinstance(sprites, list) else list()
         self.frames = 0
@@ -43,8 +48,15 @@ class Scene():
 
         else:
             collision = pygame.sprite.spritecollide(primary_sprite, secondary_sprite, False, pygame.sprite.collide_mask)
-        
+
         return collision
+
+    @staticmethod
+    def get_distance(primary_sprite, secondary_sprite):
+        rx = abs(secondary_sprite.rect.x - primary_sprite.rect.x)
+        ry = abs(secondary_sprite.rect.y - primary_sprite.rect.y)
+
+        return math.sqrt(((rx **2) + (ry **2)))
 
     @staticmethod
     def get_closest_sprite(primary_sprite, sprite_list):
@@ -54,10 +66,7 @@ class Scene():
         sprite_area = dict()
 
         for sprite in sprite_list:
-            rx = abs(sprite.rect.x - primary_sprite.rect.x)
-            ry = abs(sprite.rect.y - primary_sprite.rect.y)
-
-            distance = math.sqrt(((rx **2) + (ry **2)))
+            distance = Scene.get_distance(primary_sprite, sprite)
             sprite_area[sprite] = distance
 
         min_value = min(sprite_area.values())
@@ -101,10 +110,30 @@ class Scene():
             self.sprites.remove(sprite)
 
     def check_mouse(self):
-        ...
+        sprites = list()
+        entity_mouse = Mouse()
+        entity_mouse.rect.center = self.mouse.rect.center + self.camera.offset
 
-    def on_keyup(self, event):
-        ...
+        interactables = [s for s in self.sprites if s.get_tag(Tags.INTERACTABLE)]
 
-    def on_keydown(self, event):
-        ...
+        for interactable in interactables:
+            if not self.check_pixel_collision(entity_mouse, interactable):
+                continue
+
+            sprites.append(interactable)
+
+        return sprites
+
+    def mouse_down(self):
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_mouse_down') or not callable(sprite.on_mouse_down):
+                continue
+
+            sprite.on_mouse_down(self)
+
+    def mouse_up(self):
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_mouse_up') or not callable(sprite.on_mouse_up):
+                continue
+
+            sprite.on_mouse_up(self)

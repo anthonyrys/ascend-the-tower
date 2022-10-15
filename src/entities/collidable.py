@@ -7,6 +7,12 @@ class Collidable(Entity):
         super().__init__(position, img, dimensions, 2)
         
         self.add_tags(Tags.COLLIDABLE)
-        
-    def display(self, display_surface):
-        display_surface.blit(self.image, self.rect)
+
+    # <overridden by child classes>
+    def on_collide(self):
+        ...
+
+    # <overridden by child classes>
+    def display(self, scene, dt):
+        scene.entity_surface.blit(self.image, self.rect)
+    
