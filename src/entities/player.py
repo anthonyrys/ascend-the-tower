@@ -79,6 +79,8 @@ class Player(Entity):
         for event in self.event_timers.keys():
             self.events[event] = 0
 
+        self.collision_ignore = list()
+
     def get_keys_pressed(self):
         keys = pygame.key.get_pressed()
 
@@ -328,6 +330,12 @@ class Player(Entity):
         collidables = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
         for collidable in collidables:
             if not self.rect.colliderect(collidable.rect):
+                if collidable in self.collision_ignore:
+                    self.collision_ignore.remove(collidable)
+                
+                continue
+
+            if collidable in self.collision_ignore:
                 continue
 
             if self.velocity.x > 0:
@@ -345,6 +353,12 @@ class Player(Entity):
         barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
+                if barrier in self.collision_ignore:
+                    self.collision_ignore.remove(barrier)
+                
+                continue
+
+            if barrier in self.collision_ignore:
                 continue
 
             if self.color != barrier.color:
@@ -353,42 +367,60 @@ class Player(Entity):
             if self.rect.centerx - barrier.rect.centerx < 0:
                 if self.rect.left > barrier.rect.midleft[0]:
                     if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.centery >= barrier.rect.top):
+                        if (self.rect.top >= barrier.rect.top):
                             return True
 
                         else:
-                            self.rect.bottom = self.rect.top - 1
+                            self.collision_ignore.append(barrier)
+                            self.velocity.y = -15
 
                     if self.rect.centery - barrier.rect.centery > 0:
                         if (self.rect.bottom <= barrier.rect.bottom):
                             return True
 
                         else:
-                            self.rect.top = self.rect.bottom + 1
+                            self.collision_ignore.append(barrier)
+                            self.velocity.y = 15
 
                 else:
-                    self.rect.right = barrier.rect.left
-                    self.velocity.x = 0
+                    if abs(self.rect.right - barrier.rect.left) > 12:
+                        self.collision_ignore.append(barrier)
+                        self.velocity.x = -28
+                    
+                    else:
+                        self.rect.right = barrier.rect.left
+                        self.collide_points['right'] = True
+
+                        self.velocity.x = 0
 
             elif self.rect.centerx - barrier.rect.centerx > 0:
                 if self.rect.right < barrier.rect.midright[0]:
                     if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.centery >= barrier.rect.top):
+                        if (self.rect.top >= barrier.rect.top):
                             return True
 
                         else:
-                            self.rect.bottom = self.rect.top - 1
+                            self.collision_ignore.append(barrier)
+                            self.velocity.y = -15
 
                     if self.rect.centery - barrier.rect.centery > 0:
-                        if (self.rect.bottom <= barrier.rect.bottom):
+                        if (self.rect.bottom <= barrier.rect.bottom): 
                             return True
 
                         else:
-                            self.rect.top = self.rect.bottom + 1
+                            self.collision_ignore.append(barrier)
+                            self.velocity.y = 15
 
                 else:
-                    self.rect.left = barrier.rect.right
-                    self.velocity.x = 0
+                    if abs(self.rect.left - barrier.rect.right) > 12:
+                        self.collision_ignore.append(barrier)
+                        self.velocity.x = 28
+                    
+                    else:
+                        self.rect.left = barrier.rect.right
+                        self.collide_points['left'] = True
+                        
+                        self.velocity.x = 0
                     
             else:
                 return True
@@ -400,6 +432,12 @@ class Player(Entity):
         collidables = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
         for collidable in collidables:
             if not self.rect.colliderect(collidable.rect):
+                if collidable in self.collision_ignore:
+                    self.collision_ignore.remove(collidable)
+                
+                continue
+
+            if collidable in self.collision_ignore:
                 continue
 
             if self.velocity.y > 0:
@@ -420,6 +458,12 @@ class Player(Entity):
         barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
+                if barrier in self.collision_ignore:
+                    self.collision_ignore.remove(barrier)
+                
+                continue
+
+            if barrier in self.collision_ignore:
                 continue
 
             if self.color != barrier.color:
