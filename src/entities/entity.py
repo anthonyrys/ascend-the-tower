@@ -39,6 +39,7 @@ class Entity(pygame.sprite.Sprite):
         }
 
         self.velocity = pygame.Vector2()
+        self.outline = False
 
     @property
     def mask(self):
@@ -48,6 +49,9 @@ class Entity(pygame.sprite.Sprite):
     def display(self, scene):
         ...
         
+    def get_tag(self, tag):
+        return tag in self.tags
+
     def add_tags(self, tags, *args):
         if not isinstance(tags, list):
             tags = list([tags])
@@ -70,6 +74,3 @@ class Entity(pygame.sprite.Sprite):
                 continue
 
             self.tags.remove(tag)
-
-    def get_tag(self, tag):
-        return tag in self.tags

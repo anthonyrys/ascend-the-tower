@@ -1,11 +1,9 @@
 from src.constants import (
-    COLORS,
-    COLOR_VALUES,
-    COLOR_VALUES_SECONDARY
+    COLOR_VALUES
 )
 
 from src.entities.entity import Entity, Tags
-from src.entities.particle import Outline
+from src.entities.particle_fx import Outline
 
 import pygame
 

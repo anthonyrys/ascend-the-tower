@@ -1,19 +1,42 @@
 from src.constants import (
     GRAVITY,
-    MAX_GRAVITY
+    MAX_GRAVITY,
+    COLOR_VALUES_SECONDARY
 )
 
 from src.entities.interactable import Interactable
 from src.entities.entity import Tags
 
+from src.sprite_methods import Methods
+
 import pygame
 
 class Rock(Interactable):
     def __init__(self, position, img, dimensions, strata):
-        super().__init__(position, img, dimensions, strata)
+        super().__init__(position, img, dimensions, strata, dist=80)
         
         self.base_strata = strata
         self.offset = pygame.Vector2(0, 8)
+
+    def on_select(self, player):
+        self.selected = True
+        self.outline = True
+
+    def on_interact(self, interacter):
+        if Methods.get_distance(interacter, self) > self.interact_dist:
+            return False
+
+        self.interacter = interacter
+        self.interacting = True
+
+        self.strata = interacter.strata + 1
+        
+        return True
+
+    def on_release(self):
+        self.interacter = None
+        self.interacting = False
+        self.strata = self.base_strata
 
     def apply_gravity(self, dt):
         if not self.collide_points['bottom']:
@@ -59,19 +82,6 @@ class Rock(Interactable):
 
                 self.collide_points['top'] = True
                 self.velocity.y = 0
-
-    def on_interact(self, interacter):
-        self.interacter = interacter
-        self.interacting = True
-
-        self.strata = interacter.strata + 1
-
-        return 0
-
-    def on_release(self):
-        self.interacter = None
-        self.interacting = False
-        self.strata = self.base_strata
     
     def display(self, scene, dt):
         if not self.interacting:
@@ -92,4 +102,9 @@ class Rock(Interactable):
                 self.interacter.rect.centery + (center - self.image.get_height())
             ) + self.offset
 
+        if self.outline:
+            Methods.create_outline(self, COLOR_VALUES_SECONDARY[scene.player.color], scene.entity_surface, 4)
+            self.outline = False
+
         scene.entity_surface.blit(self.image, self.rect)
+        self.selected = False

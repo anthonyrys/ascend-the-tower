@@ -6,9 +6,10 @@ from src.constants import (
 )
 
 from src.entities.entity import Entity, Tags
-from src.entities.particle import Circle, Image
+from src.entities.particle_fx import Circle, Image
 
 from src.frame_iterator import PlayerFrames
+from src.sprite_methods import Methods
 
 import pygame
 import random
@@ -45,11 +46,7 @@ class Player(Entity):
         for keybind in self.keybinds.keys():
             self.pressed[keybind] = False
 
-        self.interact_range = 65
-        self.interact = {
-            'type': None,
-            'object': None,
-        }
+        self.interact_obj = None
 
         self.states = {
             'dead': False,
@@ -102,34 +99,36 @@ class Player(Entity):
         if self.states['dead']:
             return
 
-        interactables = scene.check_mouse()
-        if len(interactables) == 0:
-            return
-
-        intr = scene.get_closest_sprite(scene.mouse, interactables) if len(interactables) > 1 else interactables[0]
-        if intr is None:
-            return
-
-        if round(scene.get_distance(self, intr)) > self.interact_range:
-            return
-
-        self.interact['object'] = intr
-        self.interact['type'] = intr.on_interact(self)
-
-        self.states['interacting'] = True
+        self.on_interact_start(scene)
         
     def on_mouse_up(self, scene):
+        self.on_interact_end()
+
+    def on_interact_start(self, scene):
+        interactable = scene.get_selected()
+        if not interactable:
+            return
+
+        if not interactable.on_interact(self):
+            return
+
+        self.interact_obj = interactable
+        self.states['interacting'] = True
+
+    def on_interact_end(self):
         if not self.states['interacting']:
+            return
+        
+        if self.interact_obj.independent:
             return
 
         self.states['interacting'] = False
 
-        self.interact['object'].on_release()
-        self.interact['object'] = None
-        self.interact['type'] = None
+        self.interact_obj.on_release()
+        self.interact_obj = None
 
     def on_death(self, scene):
-        self.on_mouse_up(scene)
+        self.on_interact_end()
 
         self.states['dead'] = True
         self.image.set_alpha(0)
@@ -234,28 +233,19 @@ class Player(Entity):
                 min(ys, key = lambda v: abs(v - self.velocity.y))
             ) * self.ability_data[2]['range']
 
-            clipped_sprites = list()
-            collidables = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
-            for collidable in collidables:
-                if collidable.rect.clipline(start_pos, end_pos):
-                    clipped_sprites.append(collidable)
-
-            barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
-            for barrier in barriers:
+            col_sprites = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
+            for barrier in [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]:
                 if self.color != barrier.color:
                     continue
 
-                if barrier.rect.clipline(start_pos, end_pos):
-                    clipped_sprites.append(barrier)
+                col_sprites.append(barrier)
 
+            clipped_sprites = Methods.check_line_collision(start_pos, end_pos, col_sprites)
             if clipped_sprites:
-                clip_sprite = scene.get_closest_sprite(self, clipped_sprites)
+                clip_sprite = Methods.get_closest_sprite(self, clipped_sprites)
                 clipline = clip_sprite.rect.clipline(start_pos, end_pos)
 
-                end_pos = pygame.Vector2(
-                    clipline[0][0],
-                    clipline[0][1]
-                )
+                end_pos = pygame.Vector2(clipline[0][0], clipline[0][1])
 
             if end_pos.x - start_pos.x < 0:
                 end_pos.x += self.image.get_width()
@@ -580,6 +570,9 @@ class Player(Entity):
                 )
                 
                 return
+            
+            if self.interact_obj:
+                self.interact_obj.apply_interact_effect(self)
 
             self.rect.y += self.velocity.y * dt
             self.apply_collision_y(scene)

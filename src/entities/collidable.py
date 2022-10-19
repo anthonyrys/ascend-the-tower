@@ -9,10 +9,9 @@ class Collidable(Entity):
         self.add_tags(Tags.COLLIDABLE)
 
     # <overridden by child classes>
-    def on_collide(self):
-        ...
-
-    # <overridden by child classes>
     def display(self, scene, dt):
         scene.entity_surface.blit(self.image, self.rect)
     
+    # <overridden by child classes>
+    def on_collide(self):
+        ...

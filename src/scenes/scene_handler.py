@@ -24,7 +24,7 @@ class SceneHandler():
 
         self.last_time = time.time()
 
-    def new_scene(self):
+    def set_new_scene(self):
         ...
 
     def update(self):
@@ -36,10 +36,10 @@ class SceneHandler():
                 return True
 
             if event.type == pygame.MOUSEBUTTONDOWN: 
-                self.current_scene.mouse_down()
+                self.current_scene.on_mouse_down(event)
 
             if event.type == pygame.MOUSEBUTTONUP: 
-                self.current_scene.mouse_up()
+                self.current_scene.on_mouse_up(event)
 
         self.screen.fill(SCREEN_COLOR)
         self.current_scene.display(self.screen, delta_time)
