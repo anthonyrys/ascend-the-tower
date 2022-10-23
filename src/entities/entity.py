@@ -23,6 +23,8 @@ class Entity(pygame.sprite.Sprite):
         else:
             self.image = img
 
+        self.original_image = self.image
+
         if alpha != ...:
             self.image.set_alpha(alpha)
 
@@ -30,6 +32,8 @@ class Entity(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = position
+        
+        self.original_rect = self.rect
 
         self.collide_points = {
             'top': False, 
@@ -37,6 +41,8 @@ class Entity(pygame.sprite.Sprite):
             'left': False, 
             'right': False
         }
+
+        self.collision_ignore = list()
 
         self.velocity = pygame.Vector2()
         self.outline = False
@@ -46,7 +52,7 @@ class Entity(pygame.sprite.Sprite):
         return pygame.mask.from_surface(self.image)
 
     # <overridden by child classes>
-    def display(self, scene):
+    def display(self, scene, dt):
         ...
         
     def get_tag(self, tag):

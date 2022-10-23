@@ -5,21 +5,26 @@ from src.constants import (
     COLOR_VALUES
 )
 
+from src.engine import (
+    check_line_collision,
+    get_closest_sprite,
+    apply_collision_x_def,
+    apply_collision_y_def
+)
+
+from src.spritesheet_loader import load_frames
+
 from src.entities.entity import Entity, Tags
 from src.entities.particle_fx import Circle, Image
 
-from src.frame_iterator import PlayerFrames
-from src.sprite_methods import Methods
-
 import pygame
 import random
+import os
 
 class Player(Entity):
     def __init__(self, position, strata=...):
-        super().__init__(position, pygame.Surface((32, 64)), ..., strata)
-
+        super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), ..., strata)
         self.add_tags(Tags.PLAYER)
-        self.keyframes = PlayerFrames()
 
         self.spawn_location = position
         self.rect_offset = pygame.Vector2(self.image.get_width() / 2, 0)
@@ -31,6 +36,20 @@ class Player(Entity):
         self.jump_power = 24
         self.jump = 0
         self.max_jump = 2
+
+        self.imgs = dict()
+        self.frames = dict()
+        self.img_scale = 2
+
+        for name in ['idle', 'run', 'jump', 'fall']:
+            self.imgs[name] = load_frames(
+            os.path.join('imgs', 'player', f'player-{name}.png'),
+            os.path.join('data', 'player', f'player-{name}.json')
+            )
+
+            self.frames[name] = 0
+
+        self.dt_frame_counter = 0
 
         self.keybinds = {
             'left': [pygame.K_a, pygame.K_LEFT],
@@ -50,7 +69,8 @@ class Player(Entity):
 
         self.states = {
             'dead': False,
-            'interacting': False
+            'interacting': False,
+            'movement': None
         }
 
         self.ability_data = {
@@ -75,8 +95,6 @@ class Player(Entity):
         self.events = dict()
         for event in self.event_timers.keys():
             self.events[event] = 0
-
-        self.collision_ignore = list()
 
     def get_keys_pressed(self):
         keys = pygame.key.get_pressed()
@@ -105,7 +123,7 @@ class Player(Entity):
         self.on_interact_end()
 
     def on_interact_start(self, scene):
-        interactable = scene.get_selected()
+        interactable = scene.get_selected_interactable()
         if not interactable:
             return
 
@@ -135,7 +153,7 @@ class Player(Entity):
 
         scene.camera.set_camera_shake(60)
 
-        pos = pygame.Vector2(self.rect.centerx, self.rect.centery)
+        pos = pygame.Vector2(self.rect.center)
         particles = list()
         for _ in range(40):
             particles.append(
@@ -179,7 +197,7 @@ class Player(Entity):
             self.jump -= 1
             self.events['jump'] = scene.frames
 
-            pos = pygame.Vector2(self.rect.centerx, self.rect.centery) + pygame.Vector2(0, 20)
+            pos = pygame.Vector2(self.rect.center) + pygame.Vector2(0, 20)
 
             particles = list()
             particles.append(
@@ -212,7 +230,7 @@ class Player(Entity):
             if self.velocity == pygame.Vector2():
                 return
 
-            start_pos = pygame.Vector2(self.rect.centerx, self.rect.centery)
+            start_pos = pygame.Vector2(self.rect.center)
 
             xs = [-self.max_movespeed, 0, self.max_movespeed]
             ys = [-self.jump_power / 4, 0]
@@ -240,9 +258,9 @@ class Player(Entity):
 
                 col_sprites.append(barrier)
 
-            clipped_sprites = Methods.check_line_collision(start_pos, end_pos, col_sprites)
+            clipped_sprites = check_line_collision(start_pos, end_pos, col_sprites)
             if clipped_sprites:
-                clip_sprite = Methods.get_closest_sprite(self, clipped_sprites)
+                clip_sprite = get_closest_sprite(self, clipped_sprites)
                 clipline = clip_sprite.rect.clipline(start_pos, end_pos)
 
                 end_pos = pygame.Vector2(clipline[0][0], clipline[0][1])
@@ -317,28 +335,7 @@ class Player(Entity):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        collidables = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
-        for collidable in collidables:
-            if not self.rect.colliderect(collidable.rect):
-                if collidable in self.collision_ignore:
-                    self.collision_ignore.remove(collidable)
-                
-                continue
-
-            if collidable in self.collision_ignore:
-                continue
-
-            if self.velocity.x > 0:
-                self.rect.right = collidable.rect.left
-                self.collide_points['right'] = True
-
-                self.velocity.x = 0
-
-            if self.velocity.x < 0:
-                self.rect.left = collidable.rect.right
-                self.collide_points['left'] = True
-                
-                self.velocity.x = 0
+        apply_collision_x_def(self, [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)])
 
         barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
         for barrier in barriers:
@@ -419,32 +416,10 @@ class Player(Entity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        collidables = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
-        for collidable in collidables:
-            if not self.rect.colliderect(collidable.rect):
-                if collidable in self.collision_ignore:
-                    self.collision_ignore.remove(collidable)
-                
-                continue
-
-            if collidable in self.collision_ignore:
-                continue
-
-            if self.velocity.y > 0:
-                self.rect.bottom = collidable.rect.top
-                self.collide_points['bottom'] = True
-
-                if self.jump != self.max_jump:
-                    self.jump = self.max_jump
-                    
-                self.velocity.y = 0
-
-            if self.velocity.y < 0:
-                self.rect.top = collidable.rect.bottom
-                self.collide_points['top'] = True
-
-                self.velocity.y = 0
-
+        if 'bottom' in apply_collision_y_def(self, [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]):
+            if self.jump != self.max_jump:
+                self.jump = self.max_jump
+     
         barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
@@ -499,29 +474,39 @@ class Player(Entity):
     def set_frame_state(self):
         if not self.collide_points['bottom']:
             if self.velocity.y < 0:
-                self.keyframes.state = 'jump'
+                self.states['movement'] = 'jump'
             else:
-                self.keyframes.state = 'fall'
+                self.states['movement'] = 'fall'
 
         elif self.velocity.x > 0 or self.velocity.x < 0:
-            self.keyframes.state = 'run'
+            self.states['movement'] = 'run'
 
         else:
-            self.keyframes.state = 'idle'
+            self.states['movement'] = 'idle'
 
     def set_image(self, scene, dt):
+        img = None
+        et = 1
+
         if self.velocity.x > 0:
             self.direction = 1
 
         elif self.velocity.x < 0:
             self.direction = -1
 
-        if self.keyframes.state == 'run':
-            self.image = self.keyframes.iterate(dt, abs(self.velocity.x / self.max_movespeed))
+        if self.states['movement'] == 'run':
+            et = abs(self.velocity.x / self.max_movespeed)
 
-        else:
-            self.image = self.keyframes.iterate(dt, 1)
+        if len(self.imgs[self.states['movement']]) <= self.frames[self.states['movement']]:
+            self.frames[self.states['movement']] = 0
+            self.dt_frame_counter = 0
 
+        img = self.imgs[self.states['movement']][self.frames[self.states['movement']]]
+
+        self.dt_frame_counter += (1 * et) * dt
+        self.frames[self.states['movement']] = round(self.dt_frame_counter)
+
+        self.image = pygame.transform.scale(img, pygame.Vector2(img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.direction < 0 else self.image
 
         if self.color != self.prev_color:

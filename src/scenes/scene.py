@@ -39,7 +39,7 @@ class Scene():
     def display(self, screen):
         ...
 
-    def get_selected(self):
+    def get_selected_interactable(self):
         for interactable in [s for s in self.sprites if s.get_tag(Tags.INTERACTABLE)]:
             if not interactable.selected:
                 continue

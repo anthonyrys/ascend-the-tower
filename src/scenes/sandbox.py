@@ -3,28 +3,25 @@ from src.constants import (
     SCREEN_DIMENSIONS
 )
 
-from src.entities.entity import Tags
+from src.engine import BoxCamera
+from src.background import Background
+
 from src.entities.player import Player
 from src.entities.collidable import Collidable
 from src.entities.barrier import ColorBarrier
-from src.entities.rock import Rock
+from src.entities.grass import Grass
 
 from src.scenes.scene import Scene
 
-from src.camera import BoxCamera
-from src.background import Background
-
 import pygame
+import os
 
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=...):
         super().__init__(surfaces, mouse, sprites)
 
-        self.player = Player(pygame.Vector2(600, 1125), 3)
+        self.player = Player(pygame.Vector2(600, 1125), 4)
         floor = Collidable(pygame.Vector2(0, 1500), pygame.Color(255, 255, 255), pygame.Vector2(5000, 20)) 
-
-        rock_a = Rock(pygame.Vector2(700, 1125), pygame.Color(115, 115, 115), pygame.Vector2(30, 30), 2)
-        rock_b = Rock(pygame.Vector2(600, 1125), pygame.Color(115, 115, 115), pygame.Vector2(30, 30), 2)
 
         block_c = Collidable(pygame.Vector2(600, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
         block_d = Collidable(pygame.Vector2(850, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
@@ -43,8 +40,12 @@ class Sandbox(Scene):
             self.player, floor, 
             block_c, block_d,
             barrier_a, barrier_b, barrier_c,
-            rock_a, rock_b
         )
+
+        for i in range(100):
+            self.add_sprites(
+                Grass(pygame.Vector2(1500 + (i * 9), 1510), 4)
+            )
 
     def display(self, screen, dt):
         dt = 2 if dt > 2 else dt
