@@ -1,12 +1,10 @@
-from src.entities.entity import Entity, Tags
+from src.engine import Entity
 
 import pygame
 
 class Interactable(Entity):
     def __init__(self, position, img, dimensions, strata, indp=False, dist=15):
         super().__init__(position, img, dimensions, strata)
-        
-        self.add_tags(Tags.INTERACTABLE)
 
         self.independent = indp
         self.interact_dist = dist

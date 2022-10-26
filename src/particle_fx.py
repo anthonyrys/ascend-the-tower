@@ -1,4 +1,4 @@
-from src.entities.entity import Entity, Tags
+from src.engine import Entity
 
 import pygame
 import math
@@ -16,8 +16,6 @@ class Outline(Entity):
 
     def __init__(self, info, position, color, size, img, strata):
         super().__init__(position, img, ..., strata)
-
-        self.add_tags(Tags.PARTICLE)
 
         self.base_dimensions = pygame.Vector2(self.image.get_width(), self.image.get_height())
         self.dimensions = self.base_dimensions
@@ -74,8 +72,6 @@ class Circle(Entity):
     def __init__(self, info, position, color, radius, width, strata):
         super().__init__(position, pygame.Color(0, 0, 0, 0), pygame.Vector2(info.radius * 2, info.radius * 2), strata)
 
-        self.add_tags(Tags.PARTICLE)
-
         self.fill = pygame.Color(0, 0, 0)
 
         self.position, self.base_position = position, position
@@ -124,8 +120,6 @@ class Image(Entity):
 
     def __init__(self, info, position, color, dimensions, alpha, strata):
         super().__init__(position, color, dimensions, strata, alpha)
-
-        self.add_tags(Tags.PARTICLE)
 
         self.base_position = position
         self.base_alpha = alpha

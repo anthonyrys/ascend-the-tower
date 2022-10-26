@@ -1,4 +1,6 @@
-from src.entities.entity import Tags
+from src.engine import Entity
+
+from src.entities.interactable import Interactable
 
 import pygame
 
@@ -40,7 +42,7 @@ class Scene():
         ...
 
     def get_selected_interactable(self):
-        for interactable in [s for s in self.sprites if s.get_tag(Tags.INTERACTABLE)]:
+        for interactable in [s for s in self.sprites if isinstance(s, Interactable)]:
             if not interactable.selected:
                 continue
             

@@ -3,18 +3,17 @@ from src.constants import (
     SCREEN_DIMENSIONS
 )
 
-from src.engine import BoxCamera
+from src.engine import Camera
 from src.background import Background
 
 from src.entities.player import Player
 from src.entities.collidable import Collidable
-from src.entities.barrier import ColorBarrier
+from src.entities.barrier import Barrier
 from src.entities.grass import Grass
 
 from src.scenes.scene import Scene
 
 import pygame
-import os
 
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=...):
@@ -26,12 +25,12 @@ class Sandbox(Scene):
         block_c = Collidable(pygame.Vector2(600, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
         block_d = Collidable(pygame.Vector2(850, 1400), pygame.Color(255, 255, 255), pygame.Vector2(50, 100))  
 
-        barrier_a = ColorBarrier(pygame.Vector2(500, 1200), pygame.Vector2(250, 100), COLORS[0], self.player)
-        barrier_b = ColorBarrier(pygame.Vector2(950, 1200), pygame.Vector2(250, 50), COLORS[1], self.player)
-        barrier_c = ColorBarrier(pygame.Vector2(1300, 1250), pygame.Vector2(75, 250), COLORS[2], self.player)
+        barrier_a = Barrier(pygame.Vector2(500, 1200), pygame.Vector2(250, 100), COLORS[0], self.player)
+        barrier_b = Barrier(pygame.Vector2(950, 1200), pygame.Vector2(250, 50), COLORS[1], self.player)
+        barrier_c = Barrier(pygame.Vector2(1300, 1250), pygame.Vector2(75, 250), COLORS[2], self.player)
 
         self.background = Background()
-        self.camera = BoxCamera(self.player)
+        self.camera = Camera.Box(self.player)
 
         self.view = pygame.Surface(SCREEN_DIMENSIONS).get_rect()
         self.entity_view = pygame.Surface(SCREEN_DIMENSIONS).get_rect()
@@ -42,14 +41,16 @@ class Sandbox(Scene):
             barrier_a, barrier_b, barrier_c,
         )
 
-        for i in range(100):
+        for i in range(250):
             self.add_sprites(
                 Grass(pygame.Vector2(1500 + (i * 9), 1510), 4)
             )
 
     def display(self, screen, dt):
-        dt = 2 if dt > 2 else dt
         dt = round(dt, 1)
+
+        dt = 2 if dt > 2 else dt
+        dt = 1 if 1 < dt <= 1.3 else dt
 
         cam = self.camera.update(dt)
         self.entity_view.x, self.entity_view.y = cam

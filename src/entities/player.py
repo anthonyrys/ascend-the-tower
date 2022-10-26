@@ -1,21 +1,19 @@
 from src.constants import (
-    GRAVITY, 
-    MAX_GRAVITY,
     COLORS,
     COLOR_VALUES
 )
 
 from src.engine import (
+    Entity,
     check_line_collision,
-    get_closest_sprite,
-    apply_collision_x_def,
-    apply_collision_y_def
+    get_closest_sprite
 )
 
 from src.spritesheet_loader import load_frames
+from src.particle_fx import Circle, Image
 
-from src.entities.entity import Entity, Tags
-from src.entities.particle_fx import Circle, Image
+from src.entities.collidable import Collidable
+from src.entities.barrier import Barrier
 
 import pygame
 import random
@@ -24,7 +22,6 @@ import os
 class Player(Entity):
     def __init__(self, position, strata=...):
         super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), ..., strata)
-        self.add_tags(Tags.PLAYER)
 
         self.spawn_location = position
         self.rect_offset = pygame.Vector2(self.image.get_width() / 2, 0)
@@ -251,8 +248,8 @@ class Player(Entity):
                 min(ys, key = lambda v: abs(v - self.velocity.y))
             ) * self.ability_data[2]['range']
 
-            col_sprites = [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]
-            for barrier in [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]:
+            col_sprites = [s for s in scene.sprites if isinstance(s, Collidable)]
+            for barrier in [s for s in scene.sprites if isinstance(s, Barrier)]:
                 if self.color != barrier.color:
                     continue
 
@@ -324,20 +321,13 @@ class Player(Entity):
         if self.pressed['jump']:
             self.on_jump(scene, dt)
 
-    def apply_gravity(self, dt):
-        if not self.collide_points['bottom']:
-            self.velocity.y += GRAVITY * dt if self.velocity.y < MAX_GRAVITY * dt else 0
-
-        else:
-            self.velocity.y = GRAVITY * dt
-
     def apply_collision_x(self, scene):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        apply_collision_x_def(self, [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)])
+        self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Collidable)])
 
-        barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
+        barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
                 if barrier in self.collision_ignore:
@@ -416,11 +406,11 @@ class Player(Entity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in apply_collision_y_def(self, [s for s in scene.sprites if s.get_tag(Tags.COLLIDABLE)]):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Collidable)]):
             if self.jump != self.max_jump:
                 self.jump = self.max_jump
      
-        barriers = [s for s in scene.sprites if s.get_tag(Tags.BARRIER)]
+        barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
                 if barrier in self.collision_ignore:
@@ -570,4 +560,3 @@ class Player(Entity):
             self.image, 
             (self.rect.x - self.rect_offset.x, self.rect.y - self.rect_offset.y, 0, 0),
         )
-        

@@ -1,6 +1,7 @@
 from src.constants import COLOR_VALUES_SECONDARY
 
 from src.engine import (
+    Entity,
     check_line_collision,
     get_distance,
     get_closest_sprite
@@ -8,7 +9,7 @@ from src.engine import (
 
 from src.spritesheet_loader import load_standard
 
-from src.entities.entity import Tags
+from src.entities.interactable import Interactable
 
 import pygame
 import os
@@ -19,7 +20,7 @@ class Mouse(pygame.sprite.Sprite):
         for i in range(len(self.images)):
             self.images[i-1] = pygame.transform.scale(self.images[i-1], pygame.Vector2(32, 32))
 
-        self.image = self.images[1]
+        self.image = self.images[0]
         self.image = self.mask.to_surface(
             setcolor=pygame.Color(255, 255, 255), 
             unsetcolor=pygame.Color(0, 0, 0, 0)
@@ -35,7 +36,7 @@ class Mouse(pygame.sprite.Sprite):
         interactable_sprites = check_line_collision(
             scene.player.rect.center,
             self.rect.center + scene.camera.offset,
-            [s for s in scene.sprites if s.get_tag(Tags.INTERACTABLE)]
+            [s for s in scene.sprites if isinstance(s, Interactable)]
         )
         
         for sprite in interactable_sprites:

@@ -2,15 +2,14 @@ from src.constants import (
     COLOR_VALUES
 )
 
-from src.entities.entity import Entity, Tags
-from src.entities.particle_fx import Outline
+from src.engine import Entity
+from src.particle_fx import Outline
 
 import pygame
 
-class ColorBarrier(Entity):
+class Barrier(Entity):
     def __init__(self, position, dimensions, color, player):
         super().__init__(position, pygame.Color((COLOR_VALUES[color])), dimensions, 2) 
-        self.add_tags(Tags.BARRIER)
         
         self.image.convert_alpha()
         self.player = player

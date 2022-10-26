@@ -1,12 +1,10 @@
-from src.entities.entity import Entity, Tags
+from src.engine import Entity
 
 import pygame
 
 class Collidable(Entity):
     def __init__(self, position, img, dimensions):
         super().__init__(position, img, dimensions, 2)
-        
-        self.add_tags(Tags.COLLIDABLE)
 
     # <overridden by child classes>
     def display(self, scene, dt):
