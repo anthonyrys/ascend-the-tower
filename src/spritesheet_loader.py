@@ -1,13 +1,16 @@
 import pygame
 import json
+import os
 
-def load_standard(pngpath, jsonpath):
+def load_standard(pngpath, jsonpath, name):
+    jsonpath = os.path.join('data', 'imgs.json')
     sheet, data = None, None
     imgs = list()
             
     sheet = pygame.image.load(pngpath).convert_alpha()
-    data = json.load(open(jsonpath))
-        
+    data_json = json.load(open(jsonpath))
+    data = data_json[name]
+
     width = data['spritesize']['width']
     height = data['spritesize']['height']
 

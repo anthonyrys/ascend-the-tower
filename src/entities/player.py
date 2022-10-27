@@ -6,14 +6,17 @@ from src.constants import (
 from src.engine import (
     Entity,
     check_line_collision,
+    check_pixel_collision,
     get_closest_sprite
 )
 
 from src.spritesheet_loader import load_frames
 from src.particle_fx import Circle, Image
 
-from src.entities.collidable import Collidable
+from src.entities.tile import Tile
 from src.entities.barrier import Barrier
+from src.entities.platform import Platform
+from src.entities.ramp import Ramp
 
 import pygame
 import random
@@ -24,7 +27,7 @@ class Player(Entity):
         super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), ..., strata)
 
         self.spawn_location = position
-        self.rect_offset = pygame.Vector2(self.image.get_width() / 2, 0)
+        self.rect_offset = pygame.Vector2(self.rect.width / 2, 0)
 
         self.per_frame_movespeed = 4
         self.max_movespeed = 12
@@ -51,6 +54,7 @@ class Player(Entity):
         self.keybinds = {
             'left': [pygame.K_a, pygame.K_LEFT],
             'right': [pygame.K_d, pygame.K_RIGHT],
+            'down': [pygame.K_s, pygame.K_DOWN],
             'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
 
             'ability': pygame.K_f,
@@ -150,7 +154,7 @@ class Player(Entity):
 
         scene.camera.set_camera_shake(60)
 
-        pos = pygame.Vector2(self.rect.center)
+        pos = pygame.Vector2(self.rect.center) - self.velocity
         particles = list()
         for _ in range(40):
             particles.append(
@@ -248,7 +252,7 @@ class Player(Entity):
                 min(ys, key = lambda v: abs(v - self.velocity.y))
             ) * self.ability_data[2]['range']
 
-            col_sprites = [s for s in scene.sprites if isinstance(s, Collidable)]
+            col_sprites = [s for s in scene.sprites if isinstance(s, Tile)]
             for barrier in [s for s in scene.sprites if isinstance(s, Barrier)]:
                 if self.color != barrier.color:
                     continue
@@ -325,7 +329,7 @@ class Player(Entity):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Collidable)])
+        self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Tile)])
 
         barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
         for barrier in barriers:
@@ -402,14 +406,60 @@ class Player(Entity):
             else:
                 return True
 
-    def apply_collision_y(self, scene):
+    def apply_collision_y(self, scene, dt):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Collidable)]):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Tile)]):
             if self.jump != self.max_jump:
                 self.jump = self.max_jump
      
+        platforms = [s for s in scene.sprites if isinstance(s, Platform)]
+        for platform in platforms:
+            if not self.rect.colliderect(platform.rect):
+                if platform in self.collision_ignore:
+                    self.collision_ignore.remove(platform)
+                
+                continue
+
+            if self.pressed['down'] and platform not in self.collision_ignore:
+                self.collision_ignore.append(platform)
+                continue
+
+            if self.velocity.y > 0 and self.rect.bottom <= platform.rect.top + self.velocity.y:
+                self.rect.bottom = platform.rect.top
+                self.collide_points['bottom'] = True
+
+                if self.jump != self.max_jump:
+                    self.jump = self.max_jump
+                        
+                self.velocity.y = 0
+
+        ramps = [s for s in scene.sprites if isinstance(s, Ramp)]
+        for ramp in ramps:
+            if not self.rect.colliderect(ramp.rect):
+                if ramp in self.collision_ignore:
+                    self.collision_ignore.remove(ramp)
+                
+                continue
+
+            if ramp in self.collision_ignore:
+                continue
+
+            if self.pressed['jump'] and ramp not in self.collision_ignore:
+                self.collision_ignore.append(ramp)
+                continue
+
+            pos = ramp.get_y_value(self)
+            if pos - self.rect.bottom < 4:
+                self.rect.bottom = pos
+                self.collide_points['bottom'] = True
+
+                if self.jump != self.max_jump:
+                    self.jump = self.max_jump
+                            
+                self.velocity.y = 0
+
         barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
@@ -550,7 +600,7 @@ class Player(Entity):
                 self.interact_obj.apply_interact_effect(self)
 
             self.rect.y += self.velocity.y * dt
-            self.apply_collision_y(scene)
+            self.apply_collision_y(scene, dt)
 
             self.set_frame_state()
             self.set_color(scene, dt)

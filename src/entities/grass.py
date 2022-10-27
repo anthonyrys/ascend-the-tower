@@ -2,7 +2,6 @@ from src.constants import SCREEN_DIMENSIONS
 
 from src.engine import (
     Entity,
-    apply_point_rotation,
     get_distance
 )
 
@@ -16,7 +15,7 @@ import os
 
 class Grass(Entity):
     def __init__(self, position, strata=...):
-        imgs = load_standard(os.path.join('imgs', 'grass.png'), os.path.join('data', 'grass.json'))
+        imgs = load_standard(os.path.join('imgs', 'grass.png'), os.path.join('data', 'imgs.json'), 'grass')
 
         img = imgs[random.randint(0, len(imgs) - 1)]
         img = pygame.transform.scale(img, pygame.Vector2(img.get_width() * 2, img.get_height() * 2))
@@ -30,11 +29,11 @@ class Grass(Entity):
         self.calc_distance = SCREEN_DIMENSIONS[0] / 2
 
         self.original_position = pygame.Vector2(self.rect.midbottom)
-        self.rotation_point = pygame.Vector2(self.image.get_width() / 2, self.image.get_height())
+        self.rotation_point = pygame.Vector2(self.rect.width / 2, self.rect.height)
 
         self.current_rotation = 0
         self.per_rotation = 4
-        self.max_rotation = round(self.image.get_height() * 1.75)
+        self.max_rotation = round(self.rect.height * 1.7)
 
     def apply_focus_collision(self, focus, dt):
         if abs(get_distance(self, focus)) > self.calc_distance:
@@ -77,8 +76,12 @@ class Grass(Entity):
 
             if abs(self.current_rotation) <= self.per_rotation:
                 self.current_rotation = 0
-                
-        apply_point_rotation(self, self.original_position, self.rotation_point, self.current_rotation)
+
+        rect = self.image.get_rect(center = (self.original_position.x - self.rotation_point.x, self.original_position.y - self.rotation_point.y))
+        offset = (self.original_position - rect.center).rotate(-self.current_rotation)
+
+        self.image = pygame.transform.rotate(self.original_image, self.current_rotation).convert_alpha()
+        self.rect = self.image.get_rect(midtop = (self.original_position.x - offset.x, self.original_position.y - offset.y))
 
     def display(self, scene, dt):
         focus = None

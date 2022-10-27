@@ -1,0 +1,19 @@
+{
+    "grass": 
+    {
+        "sheetsize": {"width": 32, "height": 16},
+        "spritesize": {"width": 4, "height": 16}
+    },
+
+    "mouse":
+    {
+        "sheetsize": {"width": 32, "height": 16},
+        "spritesize": {"width": 16, "height": 16}
+    },
+
+    "ramps":
+    {
+        "sheetsize": {"width": 32, "height": 16},
+        "spritesize": {"width": 16, "height": 16}
+    }
+}

@@ -100,7 +100,7 @@ class Entity(pygame.sprite.Sprite):
         if alpha != ...:
             self.image.set_alpha(alpha)
 
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_bounding_rect()
         self.rect.x, self.rect.y = position
         
         self.original_rect = self.rect
@@ -190,6 +190,9 @@ class Entity(pygame.sprite.Sprite):
         else:
             self.velocity.y = GRAVITY * dt
 
+class Component(pygame.sprite.Sprite):
+    ...
+
 def check_pixel_collision(primary_sprite, secondary_sprite):
     collision = None
     if not isinstance(secondary_sprite, pygame.sprite.Group):
@@ -233,13 +236,6 @@ def get_closest_sprite(primary_sprite, sprites):
             return sprite
 
     return None
-
-def apply_point_rotation(sprite, position, point, angle):
-    rect = sprite.image.get_rect(topleft = (position.x - point.x, position.y - point.y))
-    offset = (position - rect.center).rotate(-angle)
-    
-    sprite.image = pygame.transform.rotate(sprite.original_image, angle).convert_alpha()
-    sprite.rect = sprite.image.get_rect(center = (position.x - offset.x, position.y - offset.y))
 
 def create_outline(sprite, color, display, size=1):
     surface = sprite.mask.to_surface(

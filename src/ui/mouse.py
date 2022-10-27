@@ -16,7 +16,7 @@ import os
 
 class Mouse(pygame.sprite.Sprite):
     def __init__(self):
-        self.images = load_standard(os.path.join('imgs', 'mouse.png'), os.path.join('data', 'mouse.json'))
+        self.images = load_standard(os.path.join('imgs', 'mouse.png'), os.path.join('data', 'imgs.json'), 'mouse')
         for i in range(len(self.images)):
             self.images[i-1] = pygame.transform.scale(self.images[i-1], pygame.Vector2(32, 32))
 
