@@ -3,7 +3,6 @@ from src.spritesheet_loader import load_standard
 
 import pygame
 import os
-import math
 
 class Ramp(Entity):
     def __init__(self, position, ramp_type, direction, strata=...):
@@ -33,7 +32,7 @@ class Ramp(Entity):
             if abs_pos > self.width:
                 abs_pos = self.width
 
-            return round((self.image.get_rect().bottom + self.rect.y) - ((self.height * (abs_pos / self.width)))) - 1
+            return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
 
         elif self.direction == 'left':
             dist = self.rect.right - sprite.rect.left
@@ -45,7 +44,7 @@ class Ramp(Entity):
             if abs_pos > self.width:
                 abs_pos = self.width
 
-            return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width))) - 1
+            return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
 
     def display(self, scene, dt):
         scene.entity_surface.blit(self.image, self.rect)

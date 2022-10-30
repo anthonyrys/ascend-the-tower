@@ -1,12 +1,12 @@
 from src.constants import (
     COLORS,
-    COLOR_VALUES
+    COLOR_VALUES,
+    COLOR_VALUES_PRIMARY
 )
 
 from src.engine import (
     Entity,
     check_line_collision,
-    check_pixel_collision,
     get_closest_sprite
 )
 
@@ -39,6 +39,7 @@ class Player(Entity):
 
         self.imgs = dict()
         self.frames = dict()
+        self.dt_frames = dict()
         self.img_scale = 2
 
         for name in ['idle', 'run', 'jump', 'fall']:
@@ -48,8 +49,7 @@ class Player(Entity):
             )
 
             self.frames[name] = 0
-
-        self.dt_frame_counter = 0
+            self.dt_frames[name] = 0
 
         self.keybinds = {
             'left': [pygame.K_a, pygame.K_LEFT],
@@ -154,13 +154,15 @@ class Player(Entity):
 
         scene.camera.set_camera_shake(60)
 
-        pos = pygame.Vector2(self.rect.center) - self.velocity
+        pos = pygame.Vector2(self.rect.center)
+        pos.x -= self.velocity.x
+
         particles = list()
         for _ in range(40):
             particles.append(
                 Circle(
-                    Circle.Info(pos + pygame.Vector2(random.randint(-750, 750), random.randint(-750, 750)), 80, radius=0, width=0),
-                    pos, pygame.Color(255, 255, 255), 15, 0, self.strata + 1
+                    Circle.Info(pos + pygame.Vector2(random.randint(-1500, 1500), random.randint(-1500, 1500)), 150, radius=0, width=0),
+                    pos, COLOR_VALUES_PRIMARY[self.color], 12, 0, self.strata + 1
                 )
             )
 
@@ -168,7 +170,7 @@ class Player(Entity):
             Circle(
                 Circle.Info(pos, 45, radius=250, width=1),
                 pos, 
-                pygame.Color(255, 255, 255),
+                COLOR_VALUES_PRIMARY[self.color],
                 5,
                 15,
                 self.strata + 1
@@ -295,7 +297,7 @@ class Player(Entity):
                         Circle.Info(
                             (end_pos + pygame.Vector2(random.randint(-250, 250), random.randint(-250, 250))) + self.velocity * 25, 
                             100, radius=0, width=0),
-                        end_pos, COLOR_VALUES[self.color], 10, 0, self.strata + 1
+                        end_pos, COLOR_VALUES_PRIMARY[self.color], 10, 0, self.strata + 1
                     )
                 )
 
@@ -329,13 +331,17 @@ class Player(Entity):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Tile)])
+        if not [c for c in self.collisions if isinstance(c, Ramp)]:
+            self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Tile)])
 
         barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
         for barrier in barriers:
             if not self.rect.colliderect(barrier.rect):
                 if barrier in self.collision_ignore:
                     self.collision_ignore.remove(barrier)
+
+                if barrier in self.collisions:
+                    self.collisions.remove(barrier)
                 
                 continue
 
@@ -353,6 +359,10 @@ class Player(Entity):
 
                         else:
                             self.collision_ignore.append(barrier)
+
+                            if barrier not in self.collisions:
+                                self.collisions.append(barrier)
+
                             self.velocity.y = -15
 
                     if self.rect.centery - barrier.rect.centery > 0:
@@ -371,6 +381,9 @@ class Player(Entity):
                     else:
                         self.rect.right = barrier.rect.left
                         self.collide_points['right'] = True
+
+                        if barrier not in self.collisions:
+                                self.collisions.append(barrier)
 
                         self.velocity.x = 0
 
@@ -400,7 +413,10 @@ class Player(Entity):
                     else:
                         self.rect.left = barrier.rect.right
                         self.collide_points['left'] = True
-                        
+
+                        if barrier not in self.collisions:
+                            self.collisions.append(barrier)
+                                
                         self.velocity.x = 0
                     
             else:
@@ -419,7 +435,10 @@ class Player(Entity):
             if not self.rect.colliderect(platform.rect):
                 if platform in self.collision_ignore:
                     self.collision_ignore.remove(platform)
-                
+
+                if platform in self.collisions:
+                    self.collisions.remove(platform)
+
                 continue
 
             if self.pressed['down'] and platform not in self.collision_ignore:
@@ -429,6 +448,9 @@ class Player(Entity):
             if self.velocity.y > 0 and self.rect.bottom <= platform.rect.top + self.velocity.y:
                 self.rect.bottom = platform.rect.top
                 self.collide_points['bottom'] = True
+
+                if platform not in self.collisions:
+                    self.collisions.append(platform)
 
                 if self.jump != self.max_jump:
                     self.jump = self.max_jump
@@ -440,6 +462,9 @@ class Player(Entity):
             if not self.rect.colliderect(ramp.rect):
                 if ramp in self.collision_ignore:
                     self.collision_ignore.remove(ramp)
+                    
+                if ramp in self.collisions:
+                    self.collisions.remove(ramp)
                 
                 continue
 
@@ -455,6 +480,9 @@ class Player(Entity):
                 self.rect.bottom = pos
                 self.collide_points['bottom'] = True
 
+                if ramp not in self.collisions:
+                    self.collisions.append(ramp)
+
                 if self.jump != self.max_jump:
                     self.jump = self.max_jump
                             
@@ -466,6 +494,9 @@ class Player(Entity):
                 if barrier in self.collision_ignore:
                     self.collision_ignore.remove(barrier)
                 
+                if barrier in self.collisions:
+                    self.collisions.remove(barrier)
+
                 continue
 
             if barrier in self.collision_ignore:
@@ -477,6 +508,9 @@ class Player(Entity):
             if self.velocity.y > 0:
                 self.rect.bottom = barrier.rect.top
                 self.collide_points['bottom'] = True
+                
+                if barrier not in self.collisions:
+                    self.collisions.append(barrier)
 
                 if self.jump != self.max_jump:
                     self.jump = self.max_jump
@@ -486,6 +520,9 @@ class Player(Entity):
             if self.velocity.y < 0:
                 self.rect.top = barrier.rect.bottom
                 self.collide_points['top'] = True
+
+                if barrier not in self.collisions:
+                    self.collisions.append(barrier)
 
                 self.velocity.y = 0
 
@@ -515,14 +552,17 @@ class Player(Entity):
         if not self.collide_points['bottom']:
             if self.velocity.y < 0:
                 self.states['movement'] = 'jump'
+                return
+
             else:
                 self.states['movement'] = 'fall'
+                return
 
-        elif self.velocity.x > 0 or self.velocity.x < 0:
+        if self.velocity.x > 0 or self.velocity.x < 0:
             self.states['movement'] = 'run'
+            return
 
-        else:
-            self.states['movement'] = 'idle'
+        self.states['movement'] = 'idle'
 
     def set_image(self, scene, dt):
         img = None
@@ -539,12 +579,22 @@ class Player(Entity):
 
         if len(self.imgs[self.states['movement']]) <= self.frames[self.states['movement']]:
             self.frames[self.states['movement']] = 0
-            self.dt_frame_counter = 0
+            self.dt_frames[self.states['movement']] = 0
 
         img = self.imgs[self.states['movement']][self.frames[self.states['movement']]]
 
-        self.dt_frame_counter += (1 * et) * dt
-        self.frames[self.states['movement']] = round(self.dt_frame_counter)
+        self.dt_frames[self.states['movement']]  += (1 * et) * dt
+        self.frames[self.states['movement']] = round(self.dt_frames[self.states['movement']])
+
+        for frame in self.frames:
+            if self.states['movement'] == frame:
+                continue
+
+            if self.frames[frame] == 0:
+                continue
+
+            self.frames[frame] = 0
+            self.dt_frames[frame] = 0
 
         self.image = pygame.transform.scale(img, pygame.Vector2(img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.direction < 0 else self.image
@@ -557,7 +607,7 @@ class Player(Entity):
                 Circle(
                     Circle.Info(pos, 27, radius=150, width=1),
                     pos, 
-                    COLOR_VALUES[self.color],
+                    COLOR_VALUES_PRIMARY[self.color],
                     5,
                     15,
                     self.strata + 1

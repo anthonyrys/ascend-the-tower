@@ -1,5 +1,6 @@
 from src.constants import (
-    COLOR_VALUES
+    COLOR_VALUES,
+    COLOR_VALUES_PRIMARY
 )
 
 from src.engine import Entity
@@ -8,8 +9,8 @@ from src.particle_fx import Outline
 import pygame
 
 class Barrier(Entity):
-    def __init__(self, position, dimensions, color, player):
-        super().__init__(position, pygame.Color((COLOR_VALUES[color])), dimensions, 2) 
+    def __init__(self, position, dimensions, color, player, strata=...):
+        super().__init__(position, pygame.Color((COLOR_VALUES[color])), dimensions, strata) 
         
         self.image.convert_alpha()
         self.player = player
@@ -25,7 +26,7 @@ class Barrier(Entity):
             if self.prev_state:
                 particles = Outline(
                     Outline.Info(pygame.Vector2(self.image.get_width() * 1.5, self.image.get_height() * 1.5), 30, 1),
-                    pygame.Vector2(self.rect.center), COLOR_VALUES[self.color], 3, self.image.copy(), self.strata + 1
+                    pygame.Vector2(self.rect.center), COLOR_VALUES_PRIMARY[self.color], 3, self.image.copy(), self.strata + 1
                 )
                 
                 scene.add_sprites(particles)

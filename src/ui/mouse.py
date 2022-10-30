@@ -1,7 +1,6 @@
 from src.constants import COLOR_VALUES_SECONDARY
 
 from src.engine import (
-    Entity,
     check_line_collision,
     get_distance,
     get_closest_sprite

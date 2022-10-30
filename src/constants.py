@@ -16,13 +16,13 @@ COLORS = ['red', 'blue', 'yellow']
 COLOR_VALUES = {
     COLORS[0]: pygame.Color(245, 84, 66),
     COLORS[1]: pygame.Color(66, 84, 245),
-    COLORS[2]: pygame.Color(255, 255, 84)
+    COLORS[2]: pygame.Color(235, 235, 84)
 }
 
 COLOR_VALUES_PRIMARY = {
     COLORS[0]: pygame.Color(255, 94, 76),
     COLORS[1]: pygame.Color(76, 94, 255),
-    COLORS[2]: pygame.Color(255, 255, 124)
+    COLORS[2]: pygame.Color(245, 245, 124)
 }
 
 COLOR_VALUES_SECONDARY = {

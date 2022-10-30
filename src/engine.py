@@ -61,7 +61,7 @@ class Camera():
             elif self.focus.rect.top < self.box.top:
                 self.box.top = self.focus.rect.top
             
-            offset = pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake
+            offset = (pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake)
 
             if self.camera_tween_frames < self.camera_tween_frames_max:
                 abs_prog = self.camera_tween_frames / self.camera_tween_frames_max
@@ -112,10 +112,10 @@ class Entity(pygame.sprite.Sprite):
             'right': False
         }
 
+        self.collisions = list()
         self.collision_ignore = list()
 
         self.velocity = pygame.Vector2()
-        self.outline = False
 
     @property
     def mask(self):
@@ -132,7 +132,10 @@ class Entity(pygame.sprite.Sprite):
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
                     self.collision_ignore.remove(collidable)
-                    
+                
+                if collidable in self.collisions:
+                    self.collisions.remove(collidable)
+
                 continue
 
             if collidable in self.collision_ignore:
@@ -143,11 +146,18 @@ class Entity(pygame.sprite.Sprite):
                 self.collide_points['right'] = True
 
                 callback_collision.append('right')
+
+                if collidable not in self.collisions:
+                    self.collisions.append(collidable)
+       
                 self.velocity.x = 0
 
             if self.velocity.x < 0:
                 self.rect.left = collidable.rect.right
                 self.collide_points['left'] = True
+
+                if collidable not in self.collisions:
+                    self.collisions.append(collidable)
 
                 callback_collision.append('left')
                 self.velocity.x = 0
@@ -161,6 +171,9 @@ class Entity(pygame.sprite.Sprite):
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
                     self.collision_ignore.remove(collidable)
+
+                if collidable in self.collisions:
+                    self.collisions.remove(collidable)
                     
                 continue
 
@@ -172,6 +185,10 @@ class Entity(pygame.sprite.Sprite):
                 self.collide_points['bottom'] = True
 
                 callback_collision.append('bottom')
+
+                if collidable not in self.collisions:
+                    self.collisions.append(collidable)
+
                 self.velocity.y = 0
 
             if self.velocity.y < 0:
@@ -179,6 +196,10 @@ class Entity(pygame.sprite.Sprite):
                 self.collide_points['top'] = True
 
                 callback_collision.append('top')
+
+                if collidable not in self.collisions:
+                    self.collisions.append(collidable)
+            
                 self.velocity.y = 0
 
         return callback_collision  
@@ -188,7 +209,7 @@ class Entity(pygame.sprite.Sprite):
             self.velocity.y += GRAVITY * dt if self.velocity.y < MAX_GRAVITY * dt else 0
 
         else:
-            self.velocity.y = GRAVITY * dt
+            self.velocity.y = GRAVITY / dt
 
 class Component(pygame.sprite.Sprite):
     ...
