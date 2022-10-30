@@ -32,7 +32,6 @@ class Sandbox(Scene):
         ramp_c = Ramp(pygame.Vector2(100, 1405), 1, 'right', 4)
         ramp_d = Ramp(pygame.Vector2(292, 1405), 1, 'left', 4)
 
-
         barrier_a = Barrier(pygame.Vector2(500, 1000), pygame.Vector2(250, 100), COLORS[0], self.player, 1)
         barrier_b = Barrier(pygame.Vector2(950, 1200), pygame.Vector2(250, 50), COLORS[1], self.player, 1)
         barrier_c = Barrier(pygame.Vector2(1300, 1250), pygame.Vector2(75, 250), COLORS[2], self.player, 1)
@@ -58,6 +57,7 @@ class Sandbox(Scene):
             )
 
     def display(self, screen, dt):
+        dt = 3 if dt > 3 else dt
         dt = round(dt, 1)
 
         self.background_surface.fill(pygame.Color(0, 0, 0, 0), self.view)
@@ -75,10 +75,8 @@ class Sandbox(Scene):
         self.mouse.display(self, self.player)
 
         cam = self.camera.update(dt)
-        
-        # TODO: set the entity_view's to be larger than the screen view
         self.entity_view.x, self.entity_view.y = cam.x - SCREEN_DIMENSIONS[0], cam.y - SCREEN_DIMENSIONS[1]
-
+        
         screen.blit(self.background_surface, (0, 0))
         screen.blit(self.entity_surface, -cam)
         screen.blit(self.ui_surface, (0, 0))

@@ -11,7 +11,7 @@ from src.engine import (
 )
 
 from src.spritesheet_loader import load_frames
-from src.particle_fx import Circle, Image
+from src.particle_fx import Particle, Circle, Image
 
 from src.entities.tile import Tile
 from src.entities.barrier import Barrier
@@ -161,14 +161,14 @@ class Player(Entity):
         for _ in range(40):
             particles.append(
                 Circle(
-                    Circle.Info(pos + pygame.Vector2(random.randint(-1500, 1500), random.randint(-1500, 1500)), 150, radius=0, width=0),
+                    Particle.Info(150, position=pos + pygame.Vector2(random.randint(-1500, 1500), random.randint(-1500, 1500)), radius=0, width=0),
                     pos, COLOR_VALUES_PRIMARY[self.color], 12, 0, self.strata + 1
                 )
             )
 
         particles.append(
             Circle(
-                Circle.Info(pos, 45, radius=250, width=1),
+                Particle.Info(45, position=pos, radius=250, width=1),
                 pos, 
                 COLOR_VALUES_PRIMARY[self.color],
                 5,
@@ -205,14 +205,14 @@ class Player(Entity):
             particles = list()
             particles.append(
                 Circle(
-                    Circle.Info(pos + pygame.Vector2(-40, 10), 15, radius=0, width=0),
+                    Particle.Info(15, position=pos + pygame.Vector2(-40, 10), radius=0, width=0),
                     pos, pygame.Color(255, 255, 255), 6, 0, self.strata + 1
                 )
             )
 
             particles.append(
                 Circle(
-                    Circle.Info(pos + pygame.Vector2(40, 10), 15, radius=0, width=0),
+                    Particle.Info(15, position=pos + pygame.Vector2(40, 10), radius=0, width=0),
                     pos, pygame.Color(255, 255, 255), 6, 0, self.strata + 1
                 )
             )
@@ -286,7 +286,7 @@ class Player(Entity):
             
             particles.append(
                 Image(
-                    Image.Info(start_pos - offset, 50, 0),
+                    Particle.Info(50, position=start_pos - offset, alpha=0),
                     start_pos - offset, self.image.copy(), ..., 75, self.strata
                 )
             )
@@ -294,9 +294,8 @@ class Player(Entity):
             for _ in range(15):
                 particles.append(
                     Circle(
-                        Circle.Info(
-                            (end_pos + pygame.Vector2(random.randint(-250, 250), random.randint(-250, 250))) + self.velocity * 25, 
-                            100, radius=0, width=0),
+                        Particle.Info(
+                            100, position=end_pos + pygame.Vector2(random.randint(-250, 250), random.randint(-250, 250)) + self.velocity * 25, radius=0, width=0),
                         end_pos, COLOR_VALUES_PRIMARY[self.color], 10, 0, self.strata + 1
                     )
                 )
@@ -605,7 +604,7 @@ class Player(Entity):
 
             particles.append(
                 Circle(
-                    Circle.Info(pos, 27, radius=150, width=1),
+                    Particle.Info(27, position=pos, radius=150, width=1),
                     pos, 
                     COLOR_VALUES_PRIMARY[self.color],
                     5,

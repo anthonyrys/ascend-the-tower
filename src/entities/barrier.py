@@ -4,7 +4,7 @@ from src.constants import (
 )
 
 from src.engine import Entity
-from src.particle_fx import Outline
+from src.particle_fx import Particle, Outline
 
 import pygame
 
@@ -25,7 +25,7 @@ class Barrier(Entity):
         if self.color == self.player.color:
             if self.prev_state:
                 particles = Outline(
-                    Outline.Info(pygame.Vector2(self.image.get_width() * 1.5, self.image.get_height() * 1.5), 30, 1),
+                    Particle.Info(30, dimensions=pygame.Vector2(self.image.get_width() * 1.5, self.image.get_height() * 1.5), size=1),
                     pygame.Vector2(self.rect.center), COLOR_VALUES_PRIMARY[self.color], 3, self.image.copy(), self.strata + 1
                 )
                 

@@ -8,6 +8,40 @@ import pygame
 import random
 import math
 
+class Easings():
+    @staticmethod
+    def ease_in_sine(abs_prog):
+        return 1 - math.cos((abs_prog * math.pi) / 2)
+
+    @staticmethod
+    def ease_in_cubic(abs_prog):
+        return abs_prog * abs_prog * abs_prog
+
+    @staticmethod
+    def ease_in_quint(abs_prog):
+        return abs_prog * abs_prog * abs_prog * abs_prog
+
+    @staticmethod
+    def ease_in_cir(abs_prog):
+        return 1 - math.sqrt(1 - math.pow(abs_prog, 2))
+
+
+    @staticmethod
+    def ease_out_sine(abs_prog):
+        return math.sin((abs_prog * math.PI) / 2)
+
+    @staticmethod
+    def ease_out_cubic(abs_prog):
+        return 1 - math.pow(1 - abs_prog, 3)
+
+    @staticmethod
+    def ease_out_quint(abs_prog):
+        return 1 - math.pow(1 - abs_prog, 5)
+
+    @staticmethod
+    def ease_out_cir(abs_prog):
+        return math.sqrt(1 - math.pow(abs_prog - 1, 2))
+
 class Camera():
     class Box():
         def __init__(self, focus):
@@ -42,7 +76,7 @@ class Camera():
             camera_shake = pygame.Vector2()
             if self.camera_shake_frames > 0:
                 abs_prog = self.camera_shake_frames / self.camera_shake_frames_max
-                intensity = round((self.camera_shake_intensity) * (1 - math.cos((abs_prog * math.pi) / 2)))
+                intensity = round((self.camera_shake_intensity) * Easings.ease_in_sine(abs_prog))
 
                 camera_shake.x = random.randint(-intensity, intensity)
                 camera_shake.y = random.randint(-intensity, intensity)
@@ -61,14 +95,14 @@ class Camera():
             elif self.focus.rect.top < self.box.top:
                 self.box.top = self.focus.rect.top
             
-            offset = (pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake)
+            offset = pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake
 
             if self.camera_tween_frames < self.camera_tween_frames_max:
                 abs_prog = self.camera_tween_frames / self.camera_tween_frames_max
 
                 tweened_offset = self.start_pos + pygame.Vector2(
-                    (offset.x - self.start_pos.x) * (1 - math.pow(1 - abs_prog, 5)),
-                    (offset.y - self.start_pos.y) * (1 - math.pow(1 - abs_prog, 5)),
+                    (offset.x - self.start_pos.x) * Easings.ease_out_quint(abs_prog),
+                    (offset.y - self.start_pos.y) * Easings.ease_out_quint(abs_prog),
                 )
 
                 self.camera_tween_frames += 1 * dt
