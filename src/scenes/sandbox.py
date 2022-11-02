@@ -17,7 +17,7 @@ from src.scenes.scene import Scene
 import pygame
 
 class Sandbox(Scene):
-    def __init__(self, surfaces, mouse, sprites=...):
+    def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
 
         self.player = Player(pygame.Vector2(615, 1200), 2)
@@ -53,7 +53,7 @@ class Sandbox(Scene):
 
         for i in range(250):
             self.add_sprites(
-                Grass(pygame.Vector2(1500 + (i * 9), 1500), 3)
+                Grass(pygame.Vector2(1500 + (i * 9), 1500), 3, self.player)
             )
 
     def display(self, screen, dt):

@@ -5,7 +5,7 @@ from src.entities.interactable import Interactable
 import pygame
 
 class Scene():
-    def __init__(self, surfaces, mouse, sprites=...):
+    def __init__(self, surfaces, mouse, sprites=None):
         self.surfaces = surfaces
         self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
         self.mouse = mouse

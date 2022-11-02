@@ -5,15 +5,15 @@ import pygame
 import os
 
 class Ramp(Entity):
-    def __init__(self, position, ramp_type, direction, strata=...):
-        imgs = load_standard(os.path.join('imgs', 'ramps.png'), os.path.join('data', 'imgs.json'), 'ramps')
+    def __init__(self, position, ramp_type, direction, strata=None):
+        imgs = load_standard(os.path.join('imgs', 'ramps.png'), 'ramps')
         img = imgs[ramp_type]
         img = pygame.transform.scale(img, (96, 96)).convert_alpha()
 
         if direction == 'left':
             img = pygame.transform.flip(img, True, False).convert_alpha()
 
-        super().__init__(position, img, ..., strata)
+        super().__init__(position, img, None, strata)
 
         self.ramp_type = ramp_type
         self.direction = direction

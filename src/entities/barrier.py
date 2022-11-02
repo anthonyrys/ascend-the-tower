@@ -9,7 +9,7 @@ from src.particle_fx import Particle, Outline
 import pygame
 
 class Barrier(Entity):
-    def __init__(self, position, dimensions, color, player, strata=...):
+    def __init__(self, position, dimensions, color, player, strata=None):
         super().__init__(position, pygame.Color((COLOR_VALUES[color])), dimensions, strata) 
         
         self.image.convert_alpha()

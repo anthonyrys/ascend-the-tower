@@ -115,7 +115,7 @@ class Camera():
                 return offset
 
 class Entity(pygame.sprite.Sprite):
-    def __init__(self, position, img, dimensions, strata, alpha=...):
+    def __init__(self, position, img, dimensions, strata, alpha=None):
         pygame.sprite.Sprite.__init__(self)
         self.active = True
         self.strata = strata
@@ -131,7 +131,7 @@ class Entity(pygame.sprite.Sprite):
 
         self.original_image = self.image
 
-        if alpha != ...:
+        if alpha:
             self.image.set_alpha(alpha)
 
         self.rect = self.image.get_bounding_rect()

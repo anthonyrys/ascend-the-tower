@@ -12,7 +12,7 @@ class Particle(Entity):
             for k, v in info.items():
                 self.info[k] = v
             
-    def __init__(self, info_class, position, img, dimensions, strata, alpha=...):
+    def __init__(self, info_class, position, img, dimensions, strata, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
 
         self.info = info_class.info
@@ -25,7 +25,7 @@ class Particle(Entity):
 
 class Outline(Particle):
     def __init__(self, info_class, position, color, size, img, strata):
-        super().__init__(info_class, position, img, ..., strata)
+        super().__init__(info_class, position, img, None, strata)
 
         self.base_dimensions = pygame.Vector2(self.image.get_width(), self.image.get_height())
         self.dimensions = self.base_dimensions

@@ -2,7 +2,7 @@ import pygame
 import json
 import os
 
-def load_standard(pngpath, jsonpath, name):
+def load_standard(pngpath, name):
     jsonpath = os.path.join('data', 'imgs.json')
     sheet, data = None, None
     imgs = list()

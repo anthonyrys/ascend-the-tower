@@ -23,8 +23,8 @@ import random
 import os
 
 class Player(Entity):
-    def __init__(self, position, strata=...):
-        super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), ..., strata)
+    def __init__(self, position, strata=None):
+        super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), None, strata)
 
         self.spawn_location = position
         self.rect_offset = pygame.Vector2(self.rect.width / 2, 0)
@@ -287,7 +287,7 @@ class Player(Entity):
             particles.append(
                 Image(
                     Particle.Info(50, position=start_pos - offset, alpha=0),
-                    start_pos - offset, self.image.copy(), ..., 75, self.strata
+                    start_pos - offset, self.image.copy(), None, 75, self.strata
                 )
             )
 

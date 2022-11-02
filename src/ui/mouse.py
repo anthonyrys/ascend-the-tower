@@ -15,7 +15,7 @@ import os
 
 class Mouse(pygame.sprite.Sprite):
     def __init__(self):
-        self.images = load_standard(os.path.join('imgs', 'mouse.png'), os.path.join('data', 'imgs.json'), 'mouse')
+        self.images = load_standard(os.path.join('imgs', 'mouse.png'), 'mouse')
         for i in range(len(self.images)):
             self.images[i-1] = pygame.transform.scale(self.images[i-1], pygame.Vector2(32, 32))
 
@@ -50,8 +50,8 @@ class Mouse(pygame.sprite.Sprite):
     def set_image(self, player):
         ...
 
-    def display(self, scene, player=...):
-        if player == ...:  
+    def display(self, scene, player=None):
+        if not player:  
             self.rect.center = pygame.mouse.get_pos()
             scene.ui_surface.blit(self.image, self.rect)
             
