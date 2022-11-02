@@ -39,9 +39,10 @@ class Grass(Entity):
         self.max_focus_rotation = round(self.rect.height * 2.2)
         self.rotation_focus_ratio = 1
 
-        self.sin_frequency = .01 + round((self.rect.height * 0.0005 * random.randint(1, 2)), 2)
+        self.sin_frequency = .01 + round(self.rect.height * 0.0008, 2)
         self.sin_amplifier = random.randint(1, 4)
-        self.frame_rand = random.randint(-5, 5)
+        self.sin_rotation = 0
+        self.frame_rand = random.randint(-2, 2)
 
     def apply_focus_rotation(self, dt):
         if not self.focus:
@@ -95,23 +96,26 @@ class Grass(Entity):
         if self.rotation_focus_ratio - .1 > 0:
             self.rotation_focus_ratio -= .1
 
-    def apply_passive_rotation(self, dt, frames):
-        sin_val = round(self.sin_amplifier * math.sin(self.sin_frequency * (frames + self.frame_rand))) * dt
-        if sin_val < 0:
-            sin_val += self.rotation_focus_ratio
-        if sin_val > 0:
-            sin_val -= self.rotation_focus_ratio
+    def apply_passive_rotation(self, frames):
+        self.sin_rotation = round(self.sin_amplifier * math.sin(self.sin_frequency * (frames + self.frame_rand)))
+        if self.sin_rotation < 0:
+            self.sin_rotation += self.rotation_focus_ratio * self.sin_amplifier
+        if self.sin_rotation > 0:
+            self.sin_rotation -= self.rotation_focus_ratio * self.sin_amplifier
 
-        self.current_rotation = self.focus_rotation + sin_val
+        self.current_rotation = self.focus_rotation + self.sin_rotation
+
+        if self.sin_rotation < 0:
+            self.sin_rotation = 0
 
     def display(self, scene, dt):
         self.apply_focus_rotation(dt)
-        self.apply_passive_rotation(dt, scene.frames)
+        self.apply_passive_rotation(scene.frames)
 
         rect = self.image.get_rect(center = (self.original_position.x - self.rotation_point.x, self.original_position.y - self.rotation_point.y))
         offset = (self.original_position - rect.center).rotate(-self.current_rotation)
 
         self.image = pygame.transform.rotate(self.original_image, self.current_rotation).convert_alpha()
-        self.rect = self.image.get_rect(midtop = ((self.original_position.x - offset.x), self.original_position.y - offset.y))
+        self.rect = self.image.get_rect(midtop = ((self.original_position.x - offset.x), self.original_position.y - offset.y - (self.sin_rotation / self.sin_amplifier)))
 
         scene.entity_surface.blit(self.image, self.rect)

@@ -81,5 +81,5 @@ class Sandbox(Scene):
         screen.blit(self.entity_surface, -cam)
         screen.blit(self.ui_surface, (0, 0))
 
-        self.frames += 1
+        self.frames += round(1 * dt)
     
