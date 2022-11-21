@@ -7,6 +7,19 @@ from src.constants import (
 import pygame
 import random
 import math
+import os
+
+class Fonts():
+    FONT_SIZE = 30
+    fonts = dict()
+
+    @staticmethod
+    def init():
+        for font_name in pygame.font.get_fonts():
+            Fonts.fonts[font_name] = {
+                'object': pygame.font.SysFont(font_name, Fonts.FONT_SIZE),
+                'path': pygame.font.match_font(font_name)
+            }
 
 class Easings():
     @staticmethod

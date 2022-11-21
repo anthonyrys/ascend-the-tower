@@ -45,7 +45,7 @@ class Mouse(pygame.sprite.Sprite):
         if not interactable_sprites:
             return
 
-        get_closest_sprite(scene.player, interactable_sprites).on_select(scene.player)
+        get_closest_sprite(scene.player, interactable_sprites).on_select()
 
     def set_image(self, player):
         ...

@@ -16,14 +16,18 @@ if __name__ == '__main__':
         SCREEN_DIMENSIONS,
         SCREEN_COLOR
     )
-    
+    from src.engine import Fonts
+
     from src.scenes.scene_handler import SceneHandler
 
     import pygame
     import sys
 
+    pygame.font.init()
     pygame.mixer.init()
     pygame.init()
+
+    Fonts.init()
 
     pygame.display.set_caption(TITLE)
     pygame.mouse.set_visible(False)

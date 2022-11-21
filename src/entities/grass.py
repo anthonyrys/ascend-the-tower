@@ -20,6 +20,7 @@ class Grass(Entity):
         img = pygame.transform.scale(img, pygame.Vector2(img.get_width() * 2, img.get_height() * 2))
         if random.randint(0, 1) == 1:
             img = pygame.transform.flip(img, True, False)
+            
         img.set_colorkey(pygame.Color(0, 0, 0))
         
         super().__init__(position, img, None, strata)

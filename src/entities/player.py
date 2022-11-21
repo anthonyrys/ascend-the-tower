@@ -375,7 +375,7 @@ class Player(Entity):
                 else:
                     if abs(self.rect.right - barrier.rect.left) > 12:
                         self.collision_ignore.append(barrier)
-                        self.velocity.x = -28
+                        self.velocity.x = -(self.per_frame_movespeed * 7)
                     
                     else:
                         self.rect.right = barrier.rect.left
@@ -407,7 +407,7 @@ class Player(Entity):
                 else:
                     if abs(self.rect.left - barrier.rect.right) > 12:
                         self.collision_ignore.append(barrier)
-                        self.velocity.x = 28
+                        self.velocity.x = (self.per_frame_movespeed * 7)
                     
                     else:
                         self.rect.left = barrier.rect.right
@@ -444,7 +444,7 @@ class Player(Entity):
                 self.collision_ignore.append(platform)
                 continue
 
-            if self.velocity.y > 0 and self.rect.bottom <= platform.rect.top + self.velocity.y:
+            if self.velocity.y > 0 and self.rect.bottom <= platform.rect.top + (self.velocity.y * dt):
                 self.rect.bottom = platform.rect.top
                 self.collide_points['bottom'] = True
 
@@ -635,6 +635,12 @@ class Player(Entity):
             if self.pressed['ability']:
                 self.on_ability(scene, dt)
 
+            if abs(self.velocity.x) < self.per_frame_movespeed:
+                self.velocity.x = 0
+
+            if self.interact_obj:
+                self.interact_obj.apply_interact_effect(self)
+
             self.rect.x += self.velocity.x * dt
             if (self.apply_collision_x(scene)):
                 self.on_death(scene)
@@ -644,9 +650,6 @@ class Player(Entity):
                 )
                 
                 return
-            
-            if self.interact_obj:
-                self.interact_obj.apply_interact_effect(self)
 
             self.rect.y += self.velocity.y * dt
             self.apply_collision_y(scene, dt)

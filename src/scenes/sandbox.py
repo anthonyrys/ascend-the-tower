@@ -11,6 +11,7 @@ from src.entities.barrier import Barrier
 from src.entities.grass import Grass
 from src.entities.platform import Platform
 from src.entities.ramp import Ramp
+from src.entities.rock import Rock
 
 from src.scenes.scene import Scene
 
@@ -20,8 +21,10 @@ class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
 
-        self.player = Player(pygame.Vector2(615, 1200), 2)
+        self.player = Player(pygame.Vector2(615, 1200), 3)
         floor = Tile(pygame.Vector2(0, 1500), pygame.Color(255, 255, 255), pygame.Vector2(5000, 20), 4) 
+        wall_a = Tile(pygame.Vector2(-20, 0), pygame.Color(255, 255, 255), pygame.Vector2(20, 1500), 4)
+        wall_b = Tile(pygame.Vector2(5000, 0), pygame.Color(255, 255, 255), pygame.Vector2(20, 1500), 4)
 
         block_a = Tile(pygame.Vector2(596, 1405), pygame.Color(255, 255, 255), pygame.Vector2(48, 96), 4)  
         block_b = Tile(pygame.Vector2(836, 1405), pygame.Color(255, 255, 255), pygame.Vector2(48, 96), 4)  
@@ -44,16 +47,21 @@ class Sandbox(Scene):
         self.entity_view = pygame.Rect(0, 0, SCREEN_DIMENSIONS[0] * 2, SCREEN_DIMENSIONS[1] * 3)
 
         self.add_sprites(
-            self.player, floor, 
+            self.player, floor, wall_a, wall_b,
             block_a, block_b, block_c,
             barrier_a, barrier_b, barrier_c,
             platform_a,
-            ramp_a, ramp_b, ramp_c, ramp_d
+            ramp_a, ramp_b, ramp_c, ramp_d,
         )
 
         for i in range(250):
             self.add_sprites(
                 Grass(pygame.Vector2(1500 + (i * 9), 1500), 3, self.player)
+            )
+
+        for i in range(3):
+            self.add_sprites(
+                Rock(pygame.Vector2(100 + (i * 200), 1250), pygame.Vector2(50, 50), 2)
             )
 
     def display(self, screen, dt):

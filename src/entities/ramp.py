@@ -8,7 +8,16 @@ class Ramp(Entity):
     def __init__(self, position, ramp_type, direction, strata=None):
         imgs = load_standard(os.path.join('imgs', 'ramps.png'), 'ramps')
         img = imgs[ramp_type]
-        img = pygame.transform.scale(img, (96, 96)).convert_alpha()
+
+        if ramp_type == 1:
+            surf = pygame.Surface(pygame.Vector2(16, 8)).convert_alpha()
+            surf.blit(img, (0, -8))
+            surf.set_colorkey(pygame.Color(0, 0, 0))
+
+            img = surf
+            position.y += img.get_height() * 6
+
+        img = pygame.transform.scale(img, (img.get_width() * 6, img.get_height() * 6)).convert_alpha()
 
         if direction == 'left':
             img = pygame.transform.flip(img, True, False).convert_alpha()
@@ -24,7 +33,8 @@ class Ramp(Entity):
     def get_y_value(self, sprite):
         if self.direction == 'right':
             dist = self.rect.left - sprite.rect.right
-            if self.rect.left - sprite.rect.right >= 0:
+
+            if dist >= 0:
                 return sprite.rect.bottom
             
             abs_pos = (abs(dist))
