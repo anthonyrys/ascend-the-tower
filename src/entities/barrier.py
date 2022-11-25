@@ -10,7 +10,7 @@ import pygame
 
 class Barrier(Entity):
     def __init__(self, position, dimensions, color, player, strata=None):
-        super().__init__(position, pygame.Color((COLOR_VALUES[color])), dimensions, strata) 
+        super().__init__(position, COLOR_VALUES[color], dimensions, strata) 
         
         self.image.convert_alpha()
         self.player = player
@@ -25,8 +25,8 @@ class Barrier(Entity):
         if self.color == self.player.color:
             if self.prev_state:
                 particles = Outline(
-                    Particle.Info(30, dimensions=pygame.Vector2(self.image.get_width() * 1.5, self.image.get_height() * 1.5), size=1),
-                    pygame.Vector2(self.rect.center), COLOR_VALUES_PRIMARY[self.color], 3, self.image.copy(), self.strata + 1
+                    Particle.Info(30, dimensions=(self.image.get_width() * 1.5, self.image.get_height() * 1.5), size=1),
+                    self.rect.topleft, COLOR_VALUES_PRIMARY[self.color], 3, self.image.copy()
                 )
                 
                 scene.add_sprites(particles)
@@ -46,4 +46,4 @@ class Barrier(Entity):
 
     def display(self, scene, dt):
         self.set_color(scene)
-        scene.entity_surface.blit(self.image, self.rect)
+        super().display(scene, dt)

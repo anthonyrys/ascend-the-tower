@@ -9,15 +9,20 @@ class Ramp(Entity):
         imgs = load_standard(os.path.join('imgs', 'ramps.png'), 'ramps')
         img = imgs[ramp_type]
 
+        position = list(position)
+
         if ramp_type == 1:
-            surf = pygame.Surface(pygame.Vector2(16, 8)).convert_alpha()
-            surf.blit(img, (0, -8))
-            surf.set_colorkey(pygame.Color(0, 0, 0))
+            img_size = img.get_size()
+
+            surf = pygame.Surface((img_size[0], img_size[1] / 2)).convert_alpha()
+            surf.blit(img, (0, -img_size[1] / 2))
+            surf.set_colorkey((0, 0, 0))
 
             img = surf
-            position.y += img.get_height() * 6
-
-        img = pygame.transform.scale(img, (img.get_width() * 6, img.get_height() * 6)).convert_alpha()
+            position[1] += img.get_height() * 6
+            
+        img_size = img.get_size()
+        img = pygame.transform.scale(img, (img_size[0] * 6, img_size[1] * 6)).convert_alpha()
 
         if direction == 'left':
             img = pygame.transform.flip(img, True, False).convert_alpha()
@@ -57,5 +62,5 @@ class Ramp(Entity):
             return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
 
     def display(self, scene, dt):
-        scene.entity_surface.blit(self.image, self.rect)
+        super().display(scene, dt)
         

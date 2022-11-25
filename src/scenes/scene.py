@@ -1,6 +1,5 @@
-from src.engine import Entity
-
 from src.entities.interactable import Interactable
+from src.particle_fx import Particle
 
 import pygame
 
@@ -10,9 +9,12 @@ class Scene():
         self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
         self.mouse = mouse
 
+        self.paused = False
+
         self.sprites = sprites if isinstance(sprites, list) else list()
         self.frames = 0
-    
+        self.raw_frames = 0
+
     @staticmethod
     def sort_sprites(sprites):
         display_order = dict()
@@ -33,6 +35,17 @@ class Scene():
             display_order[-1] = list()
 
             for sprite in unlabled:
+                if isinstance(sprite, Particle):
+                    strata = len(display_order) + 1
+
+                    if strata in display_order:
+                        display_order[strata].append(sprite)
+
+                    else:
+                        display_order[strata] = list([sprite])
+                        
+                    continue
+                
                 display_order[-1].append(sprite)
 
         return display_order

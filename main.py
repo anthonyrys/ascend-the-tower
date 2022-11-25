@@ -5,7 +5,7 @@ def main(screen, clock, scene_handler):
         screen.fill(SCREEN_COLOR)
 
         quit = scene_handler.update()
-        pygame.display.update()
+        pygame.display.flip()
 
         clock.tick(FRAME_RATE)
 
@@ -22,9 +22,7 @@ if __name__ == '__main__':
 
     import pygame
     import sys
-
-    pygame.font.init()
-    pygame.mixer.init()
+    
     pygame.init()
 
     Fonts.init()
@@ -32,7 +30,7 @@ if __name__ == '__main__':
     pygame.display.set_caption(TITLE)
     pygame.mouse.set_visible(False)
 
-    screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
+    screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.RESIZABLE)
     main(screen, pygame.time.Clock(), SceneHandler(screen))
     
     pygame.quit()

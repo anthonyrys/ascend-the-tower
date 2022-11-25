@@ -7,19 +7,13 @@ from src.constants import (
 import pygame
 import random
 import math
-import os
 
 class Fonts():
-    FONT_SIZE = 30
     fonts = dict()
+    font_styles = {}
 
-    @staticmethod
     def init():
-        for font_name in pygame.font.get_fonts():
-            Fonts.fonts[font_name] = {
-                'object': pygame.font.SysFont(font_name, Fonts.FONT_SIZE),
-                'path': pygame.font.match_font(font_name)
-            }
+        ...
 
 class Easings():
     @staticmethod
@@ -59,15 +53,15 @@ class Camera():
     class Box():
         def __init__(self, focus):
             self.focus = focus
-            self.offset = pygame.Vector2()
+            self.offset = (0, 0)
 
-            self.box_dimensions = pygame.Vector2(555, 265)
+            self.box_dimensions = (555, 265)
             self.box = pygame.Rect(
-                self.box_dimensions.x,
-                self.box_dimensions.y,
+                self.box_dimensions[0],
+                self.box_dimensions[1],
 
-                SCREEN_DIMENSIONS.x - (self.box_dimensions.x * 2),
-                SCREEN_DIMENSIONS.y - (self.box_dimensions.y * 2)
+                SCREEN_DIMENSIONS[0] - (self.box_dimensions[0] * 2),
+                SCREEN_DIMENSIONS[1] - (self.box_dimensions[1] * 2)
             )
 
             self.camera_shake_frames_max, self.camera_shake_frames = 0, 0
@@ -83,16 +77,16 @@ class Camera():
         def set_camera_tween(self, frames):
             self.camera_tween_frames_max = frames
             self.camera_tween_frames = 0
-            self.start_pos = pygame.Vector2(self.box.topleft) - self.box_dimensions
+            self.start_pos = (self.box.topleft[0] - self.box_dimensions[0], self.box.topleft[1] - self.box_dimensions[1])
 
         def update(self, dt):
-            camera_shake = pygame.Vector2()
+            camera_shake = [0, 0]
             if self.camera_shake_frames > 0:
                 abs_prog = self.camera_shake_frames / self.camera_shake_frames_max
                 intensity = round((self.camera_shake_intensity) * Easings.ease_in_sine(abs_prog))
 
-                camera_shake.x = random.randint(-intensity, intensity)
-                camera_shake.y = random.randint(-intensity, intensity)
+                camera_shake[0] = random.randint(-intensity, intensity)
+                camera_shake[1] = random.randint(-intensity, intensity)
 
                 self.camera_shake_frames -= 1 * dt
 
@@ -108,24 +102,27 @@ class Camera():
             elif self.focus.rect.top < self.box.top:
                 self.box.top = self.focus.rect.top
             
-            offset = pygame.Vector2(self.box.x, self.box.y) - self.box_dimensions + camera_shake
+            offset = (
+                self.box[0] - self.box_dimensions[0] + camera_shake[0], 
+                self.box[1] - self.box_dimensions[1] + camera_shake[1]
+                )
 
             if self.camera_tween_frames < self.camera_tween_frames_max:
                 abs_prog = self.camera_tween_frames / self.camera_tween_frames_max
 
-                tweened_offset = self.start_pos + pygame.Vector2(
-                    (offset.x - self.start_pos.x) * Easings.ease_out_quint(abs_prog),
-                    (offset.y - self.start_pos.y) * Easings.ease_out_quint(abs_prog),
+                tweened_offset = (
+                    self.start_pos[0] + ((offset[0] - self.start_pos[0]) * Easings.ease_out_quint(abs_prog)),
+                    self.start_pos[1] + ((offset[1] - self.start_pos[1]) * Easings.ease_out_quint(abs_prog)),
                 )
 
                 self.camera_tween_frames += 1 * dt
 
                 self.offset = tweened_offset
-                return tweened_offset
+                return list(tweened_offset)
 
             else:
                 self.offset = offset
-                return offset
+                return list(offset)
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, position, img, dimensions, strata, alpha=None):
@@ -133,24 +130,30 @@ class Entity(pygame.sprite.Sprite):
         self.active = True
         self.strata = strata
 
-        if isinstance(img, pygame.Color):
+        if isinstance(img, tuple):
             self.image = pygame.Surface(dimensions).convert_alpha()
-            self.image.set_colorkey(pygame.Color(0, 0, 0))
+            self.image.set_colorkey((0, 0, 0))
             
             self.image.fill(img)
 
+            self.original_image = pygame.Surface(dimensions).convert_alpha()
+            self.original_image.set_colorkey((0, 0, 0))
+            
+            self.original_image.fill(img)
+
         else:
             self.image = img
-
-        self.original_image = self.image
+            self.original_image = img
 
         if alpha:
             self.image.set_alpha(alpha)
 
         self.rect = self.image.get_bounding_rect()
         self.rect.x, self.rect.y = position
+        self.rect_offset = (0, 0)
         
-        self.original_rect = self.rect
+        self.original_rect = self.image.get_bounding_rect()
+        self.original_rect.x, self.original_rect.y = position
 
         self.collide_points = {
             'top': False, 
@@ -162,7 +165,7 @@ class Entity(pygame.sprite.Sprite):
         self.collisions = list()
         self.collision_ignore = list()
 
-        self.velocity = pygame.Vector2()
+        self.velocity = [0, 0]
 
     @property
     def mask(self):
@@ -170,7 +173,10 @@ class Entity(pygame.sprite.Sprite):
 
     # <overridden by child classes>
     def display(self, scene, dt):
-        ...
+        scene.entity_surface.blit(
+            self.image, 
+            (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
+        )
 
     def apply_collision_x_default(self, collidables):
         callback_collision = list()
@@ -188,7 +194,7 @@ class Entity(pygame.sprite.Sprite):
             if collidable in self.collision_ignore:
                 continue
 
-            if self.velocity.x > 0:
+            if self.velocity[0] > 0:
                 self.rect.right = collidable.rect.left
                 self.collide_points['right'] = True
 
@@ -197,9 +203,9 @@ class Entity(pygame.sprite.Sprite):
                 if collidable not in self.collisions:
                     self.collisions.append(collidable)
        
-                self.velocity.x = 0
+                self.velocity[1] = 0
 
-            if self.velocity.x < 0:
+            if self.velocity[1] < 0:
                 self.rect.left = collidable.rect.right
                 self.collide_points['left'] = True
 
@@ -207,7 +213,7 @@ class Entity(pygame.sprite.Sprite):
                     self.collisions.append(collidable)
 
                 callback_collision.append('left')
-                self.velocity.x = 0
+                self.velocity[1] = 0
 
         return callback_collision
 
@@ -227,7 +233,7 @@ class Entity(pygame.sprite.Sprite):
             if collidable in self.collision_ignore:
                 continue
 
-            if self.velocity.y > 0:
+            if self.velocity[1] > 0:
                 self.rect.bottom = collidable.rect.top
                 self.collide_points['bottom'] = True
 
@@ -236,9 +242,9 @@ class Entity(pygame.sprite.Sprite):
                 if collidable not in self.collisions:
                     self.collisions.append(collidable)
 
-                self.velocity.y = 0
+                self.velocity[1] = 0
 
-            if self.velocity.y < 0:
+            if self.velocity[1] < 0:
                 self.rect.top = collidable.rect.bottom
                 self.collide_points['top'] = True
 
@@ -247,19 +253,63 @@ class Entity(pygame.sprite.Sprite):
                 if collidable not in self.collisions:
                     self.collisions.append(collidable)
             
-                self.velocity.y = 0
+                self.velocity[1] = 0
 
         return callback_collision  
 
     def apply_gravity(self, dt):
         if not self.collide_points['bottom']:
-            self.velocity.y += GRAVITY * dt if self.velocity.y < MAX_GRAVITY * dt else 0
+            self.velocity[1] += GRAVITY * dt if self.velocity[1] < MAX_GRAVITY * dt else 0
 
         else:
-            self.velocity.y = GRAVITY / dt
+            if dt == 0:
+                self.velocity[1] = 0
+
+            else:
+                self.velocity[1] = GRAVITY / dt
 
 class Component(pygame.sprite.Sprite):
-    ...
+    def __init__(self, position, img, dimensions, strata, alpha=None):
+        pygame.sprite.Sprite.__init__(self)
+        self.active = True
+        self.strata = strata
+
+        if isinstance(img, tuple):
+            self.image = pygame.Surface(dimensions).convert_alpha()
+            self.image.set_colorkey((0, 0, 0))
+            
+            self.image.fill(img)
+
+            self.original_image = pygame.Surface(dimensions).convert_alpha()
+            self.original_image.set_colorkey((0, 0, 0))
+            
+            self.original_image.fill(img)
+
+        else:
+            self.image = img
+            self.original_image = img
+
+        if alpha:
+            self.image.set_alpha(alpha)
+
+        self.rect = self.image.get_bounding_rect()
+        self.rect.x, self.rect.y = position
+        
+        self.original_rect = self.image.get_bounding_rect()
+        self.original_rect.x, self.original_rect.y = position
+
+        self.global_offset = (0, 0)
+
+    @property
+    def mask(self):
+        return pygame.mask.from_surface(self.image)
+
+    # <overridden by child classes>
+    def display(self, scene, dt):
+        scene.ui_surface.blit(
+            self.image, 
+            (self.rect.x + self.global_offset.x, self.rect.y + self.global_offset.y, 0, 0),
+        )
 
 def check_pixel_collision(primary_sprite, secondary_sprite):
     collision = None
@@ -308,19 +358,19 @@ def get_closest_sprite(primary_sprite, sprites):
 def create_outline(sprite, color, display, size=1):
     surface = sprite.mask.to_surface(
         setcolor=color, 
-        unsetcolor=pygame.Color(0, 0, 0, 0)
+        unsetcolor=(0, 0, 0, 0)
     )
-    surface.set_colorkey(pygame.Color(0, 0, 0))
+    surface.set_colorkey((0, 0, 0))
 
     for i in range(size):
-        display.blit(surface, pygame.Vector2(sprite.rect.x - i, sprite.rect.y))
-        display.blit(surface, pygame.Vector2(sprite.rect.x + i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
 
-        display.blit(surface, pygame.Vector2(sprite.rect.x, sprite.rect.y - i))
-        display.blit(surface, pygame.Vector2(sprite.rect.x, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
 
-        display.blit(surface, pygame.Vector2(sprite.rect.x - i, sprite.rect.y - i))
-        display.blit(surface, pygame.Vector2(sprite.rect.x + i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
 
-        display.blit(surface, pygame.Vector2(sprite.rect.x - i, sprite.rect.y + i))
-        display.blit(surface, pygame.Vector2(sprite.rect.x + i, sprite.rect.y - i))  
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  

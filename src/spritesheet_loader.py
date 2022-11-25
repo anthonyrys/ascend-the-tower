@@ -18,8 +18,8 @@ def load_standard(pngpath, name):
         x = width * i
 
         img = pygame.Surface((width, height)).convert_alpha()
-        img.set_colorkey(pygame.Color((0, 0, 0)))
-        img.blit(sheet, pygame.Vector2(0, 0), (x, 0, width, height))
+        img.set_colorkey((0, 0, 0))
+        img.blit(sheet, (0, 0), (x, 0, width, height))
 
         imgs.append(img)
 
@@ -40,8 +40,8 @@ def load_frames(pngpath, jsonpath):
         duration = data['frames'][f'{i}']['duration']
 
         img = pygame.Surface((width, height)).convert_alpha()
-        img.set_colorkey(pygame.Color((0, 0, 0)))
-        img.blit(sheet, pygame.Vector2(0, 0), (x, 0, width, height))
+        img.set_colorkey((0, 0, 0))
+        img.blit(sheet, (0, 0), (x, 0, width, height))
 
         for _ in range(duration):
             imgs.append(img)

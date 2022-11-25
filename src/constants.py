@@ -1,32 +1,29 @@
-import pygame
-
 TITLE = 'untitled'
 FRAME_RATE = 30
 
-SCREEN_DIMENSIONS = pygame.Vector2(1280, 720)
-SCREEN_COLOR = pygame.Color(44, 44, 44)
+SCREEN_DIMENSIONS = (1280, 720)
+SCREEN_COLOR = (44, 44, 44)
 
-BG_COLOR = pygame.Color(40, 40, 40)
+BG_COLOR = (40, 40, 40)
 
 GRAVITY = 2
 MAX_GRAVITY = 30
 
-
 COLORS = ['red', 'blue', 'yellow']
 COLOR_VALUES = {
-    COLORS[0]: pygame.Color(245, 84, 66),
-    COLORS[1]: pygame.Color(66, 84, 245),
-    COLORS[2]: pygame.Color(235, 235, 84)
+    COLORS[0]: (245, 84, 66),
+    COLORS[1]: (66, 84, 245),
+    COLORS[2]: (235, 235, 84)
 }
 
 COLOR_VALUES_PRIMARY = {
-    COLORS[0]: pygame.Color(255, 94, 76),
-    COLORS[1]: pygame.Color(76, 94, 255),
-    COLORS[2]: pygame.Color(245, 245, 124)
+    COLORS[0]: (255, 94, 76),
+    COLORS[1]: (76, 94, 255),
+    COLORS[2]: (245, 245, 124)
 }
 
 COLOR_VALUES_SECONDARY = {
-    COLORS[0]: pygame.Color(255, 114, 96),
-    COLORS[1]: pygame.Color(96, 114, 255),
-    COLORS[2]: pygame.Color(255, 255, 164)
+    COLORS[0]: (255, 114, 96),
+    COLORS[1]: (96, 114, 255),
+    COLORS[2]: (255, 255, 164)
 }

@@ -15,7 +15,7 @@ class Interactable(Entity):
         
     # <overridden by child classes>
     def display(self, scene, dt):
-        ...
+        super().display(scene, dt)
 
     # <overridden by child classes>
     def on_select(self):

@@ -5,4 +5,4 @@ class Tile(Entity):
         super().__init__(position, img, dimensions, strata)
 
     def display(self, scene, dt):
-        scene.entity_surface.blit(self.image, self.rect)
+        super().display(scene, dt)

@@ -24,33 +24,44 @@ class Particle(Entity):
         ...
 
 class Outline(Particle):
-    def __init__(self, info_class, position, color, size, img, strata):
-        super().__init__(info_class, position, img, None, strata)
+    def __init__(self, info_class, position, color, size, img):
+        super().__init__(info_class, position, img, None, None)
 
-        self.base_dimensions = pygame.Vector2(self.image.get_width(), self.image.get_height())
+        self.base_dimensions = self.image.get_size()
         self.dimensions = self.base_dimensions
         self.base_size, self.size = size, size
         self.position = position
         self.color = color
 
     def display(self, scene, dt):
+        if scene.paused:
+            outline = self.mask.outline()
+            for i, pixel in enumerate(outline):
+                outline[i] = (pixel[0] + self.rect.x, pixel[1] + self.rect.y)
+
+            pygame.draw.polygon(scene.entity_surface, self.color, outline, self.size)
+            return
+
         if self.frame_count > self.speed:
             scene.del_sprites(self)
             return
 
         abs_prog = self.frame_count / self.speed
 
+        tween_size_x = round(((self.info['dimensions'][0] - self.base_dimensions[0]) * Easings.ease_out_cubic(abs_prog)))
+        tween_size_y = round(((self.info['dimensions'][1] - self.base_dimensions[1]) * Easings.ease_out_cubic(abs_prog)))
+
         self.image = pygame.transform.scale(
-            self.image, 
-            pygame.Vector2(
-                self.base_dimensions.x + round(((self.info['dimensions'].x - self.base_dimensions.x) * Easings.ease_out_cubic(abs_prog))),
-                self.base_dimensions.y +  round(((self.info['dimensions'].y - self.base_dimensions.y) * Easings.ease_out_cubic(abs_prog)))
+            self.image, (
+                self.base_dimensions[0] + tween_size_x,
+                self.base_dimensions[1] + tween_size_y
             )
         )
             
         self.size = self.base_size + round((self.info['size'] - self.base_size) * Easings.ease_in_quint(abs_prog))
-        self.rect.x = self.position.x - self.image.get_width() / 2
-        self.rect.y = self.position.y - self.image.get_height() / 2
+
+        self.rect.x = self.position[0] - (tween_size_x / 2)
+        self.rect.y = self.position[1] - (tween_size_y / 2)
 
         outline = self.mask.outline()
         for i, pixel in enumerate(outline):
@@ -61,8 +72,8 @@ class Outline(Particle):
         self.frame_count += 1 * dt
 
 class Circle(Particle):
-    def __init__(self, info_class, position, color, radius, width, strata):
-        super().__init__(info_class, position, pygame.Color(0, 0, 0, 0), pygame.Vector2(radius * 2, radius * 2), strata)
+    def __init__(self, info_class, position, color, radius, width):
+        super().__init__(info_class, position, (0, 0, 0, 0), (radius * 2, radius * 2), None)
 
         self.position, self.base_position = position, position
         self.radius, self.base_radius = radius, radius
@@ -71,15 +82,23 @@ class Circle(Particle):
         self.color = color
 
     def display(self, scene, dt):
+        if scene.paused:
+            pygame.draw.circle(
+                scene.entity_surface, 
+                self.color, self.rect.center, self.radius, self.width
+            )
+
+            return
+
         if self.frame_count > self.speed:
             scene.del_sprites(self)
             return
 
         abs_prog = self.frame_count / self.speed
 
-        self.rect.center = self.base_position + pygame.Vector2(
-            (self.info['position'].x - self.base_position.x) * (1 - pow(1 - abs_prog, 4)),
-            (self.info['position'].y - self.base_position.y) * (1 - pow(1 - abs_prog, 4)),
+        self.rect.center = (
+            self.base_position[0] + (self.info['position'][0] - self.base_position[0]) * (1 - pow(1 - abs_prog, 4)),
+            self.base_position[1] + (self.info['position'][1] - self.base_position[1]) * (1 - pow(1 - abs_prog, 4)),
         )
 
         self.radius = self.base_radius + ((self.info['radius'] - self.base_radius) * Easings.ease_out_cubic(abs_prog))
@@ -93,13 +112,17 @@ class Circle(Particle):
         self.frame_count += 1 * dt
 
 class Image(Particle):
-    def __init__(self, info_class, position, color, dimensions, alpha, strata):
-        super().__init__(info_class, position, color, dimensions, strata, alpha)
+    def __init__(self, info_class, position, color, dimensions, alpha):
+        super().__init__(info_class, position, color, dimensions, None, alpha)
 
         self.base_position = position
         self.base_alpha = alpha
 
     def display(self, scene, dt):
+        if scene.paused:
+            scene.entity_surface.blit(self.image, self.rect)
+            return
+
         if self.frame_count > self.speed:
             scene.del_sprites(self)
             return
