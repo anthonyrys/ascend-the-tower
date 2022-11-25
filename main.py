@@ -30,7 +30,7 @@ if __name__ == '__main__':
     pygame.display.set_caption(TITLE)
     pygame.mouse.set_visible(False)
 
-    screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.RESIZABLE)
+    screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
     main(screen, pygame.time.Clock(), SceneHandler(screen))
     
     pygame.quit()

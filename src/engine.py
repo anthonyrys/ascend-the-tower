@@ -12,6 +12,7 @@ class Fonts():
     fonts = dict()
     font_styles = {}
 
+    @staticmethod
     def init():
         ...
 
@@ -308,7 +309,7 @@ class Component(pygame.sprite.Sprite):
     def display(self, scene, dt):
         scene.ui_surface.blit(
             self.image, 
-            (self.rect.x + self.global_offset.x, self.rect.y + self.global_offset.y, 0, 0),
+            (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
         )
 
 def check_pixel_collision(primary_sprite, secondary_sprite):
