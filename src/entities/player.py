@@ -1,195 +1,147 @@
-from src.constants import (
-    COLORS,
-    COLOR_VALUES,
-    COLOR_VALUES_PRIMARY
-)
-
-from src.engine import (
-    Entity,
-    check_line_collision,
-    get_closest_sprite
-)
-
-from src.spritesheet_loader import load_frames
+from src.constants import PRIMARY_COLOR
+from src.engine import Entity, Inputs, check_pixel_collision
+from src.spritesheet_loader import load_spritesheet
 from src.particle_fx import Particle, Circle, Image
 
-from src.entities.tile import Tile
-from src.entities.barrier import Barrier
-from src.entities.platform import Platform
-from src.entities.ramp import Ramp
+from src.core_systems.abilities import Dash
+
+from src.entities.tiles import Block, Platform, Ramp
 
 import pygame
-import random
 import math
 import os
 
 class Player(Entity):
-    def __init__(self, position, strata=None):
-        super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), None, strata)
+    class Halo(Entity):
+        def __init__(self, position, img, strata):
+            self.img_scale = 2
 
-        self.spawn_location = position
-        self.rect_offset = (self.rect.width / 2, 0)
+            img = pygame.transform.scale(img, (img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
+            img.set_colorkey((0, 0, 0, 0))
 
-        self.per_frame_movespeed = 4
-        self.max_movespeed = 12
-        self.direction = 0
-        
-        self.jump_power = 24
-        self.jump = 0
-        self.max_jump = 2
-
-        self.imgs = dict()
-        self.frames = dict()
-        self.dt_frames = dict()
-        self.img_scale = 2
-
-        for name in ['idle', 'run', 'jump', 'fall']:
-            self.imgs[name] = load_frames(
-            os.path.join('imgs', 'player', f'player-{name}.png'),
-            os.path.join('data', 'player', f'player-{name}.json')
+            img = pygame.mask.from_surface(img).to_surface(
+                setcolor=PRIMARY_COLOR, 
+                unsetcolor=(0, 0, 0, 0)
             )
 
-            self.frames[name] = 0
-            self.dt_frames[name] = 0
+            super().__init__(position, img, None, strata)
 
-        self.keybinds = {
-            'left': [pygame.K_a, pygame.K_LEFT],
-            'right': [pygame.K_d, pygame.K_RIGHT],
-            'down': [pygame.K_s, pygame.K_DOWN],
-            'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
+            self.glow['active'] = True
+            self.glow['size'] = 1.2
+            self.glow['intensity'] = .2
 
-            'ability': pygame.K_f,
-            'color_forward': pygame.K_e,
-            'color_backward': pygame.K_q
+            self.sin_amplifier = 1
+            self.sin_frequency = .05
+
+        def display(self, player, scene, dt):
+            self.rect.x = player.rect.x
+            self.rect.y = player.rect.y
+            
+            self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (scene.frame_count)))) + (self.image.get_height() * .65)
+
+            super().display(scene, dt)
+
+    def __init__(self, position, strata=None):
+        super().__init__(position, pygame.Surface((32, 64)).convert_alpha(), None, strata)
+        self.halo = self.Halo(position, pygame.image.load(os.path.join('imgs', 'player', 'halo.png')).convert_alpha(), self.strata)
+
+        self.rect_offset = [self.rect.width / 2, 0]
+
+        self.timed_inputs = {}
+        self.timed_input_buffer = 7
+
+        self.movement_info = {
+            'direction': 0,
+            'friction': 1,
+
+            'per_frame_movespeed': 3,
+            'max_movespeed': 12,
+
+            'jump_power': 24,
+            'jumps': 0,
+            'max_jumps': 2
         }
 
-        self.pressed = dict()
-        for keybind in self.keybinds.keys():
-            self.pressed[keybind] = False
+        self.combat_info = {
+            'max_health': 100,
+            'health': 100
+        }
 
-        self.interact_obj = None
-
-        self.states = {
+        self.state_info = {
             'dead': False,
-            'interacting': False,
             'movement': None
         }
 
-        self.ability_data = {
-            0: {},
-            1: {},
-            2: {
-                'timer': 80,
-                'range': 40
-            }
-        }
+        self.imgs = {}
+        self.img_frames = {}
+        self.img_frames_raw = {}
+        self.img_scale = 2
 
-        self.color = COLORS[0]
-        self.prev_color = self.color
-
-        self.event_timers = { 
-            'color_swap': 25,
-            'ability_2': self.ability_data[2]['timer'],
-            'jump': 8,
-            'respawn': 75
+        self.frame_info = {
+            'idle': [50, 50],
+            'run': [2, 2, 2, 2, 2],
+            'jump': [1],
+            'fall': [1]
         }
         
-        self.events = dict()
-        for event in self.event_timers.keys():
-            self.events[event] = 0
+        for name in ['idle', 'run', 'jump', 'fall']:
+            self.imgs[name] = load_spritesheet(os.path.join('imgs', 'player', f'player-{name}.png'), self.frame_info[name])
 
-        self.render_flags = {
-            'camera_shake': False
+            self.img_frames[name] = 0
+            self.img_frames_raw[name] = 0
+
+        self.cooldown_timers = {
+            'jump': 8
         }
 
-    def get_keys_pressed(self):
-        keys = pygame.key.get_pressed()
+        self.cooldowns = {}
+        for cd in self.cooldown_timers.keys():
+            self.cooldowns[cd] = 0
+        
+        self.abilities = [Dash(self)]
 
-        for action in self.pressed.keys():
-            self.pressed[action] = False
+        self.equipment = {
+            'weapon': None,
 
-            if not isinstance(self.keybinds[action], list):
-                self.pressed[action] = keys[self.keybinds[action]]
+            'head': None,
+            'chest': None,
+            'pants': None,
+            'feet': None
+        }
+
+        self.immunities = {}
+
+    def on_key_down(self, scene, key):
+        for action, keybinds in Inputs.KEYBINDS.items():
+            if key not in keybinds:
                 continue
 
-            for val in self.keybinds[action]:
-                if not keys[val]:
-                    continue
+            if self.timed_inputs.get(action):
+                for ability in [a for a in self.abilities if a.keybind_info['double_tap']]:
+                    for keybinds in ability.keybind_info['keybinds']:
+                        if action not in keybinds:
+                            continue
 
-                self.pressed[action] = keys[val]
-                break
+                        ability.call(scene, keybind=action)
 
-    def on_mouse_down(self, scene):
-        if scene.paused:
+            self.timed_inputs[action] = self.timed_input_buffer
+
+    def on_jump(self, scene):
+        if self.cooldowns['jump'] != 0:
             return
 
-        if self.states['dead']:
-            return
+        if self.movement_info['jumps'] > 0:
+            self.velocity[1] = -(self.movement_info['jump_power'])
 
-        self.on_interact_start(scene)
-        
-    def on_mouse_up(self, scene):
-        self.on_interact_end()
-
-    def on_interact_start(self, scene):
-        interactable = scene.get_selected_interactable()
-        if not interactable:
-            return
-
-        if not interactable.on_interact(scene, self):
-            return
-
-        self.interact_obj = interactable
-        self.states['interacting'] = True
-
-    def on_interact_end(self):
-        if not self.states['interacting']:
-            return
-        
-        if self.interact_obj.independent:
-            return
-
-        self.states['interacting'] = False
-
-        self.interact_obj.on_release()
-        self.interact_obj = None
-
-    def on_death(self, scene):
-        self.on_interact_end()
-
-        self.states['dead'] = True
-        scene.set_dt_multiplier(5, .1)
-
-        self.events['respawn'] = scene.frames
-
-    def on_respawn(self, scene):
-        scene.camera.set_camera_tween(55)
-        self.rect.center = self.spawn_location
-
-        self.jump = 0
-        self.velocity = [0, 0]
-
-        self.states['dead'] = False
-        self.render_flags['camera_shake'] = False
-
-        self.image.set_alpha(255)
-
-    def on_jump(self, scene, dt):
-        if not (scene.frames - self.events['jump']) >= self.event_timers['jump']:
-            return
-
-        if self.jump > 0:
-            self.velocity[1] = -(self.jump_power)
-
-            self.jump -= 1
-            self.events['jump'] = scene.frames
+            self.movement_info['jumps'] -= 1
+            self.cooldowns['jump'] = self.cooldown_timers['jump']
 
             pos = (
                 self.rect.centerx,
                 self.rect.centery + 20
             )
 
-            particles = list()
+            particles = []
             particles.append(
                 Circle(
                     Particle.Info(15, position=(pos[0] - 40, pos[1] + 10), radius=0, width=0),
@@ -206,229 +158,55 @@ class Player(Entity):
 
             scene.add_sprites(particles)    
 
-    def on_ability(self, scene, dt):
-        if self.color == COLORS[0]:
-            ...
+    def apply_movement(self, scene):
+        pressed = Inputs.pressed
 
-        elif self.color == COLORS[1]:
-            ...
-
-        elif self.color == COLORS[2]:       
-            if not (scene.frames - self.events['ability_2']) >= self.event_timers['ability_2']:
-                return
-
-            if self.velocity == (0, 0):
-                return
-
-            start_pos = self.rect.center
-
-            end_pos = (
-                min([-self.max_movespeed, 0, self.max_movespeed], key = lambda v: abs(v - self.velocity[0])),
-                min([-self.jump_power / 4, 0], key = lambda v: abs(v - self.velocity[1]))
-            )
-
-            if end_pos == (0, 0):
-                return
-
-            end_pos = (
-                start_pos[0] + (end_pos[0] * self.ability_data[2]['range']),
-                start_pos[1] + (end_pos[1] * self.ability_data[2]['range'])
-            )
-
-            col_sprites = [s for s in scene.sprites if isinstance(s, Tile)]
-            for barrier in [s for s in scene.sprites if isinstance(s, Barrier)]:
-                if self.color != barrier.color:
-                    continue
-
-                col_sprites.append(barrier)
-
-            clipped_sprites = check_line_collision(start_pos, end_pos, col_sprites)
-            if clipped_sprites:
-                clip_sprite = get_closest_sprite(self, clipped_sprites)
-                clipline = clip_sprite.rect.clipline(start_pos, end_pos)
-
-                end_pos = (clipline[0][0], clipline[0][1])
-
-            if math.sqrt((abs(end_pos[0] - start_pos[0]) **2) + (abs(end_pos[1] - start_pos[1]) **2)) < 100:
-                return
-
-            self.events['ability_2'] = scene.frames
-
-            end_pos = list(end_pos)
-
-            if end_pos[0] - start_pos[0] < 0:
-                end_pos[0] += self.image.get_width()
-            elif end_pos[0] - start_pos[0] > 0:
-                end_pos[0] -= self.image.get_width()
-
-            if end_pos[1] - start_pos[1] < 0:
-                end_pos[1] += self.image.get_height()
-            elif end_pos[1] - start_pos[1] > 0:
-                end_pos[1] -= self.image.get_height()
-
-            self.rect.center = end_pos
-            self.velocity[1] = 0 if self.velocity[1] > 0 else self.velocity[1]
-
-            particles = list()
-            offset = (self.image.get_size()[0] / 2, self.image.get_size()[1] / 2)
-            
-            particles.append(
-                Image(
-                    Particle.Info(50, position=(start_pos[0] - offset[0], start_pos[1] - offset[1]), alpha=0),
-                    (start_pos[0] - offset[0], start_pos[1] - offset[1]), self.image.copy(), None, 75
-                )
-            )
-
-            for _ in range(15):            
-                dest = (
-                    end_pos[0] + random.randint(-200, 200) + (self.velocity[0] * 26),  
-                    end_pos[1] + random.randint(-200, 200) + (self.velocity[1] * 26)
-                )
-
-                particles.append(
-                    Circle(
-                        Particle.Info(
-                            100, position=dest, radius=0, width=0),
-                        end_pos, COLOR_VALUES_PRIMARY[self.color], 10, 0
-                    )
-                )
-
-            scene.add_sprites(particles)
-            scene.camera.set_camera_tween(25)
-            
-    def apply_movement(self, scene, dt):
-        if self.velocity[0] > self.max_movespeed:
-            if (abs(self.velocity[0]) - self.max_movespeed) < self.per_frame_movespeed:
-                self.velocity[0] -= (abs(self.velocity[0]) - self.max_movespeed)
+        if self.velocity[0] > self.movement_info['max_movespeed']:
+            if (abs(self.velocity[0]) - self.movement_info['max_movespeed']) < self.movement_info['friction']:
+                self.velocity[0] -= (abs(self.velocity[0]) - self.movement_info['max_movespeed'])
             
             else:
-                self.velocity[0] -= (self.per_frame_movespeed)
+                self.velocity[0] -= (self.movement_info['friction'])
 
-        elif self.velocity[0] < -(self.max_movespeed):
-            if (abs(self.velocity[0]) - self.max_movespeed) < self.per_frame_movespeed:
-                self.velocity[0] += (abs(self.velocity[0]) - self.max_movespeed)
+        elif self.velocity[0] < -(self.movement_info['max_movespeed']):
+            if (abs(self.velocity[0]) - self.movement_info['max_movespeed']) < self.movement_info['friction']:
+                self.velocity[0] += (abs(self.velocity[0]) - self.movement_info['max_movespeed'])
             
             else:
-                self.velocity[0] += (self.per_frame_movespeed)
+                self.velocity[0] += (self.movement_info['friction'])
 
-        if self.pressed['right']:
-            self.velocity[0] += (self.per_frame_movespeed) if self.velocity[0] < self.max_movespeed else 0
+        if pressed['right']:
+            self.velocity[0] += (self.movement_info['per_frame_movespeed']) if self.velocity[0] < self.movement_info['max_movespeed'] else 0
         
-        if self.pressed['left']:
-           self.velocity[0] -= (self.per_frame_movespeed) if self.velocity[0] > -(self.max_movespeed) else 0
+        if pressed['left']:
+           self.velocity[0] -= (self.movement_info['per_frame_movespeed']) if self.velocity[0] > -(self.movement_info['max_movespeed']) else 0
 
-        if not self.pressed['right'] and not self.pressed['left']:
+        if not pressed['right'] and not pressed['left']:
             if self.velocity[0] > 0:
-                self.velocity[0] -= (self.per_frame_movespeed)
+                self.velocity[0] -= (self.movement_info['per_frame_movespeed'])
 
             elif self.velocity[0] < 0:
-                self.velocity[0] += (self.per_frame_movespeed)
+                self.velocity[0] += (self.movement_info['per_frame_movespeed'])
 
-        if self.pressed['jump']:
-            self.on_jump(scene, dt)
+        if pressed['jump']:
+            self.on_jump(scene)
 
     def apply_collision_x(self, scene):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
         if not [c for c in self.collisions if isinstance(c, Ramp)]:
-            self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Tile)])
-
-        barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
-        for barrier in barriers:
-            if not self.rect.colliderect(barrier.rect):
-                if barrier in self.collision_ignore:
-                    self.collision_ignore.remove(barrier)
-
-                if barrier in self.collisions:
-                    self.collisions.remove(barrier)
-                
-                continue
-
-            if barrier in self.collision_ignore:
-                continue
-
-            if self.color != barrier.color:
-                continue
-
-            if self.rect.centerx - barrier.rect.centerx < 0:
-                if self.rect.left > barrier.rect.midleft[0]:
-                    if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.top >= barrier.rect.top):
-                            return True
-
-                        else:
-                            self.collision_ignore.append(barrier)
-
-                            if barrier not in self.collisions:
-                                self.collisions.append(barrier)
-
-                            self.velocity[1] = -15
-
-                    if self.rect.centery - barrier.rect.centery > 0:
-                        if (self.rect.bottom <= barrier.rect.bottom):
-                            return True
-
-                        else:
-                            self.collision_ignore.append(barrier)
-                            self.velocity[1] = 15
-
-                else:
-                    if abs(self.rect.right - barrier.rect.left) > 12:
-                        self.collision_ignore.append(barrier)
-                        self.velocity[0] = -(self.per_frame_movespeed * 7)
-                    
-                    else:
-                        self.rect.right = barrier.rect.left
-                        self.collide_points['right'] = True
-
-                        if barrier not in self.collisions:
-                                self.collisions.append(barrier)
-
-                        self.velocity[0] = 0
-
-            elif self.rect.centerx - barrier.rect.centerx > 0:
-                if self.rect.right < barrier.rect.midright[0]:
-                    if self.rect.centery - barrier.rect.centery < 0:
-                        if (self.rect.top >= barrier.rect.top):
-                            return True
-
-                        else:
-                            self.collision_ignore.append(barrier)
-                            self.velocity[1] = -15
-
-                    if self.rect.centery - barrier.rect.centery > 0:
-                        if (self.rect.bottom <= barrier.rect.bottom): 
-                            return True
-
-                        else:
-                            self.collision_ignore.append(barrier)
-                            self.velocity[1] = 15
-
-                else:
-                    if abs(self.rect.left - barrier.rect.right) > 12:
-                        self.collision_ignore.append(barrier)
-                        self.velocity[0] = (self.per_frame_movespeed * 7)
-                    
-                    else:
-                        self.rect.left = barrier.rect.right
-                        self.collide_points['left'] = True
-
-                        if barrier not in self.collisions:
-                            self.collisions.append(barrier)
-                                
-                        self.velocity[0] = 0
-                    
-            else:
-                return True
+            self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Block)])
 
     def apply_collision_y(self, scene, dt):
+        pressed = Inputs.pressed
+
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Tile)]):
-            if self.jump != self.max_jump:
-                self.jump = self.max_jump
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Block)]):
+            if self.movement_info['jumps'] != self.movement_info['max_jumps']:
+                self.movement_info['jumps'] = self.movement_info['max_jumps']
      
         platforms = [s for s in scene.sprites if isinstance(s, Platform)]
         for platform in platforms:
@@ -441,7 +219,7 @@ class Player(Entity):
 
                 continue
 
-            if self.pressed['down'] and platform not in self.collision_ignore:
+            if pressed['down'] and platform not in self.collision_ignore:
                 self.collision_ignore.append(platform)
                 continue
 
@@ -452,8 +230,8 @@ class Player(Entity):
                 if platform not in self.collisions:
                     self.collisions.append(platform)
 
-                if self.jump != self.max_jump:
-                    self.jump = self.max_jump
+                if self.movement_info['jumps'] != self.movement_info['max_jumps']:
+                    self.movement_info['jumps'] = self.movement_info['max_jumps']
                         
                 self.velocity[1] = 0
 
@@ -471,9 +249,9 @@ class Player(Entity):
             if ramp in self.collision_ignore:
                 continue
 
-            if self.pressed['jump'] and ramp not in self.collision_ignore:
-                self.collision_ignore.append(ramp)
-                continue
+            if pressed['jump'] and ramp not in self.collision_ignore:
+               self.collision_ignore.append(ramp) 
+               continue
 
             pos = ramp.get_y_value(self)
             if pos - self.rect.bottom < 4:
@@ -483,216 +261,117 @@ class Player(Entity):
                 if ramp not in self.collisions:
                     self.collisions.append(ramp)
 
-                if self.jump != self.max_jump:
-                    self.jump = self.max_jump
+                if self.movement_info['jumps'] != self.movement_info['max_jumps']:
+                    self.movement_info['jumps'] = self.movement_info['max_jumps']
                             
                 self.velocity[1] = 0
 
-        barriers = [s for s in scene.sprites if isinstance(s, Barrier)]
-        for barrier in barriers:
-            if not self.rect.colliderect(barrier.rect):
-                if barrier in self.collision_ignore:
-                    self.collision_ignore.remove(barrier)
-                
-                if barrier in self.collisions:
-                    self.collisions.remove(barrier)
-
-                continue
-
-            if barrier in self.collision_ignore:
-                continue
-
-            if self.color != barrier.color:
-                continue
-
-            if self.velocity[1] > 0:
-                self.rect.bottom = barrier.rect.top
-                self.collide_points['bottom'] = True
-                
-                if barrier not in self.collisions:
-                    self.collisions.append(barrier)
-
-                if self.jump != self.max_jump:
-                    self.jump = self.max_jump
-                        
-                self.velocity[1] = 0
-
-            if self.velocity[1] < 0:
-                self.rect.top = barrier.rect.bottom
-                self.collide_points['top'] = True
-
-                if barrier not in self.collisions:
-                    self.collisions.append(barrier)
-
-                self.velocity[1] = 0
-
-    def set_color(self, scene, dt):
-        frames = scene.frames
-
-        if not (frames - self.events['color_swap']) >= self.event_timers['color_swap']:
+    def apply_afterimages(self, scene, dt):
+        if abs(self.velocity[0]) <= self.movement_info['max_movespeed']:
             return
 
-        if self.pressed['color_forward']:
-            if COLORS.index(self.color) + 1 == len(COLORS):
-                self.color = COLORS[0]
-            else:
-                self.color = COLORS[COLORS.index(self.color) + 1]
+        x_pos = self.rect.left - self.rect.width * .5
 
-            self.events['color_swap'] = frames
+        afterimage_plr = Image(
+            Particle.Info(5, alpha=0),
+            (x_pos, self.rect.y), 
+            self.image.copy(), self.strata - 1, 50
+        )
 
-        elif self.pressed['color_backward']:
-            if COLORS.index(self.color) == 0:
-                self.color = COLORS[-1]
-            else:
-                self.color = COLORS[COLORS.index(self.color) - 1]
+        afterimage_halo = Image(
+            Particle.Info(5, alpha=0),
+            (self.rect.left - self.halo.rect_offset[0], self.rect.y - self.halo.rect_offset[1]),
+            self.halo.image.copy(), self.strata - 1, 50
+        )
 
-            self.events['color_swap'] = frames
+        scene.add_sprites(afterimage_plr, afterimage_halo)
 
     def set_frame_state(self):
         if not self.collide_points['bottom']:
             if self.velocity[1] < 0:
-                self.states['movement'] = 'jump'
+                self.state_info['movement'] = 'jump'
                 return
 
             else:
-                self.states['movement'] = 'fall'
+                self.state_info['movement'] = 'fall'
                 return
 
         if self.velocity[0] > 0 or self.velocity[0] < 0:
-            self.states['movement'] = 'run'
+            self.state_info['movement'] = 'run'
             return
 
-        self.states['movement'] = 'idle'
+        self.state_info['movement'] = 'idle'
 
-    def set_image(self, scene, dt):
+    def set_images(self, scene, dt):
         img = None
         et = 1
 
-        if self.velocity[0] > 0:
-            self.direction = 1
+        mouse_pos_x = scene.mouse.rect.centerx + scene.camera_offset[0]
 
-        elif self.velocity[0] < 0:
-            self.direction = -1
+        if mouse_pos_x > self.rect.centerx:
+            self.movement_info['direction'] = 1
 
-        if self.states['movement'] == 'run':
-            et = abs(self.velocity[0] / self.max_movespeed)
+        elif mouse_pos_x < self.rect.centerx:
+            self.movement_info['direction'] = -1
 
-        if len(self.imgs[self.states['movement']]) <= self.frames[self.states['movement']]:
-            self.frames[self.states['movement']] = 0
-            self.dt_frames[self.states['movement']] = 0
+        if self.state_info['movement'] == 'run':
+            et = 1 if abs(self.velocity[0] / self.movement_info['max_movespeed']) > 1 else abs(self.velocity[0] / self.movement_info['max_movespeed'])
 
-        img = self.imgs[self.states['movement']][self.frames[self.states['movement']]]
+        if len(self.imgs[self.state_info['movement']]) <= self.img_frames[self.state_info['movement']]:
+            self.img_frames[self.state_info['movement']] = 0
+            self.img_frames_raw[self.state_info['movement']] = 0
 
-        self.dt_frames[self.states['movement']]  += (1 * et) * dt
-        self.frames[self.states['movement']] = round(self.dt_frames[self.states['movement']])
+        img = self.imgs[self.state_info['movement']][self.img_frames[self.state_info['movement']]]
 
-        for frame in self.frames:
-            if self.states['movement'] == frame:
+        self.img_frames_raw[self.state_info['movement']]  += (1 * et) * dt
+        self.img_frames[self.state_info['movement']] = round(self.img_frames_raw[self.state_info['movement']])
+
+        for frame in self.img_frames:
+            if self.state_info['movement'] == frame:
                 continue
 
-            if self.frames[frame] == 0:
+            if self.img_frames[frame] == 0:
                 continue
 
-            self.frames[frame] = 0
-            self.dt_frames[frame] = 0
+            self.img_frames[frame] = 0
+            self.img_frames_raw[frame] = 0
 
         self.image = pygame.transform.scale(img, (img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
-        self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.direction < 0 else self.image
-
-        if self.color != self.prev_color:
-            pos = self.rect.center
-            particles = list()
-
-            particles.append(
-                Circle(
-                    Particle.Info(27, position=pos, radius=150, width=1),
-                    pos, 
-                    COLOR_VALUES_PRIMARY[self.color],
-                    5,
-                    15
-                )
-            )
-            scene.add_sprites(particles)
-
-        self.image = self.mask.to_surface(
-            setcolor=COLOR_VALUES[self.color], 
-            unsetcolor=(0, 0, 0, 0)
-        )
-
-        self.prev_color = self.color
+        self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def display(self, scene, dt):
-        if scene.paused:
-            super().display(scene, dt)
+        for event in self.cooldowns.keys():
+            if self.cooldowns[event] < 1 * dt:
+                self.cooldowns[event] = 0
+                continue
 
-            for event in self.events.keys():
-                self.events[event] += 1 * dt
+            self.cooldowns[event] -= 1 * dt
 
-            return
+        for key in self.timed_inputs:
+            self.timed_inputs[key] -= 1 * dt
 
-        if self.states['dead']:
-            if (scene.frames - self.events['respawn']) > 5 and not self.render_flags['camera_shake']:
-                self.render_flags['camera_shake'] = True
-                scene.camera.set_camera_shake(60)
-  
-                self.image.set_alpha(0)
+            if self.timed_inputs[key] <= 0:
+                self.timed_inputs[key] = 0
 
-                pos = list(self.rect.center)
-                pos[0] -= self.velocity[0]
+        for ability in self.abilities:
+            ability.update(scene, dt)
                 
-                particles = list()
-                for _ in range(40):
-                    particles.append(
-                        Circle(
-                            Particle.Info(150, position=(pos[0] + random.randint(-1500, 1500), pos[1] + random.randint(-1500, 1500)), radius=0, width=0),
-                            pos, COLOR_VALUES_PRIMARY[self.color], 12, 0
-                        )
-                    )
+        self.apply_gravity(dt)
+        self.apply_movement(scene)
+        
+        if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
+            self.velocity[0] = 0
 
-                particles.append(
-                    Circle(
-                        Particle.Info(45, position=pos, radius=250, width=1),
-                        pos, 
-                        COLOR_VALUES_PRIMARY[self.color],
-                        5,
-                        15,
-                    )
-                )
-                scene.add_sprites(particles)
+        self.rect.x += round(self.velocity[0] * dt)
+        self.apply_collision_x(scene)
 
-            if (scene.frames - self.events['respawn']) > self.event_timers['respawn']:
-                self.on_respawn(scene)
+        self.rect.y += round(self.velocity[1] * dt)
+        self.apply_collision_y(scene, dt)
 
-        else:
-            self.get_keys_pressed()
+        self.apply_afterimages(scene, dt)
 
-            self.apply_gravity(dt)
-            self.apply_movement(scene, dt)
-
-            if self.pressed['ability']:
-                self.on_ability(scene, dt)
-
-            if abs(self.velocity[0]) < self.per_frame_movespeed:
-                self.velocity[0] = 0
-
-            if self.interact_obj:
-                self.interact_obj.apply_interact_effect(self)
-
-            self.rect.x += self.velocity[0] * dt
-            if (self.apply_collision_x(scene)):
-                self.on_death(scene)
-                scene.entity_surface.blit(
-                    self.image, 
-                    (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
-                )
-                
-                return
-
-            self.rect.y += self.velocity[1] * dt
-            self.apply_collision_y(scene, dt)
-
-            self.set_frame_state()
-            self.set_color(scene, dt)
-            self.set_image(scene, dt)
+        self.set_frame_state()
+        self.set_images(scene, dt)
 
         super().display(scene, dt)
+        self.halo.display(self, scene, dt)

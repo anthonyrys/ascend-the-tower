@@ -2,48 +2,37 @@ import pygame
 import json
 import os
 
-def load_standard(pngpath, name):
-    jsonpath = os.path.join('data', 'imgs.json')
-    sheet, data = None, None
-    imgs = list()
-            
+config = json.load(open(os.path.join('data', 'config.json')))
+spritesheet_stop_code = tuple(config['spritesheet_stop_code'])
+
+def load_spritesheet(pngpath, frames=None):
+    imgs = []   
     sheet = pygame.image.load(pngpath).convert_alpha()
-    data_json = json.load(open(jsonpath))
-    data = data_json[name]
 
-    width = data['spritesize']['width']
-    height = data['spritesize']['height']
+    width = sheet.get_width()
+    height = sheet.get_height()
 
-    for i in range(int(data['sheetsize']['width'] / width)):
-        x = width * i
+    img_count = 0
+    start, stop = 0, 0
+    i = 0
 
-        img = pygame.Surface((width, height)).convert_alpha()
+    for i in range(width):
+        if sheet.get_at((i, 0)) != spritesheet_stop_code:
+            continue
+    
+        stop = i
+        img = pygame.Surface((stop - start, height)).convert_alpha()
         img.set_colorkey((0, 0, 0))
-        img.blit(sheet, (0, 0), (x, 0, width, height))
+        img.blit(sheet, (0, 0), (start, 0, stop - start, height))
 
-        imgs.append(img)
+        if frames:
+            for _ in range(frames[img_count]):
+                imgs.append(img)
 
-    return imgs
-
-def load_frames(pngpath, jsonpath):
-    sheet, data = None, None
-    imgs = list()
-            
-    sheet = pygame.image.load(pngpath).convert_alpha()
-    data = json.load(open(jsonpath))
-
-    width = data['spritesize']['width']
-    height = data['spritesize']['height']
-
-    for i in data['frames'].keys():
-        x = width * int(i)
-        duration = data['frames'][f'{i}']['duration']
-
-        img = pygame.Surface((width, height)).convert_alpha()
-        img.set_colorkey((0, 0, 0))
-        img.blit(sheet, (0, 0), (x, 0, width, height))
-
-        for _ in range(duration):
+        else:
             imgs.append(img)
+
+        img_count += 1
+        start = stop + 1
 
     return imgs

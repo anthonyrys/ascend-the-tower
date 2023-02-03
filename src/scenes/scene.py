@@ -1,24 +1,31 @@
-from src.entities.interactable import Interactable
+from src.constants import SCREEN_DIMENSIONS
 from src.particle_fx import Particle
 
 import pygame
 
-class Scene():
+class Scene:
     def __init__(self, surfaces, mouse, sprites=None):
         self.surfaces = surfaces
         self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
         self.mouse = mouse
 
-        self.paused = False
+        self.view = pygame.Surface(SCREEN_DIMENSIONS).get_rect()
 
-        self.sprites = sprites if isinstance(sprites, list) else list()
-        self.frames = 0
-        self.raw_frames = 0
+        self.dt_info = {
+            'multiplier': 1,
+            'frames': 0,
+            'max_frames': 0
+        }
+
+        self.sprites = sprites if isinstance(sprites, list) else []
+
+        self.frame_count = 0
+        self.frame_count_raw = 0
 
     @staticmethod
     def sort_sprites(sprites):
-        display_order = dict()
-        unlabled = list()
+        display_order = {}
+        unlabled = []
 
         for sprite in sprites:
             if not isinstance(sprite.strata, int):
@@ -32,7 +39,7 @@ class Scene():
                 display_order[sprite.strata] = list([sprite])
 
         if unlabled:
-            display_order[-1] = list()
+            display_order[-1] = []
 
             for sprite in unlabled:
                 if isinstance(sprite, Particle):
@@ -50,32 +57,45 @@ class Scene():
 
         return display_order
         
-    # <overridden by child classes>
-    def display(self, screen):
+    def display(self, clock, screen):
         ...
 
     def get_selected_interactable(self):
-        for interactable in [s for s in self.sprites if isinstance(s, Interactable)]:
-            if not interactable.selected:
-                continue
-            
-            return interactable
+        ...
 
     def on_mouse_down(self, event):
-        if event.button == 1:
-            for sprite in self.sprites:
-                if not hasattr(sprite, 'on_mouse_down') or not callable(sprite.on_mouse_down):
-                    continue
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_mouse_down') or not callable(sprite.on_mouse_down):
+                continue
 
-                sprite.on_mouse_down(self)
+            sprite.on_mouse_down(self, event.button)
 
     def on_mouse_up(self, event):
-        if event.button == 1:
-            for sprite in self.sprites:
-                if not hasattr(sprite, 'on_mouse_up') or not callable(sprite.on_mouse_up):
-                    continue
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_mouse_up') or not callable(sprite.on_mouse_up):
+                continue
 
-                sprite.on_mouse_up(self)
+            sprite.on_mouse_up(self, event.button)
+
+    def on_key_down(self, event):
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_key_down') or not callable(sprite.on_key_down):
+                continue
+
+            sprite.on_key_down(self, event.key)
+
+    def on_key_up(self, event):
+        for sprite in self.sprites:
+            if not hasattr(sprite, 'on_key_up') or not callable(sprite.on_key_up):
+                continue
+
+            sprite.on_key_up(self, event.key)
+
+    def set_dt_multiplier(self, duration, multiplier):
+        self.dt_info['max_frames'] = duration
+        self.dt_info['frames'] = duration
+
+        self.dt_info['multiplier'] = multiplier
 
     def add_sprites(self, sprites, *args):
         if not isinstance(sprites, list):

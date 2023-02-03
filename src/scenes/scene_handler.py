@@ -1,3 +1,4 @@
+from src.engine import Inputs
 from src.constants import (
     SCREEN_COLOR,
     SCREEN_DIMENSIONS,
@@ -11,19 +12,20 @@ from src.ui.mouse import Mouse
 import pygame
 import time
 
-class SceneHandler():
-    def __init__(self, screen):
+class SceneHandler:
+    def __init__(self, screen, clock):
         self.screen = screen
+        self.clock = clock
         self.fullscreen = False
 
         self.mouse = Mouse()
 
         self.background_surface = pygame.Surface((2500, 2500), pygame.SRCALPHA).convert_alpha()
-        self.entity_surface = pygame.Surface((5000, 5000), pygame.SRCALPHA).convert_alpha()
+        self.entity_surface = pygame.Surface((10000, 10000), pygame.SRCALPHA).convert_alpha()
         self.ui_surface = pygame.Surface((2000, 2000), pygame.SRCALPHA).convert_alpha()
 
         self.current_scene = Sandbox([self.background_surface, self.entity_surface, self.ui_surface], self.mouse)
-        self.stored_scenes = list()
+        self.stored_scenes = []
 
         self.last_time = time.time()
 
@@ -39,10 +41,6 @@ class SceneHandler():
                 return True
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.current_scene.paused = not self.current_scene.paused
-
-                # <temp>
                 if event.key == pygame.K_0:
                     self.fullscreen = not self.fullscreen
 
@@ -52,13 +50,21 @@ class SceneHandler():
                     else:
                         self.screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
 
+                else:
+                    self.current_scene.on_key_down(event)
+
+            if event.type == pygame.KEYUP:
+                self.current_scene.on_key_up(event)
+
             if event.type == pygame.MOUSEBUTTONDOWN: 
                 self.current_scene.on_mouse_down(event)
 
             if event.type == pygame.MOUSEBUTTONUP: 
                 self.current_scene.on_mouse_up(event)
 
+        Inputs.get_keys_pressed()
+
         self.screen.fill(SCREEN_COLOR)
-        self.current_scene.display(self.screen, delta_time)
+        self.current_scene.display(self.screen, self.clock, delta_time)
 
         return False

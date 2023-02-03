@@ -1,9 +1,0 @@
-{
-    "sheetsize": {"width": 32, "height": 32},
-    "spritesize": {"width": 32, "height": 32},
-
-    "frames": 
-    {
-        "0": {"duration": 1}
-    }
-}

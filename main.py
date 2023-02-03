@@ -16,7 +16,10 @@ if __name__ == '__main__':
         SCREEN_DIMENSIONS,
         SCREEN_COLOR
     )
-    from src.engine import Fonts
+    from src.engine import (
+        Fonts,
+        Inputs
+    )
 
     from src.scenes.scene_handler import SceneHandler
 
@@ -25,13 +28,16 @@ if __name__ == '__main__':
     
     pygame.init()
 
-    Fonts.init()
-
     pygame.display.set_caption(TITLE)
     pygame.mouse.set_visible(False)
 
     screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
-    main(screen, pygame.time.Clock(), SceneHandler(screen))
+    clock = pygame.time.Clock()
+
+    Fonts.init()
+    Inputs.init()
+
+    main(screen, clock, SceneHandler(screen, clock))
     
     pygame.quit()
     sys.exit()
