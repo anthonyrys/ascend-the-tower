@@ -71,7 +71,11 @@ class Inputs:
         'left': [pygame.K_a, pygame.K_LEFT],
         'right': [pygame.K_d, pygame.K_RIGHT],
         'down': [pygame.K_s, pygame.K_DOWN],
-        'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP]
+        'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
+
+        'ability_1': [],
+        'ability_2': [],
+        'ability_3': []
     }
 
     MOVEMENT = ['left', 'right', 'down', 'jump']
@@ -106,92 +110,91 @@ class Inputs:
                 Inputs.pressed[action] = keys[val]
                 break
 
-class Camera:
-    class CameraTemplate:
-        def __init__(self, focus):
-            self.focus = focus
-            self.offset = [0, 0]
-            self.zoom = 1
+class CameraTemplate:
+    def __init__(self, focus):
+        self.focus = focus
+        self.offset = [0, 0]
+        self.zoom = 1
 
-            self.camera_shake_info = {
-                'frames': 0,
-                'max_frames': 0,
-                'intensity': 10
-            }
+        self.camera_shake_info = {
+            'frames': 0,
+            'max_frames': 0,
+            'intensity': 10
+        }
 
-            self.camera_tween_info = {
-                'frames': 0,
-                'max_frames': 0,
-                'start_pos': None
-            }
+        self.camera_tween_info = {
+            'frames': 0,
+            'max_frames': 0,
+            'start_pos': None
+        }
 
-        def set_camera_shake(self, frames, intensity=10):
-            self.camera_shake_info['frames'] = frames
-            self.camera_shake_info['max_frames'] = frames
-            self.camera_shake_info['intensity'] = intensity
+    def set_camera_shake(self, frames, intensity=10):
+        self.camera_shake_info['frames'] = frames
+        self.camera_shake_info['max_frames'] = frames
+        self.camera_shake_info['intensity'] = intensity
 
-        def set_camera_tween(self, frames):
-            self.camera_tween_info['frames'] = frames
-            self.camera_tween_info['max_frames'] = frames
-            self.camera_tween_info['start_pos'] = (self.box.topleft[0] - self.box_dimensions[0], self.box.topleft[1] - self.box_dimensions[1])
+    def set_camera_tween(self, frames):
+        self.camera_tween_info['frames'] = 0
+        self.camera_tween_info['max_frames'] = frames
+        self.camera_tween_info['start_pos'] = (self.box.topleft[0] - self.box_dimensions[0], self.box.topleft[1] - self.box_dimensions[1])
 
-    class Box(CameraTemplate):
-        def __init__(self, focus):
-            super().__init__(focus)
+class BoxCamera(CameraTemplate):
+    def __init__(self, focus):
+        super().__init__(focus)
 
-            self.box_dimensions = (555, 265)
-            self.box = pygame.Rect(
-                self.box_dimensions[0],
-                self.box_dimensions[1],
+        self.box_dimensions = (555, 265)
+        self.box = pygame.Rect(
+            self.box_dimensions[0],
+            self.box_dimensions[1],
 
-                SCREEN_DIMENSIONS[0] - (self.box_dimensions[0] * 2),
-                SCREEN_DIMENSIONS[1] - (self.box_dimensions[1] * 2)
-            )
+            SCREEN_DIMENSIONS[0] - (self.box_dimensions[0] * 2),
+            SCREEN_DIMENSIONS[1] - (self.box_dimensions[1] * 2)
+        )
 
-        def update(self, dt):
-            camera_shake = [0, 0]
-            if self.camera_shake_info['frames'] > 0:
-                abs_prog = self.camera_shake_info['frames'] / self.camera_shake_info['max_frames']
-                intensity = round((self.camera_shake_info['intensity']) * Easings.ease_in_sine(abs_prog))
+    def update(self, dt):
+        camera_shake = [0, 0]
+        if self.camera_shake_info['frames'] > 0:
+            abs_prog = self.camera_shake_info['frames'] / self.camera_shake_info['max_frames']
+            intensity = round((self.camera_shake_info['intensity']) * Easings.ease_in_sine(abs_prog))
 
-                camera_shake[0] = random.randint(-intensity, intensity)
-                camera_shake[1] = random.randint(-intensity, intensity)
+            camera_shake[0] = random.randint(-intensity, intensity)
+            camera_shake[1] = random.randint(-intensity, intensity)
 
-                self.camera_shake_info['frames'] -= 1 * dt
+            self.camera_shake_info['frames'] -= 1 * dt
 
-            if self.focus.rect.left < self.box.left:
-                self.box.left = self.focus.rect.left
+        if self.focus.rect.left < self.box.left:
+            self.box.left = self.focus.rect.left
 
-            elif self.focus.rect.right > self.box.right:
-                self.box.right = self.focus.rect.right
+        elif self.focus.rect.right > self.box.right:
+            self.box.right = self.focus.rect.right
 
-            if self.focus.rect.bottom > self.box.bottom:
-                self.box.bottom = self.focus.rect.bottom
+        if self.focus.rect.bottom > self.box.bottom:
+            self.box.bottom = self.focus.rect.bottom
 
-            elif self.focus.rect.top < self.box.top:
-                self.box.top = self.focus.rect.top
+        elif self.focus.rect.top < self.box.top:
+            self.box.top = self.focus.rect.top
             
-            offset = [
-                self.box[0] - self.box_dimensions[0] + camera_shake[0], 
-                self.box[1] - self.box_dimensions[1] + camera_shake[1]
+        offset = [
+            self.box[0] - self.box_dimensions[0] + camera_shake[0], 
+            self.box[1] - self.box_dimensions[1] + camera_shake[1]
+        ]
+
+        if self.camera_tween_info['frames'] < self.camera_tween_info['max_frames']:
+            abs_prog = self.camera_tween_info['frames'] / self.camera_tween_info['max_frames']
+
+            tweened_offset = [
+                self.camera_tween_info['start_pos'][0] + ((offset[0] - self.camera_tween_info['start_pos'][0]) * Easings.ease_out_quint(abs_prog)),
+                self.camera_tween_info['start_pos'][1] + ((offset[1] - self.camera_tween_info['start_pos'][1]) * Easings.ease_out_quint(abs_prog)),
             ]
 
-            if self.camera_tween_info['frames'] < self.camera_tween_info['max_frames']:
-                abs_prog = self.camera_tween_info['frames'] / self.camera_tween_info['max_frames']
+            self.camera_tween_info['frames'] += 1 * dt
 
-                tweened_offset = [
-                    self.camera_tween_info['start_pos'][0] + ((offset[0] - self.camera_tween_info['start_pos'][0]) * Easings.ease_out_quint(abs_prog)),
-                    self.camera_tween_info['start_pos'][1] + ((offset[1] - self.camera_tween_info['start_pos'][1]) * Easings.ease_out_quint(abs_prog)),
-                ]
+            self.offset = tweened_offset
+            return tweened_offset
 
-                self.camera_tween_info['frames'] += 1 * dt
-
-                self.offset = tweened_offset
-                return tweened_offset
-
-            else:
-                self.offset = offset
-                return offset
+        else:
+            self.offset = offset
+            return offset
 
 class Entity(pygame.sprite.Sprite):
     GRAVITY = 2
@@ -241,16 +244,46 @@ class Entity(pygame.sprite.Sprite):
             'intensity': .25
         }
 
+        self.gravity_info = {
+            'frames': 0,
+            'gravity': Entity.GRAVITY,
+            'max_gravity': Entity.MAX_GRAVITY
+        }
+
         self.collisions = []
         self.collision_ignore = []
 
         self.velocity = [0, 0]
+        self.previous_true_position = [0, 0]
+        self.previous_center_position = [0, 0]
 
     @property
     def mask(self):
         return pygame.mask.from_surface(self.image)
+    
+    @property
+    def true_position(self):
+        return [self.rect.x, self.rect.y]
+
+    @property
+    def center_position(self):
+        return [self.rect.centerx, self.rect.centery]
 
     def display(self, scene, dt):
+        self.previous_true_position = [self.rect.x, self.rect.y]
+        self.previous_center_position = [self.rect.centerx, self.rect.centery]
+
+        if self.gravity_info['frames'] > 0:
+            self.gravity_info['frames'] -= 1 * dt
+
+        elif self.gravity_info['frames'] <= 0:
+            if self.gravity_info['gravity'] != Entity.GRAVITY or self.gravity_info['max_gravity'] != Entity.MAX_GRAVITY:
+                self.gravity_info = {
+                    'frames': 0,
+                    'gravity': Entity.GRAVITY,
+                    'max_gravity': Entity.MAX_GRAVITY
+                }
+
         if self.glow['active']:
             image = pygame.transform.scale(self.image, (self.image.get_width() * self.glow['size'], self.image.get_height() * self.glow['size']))
             image.set_alpha(self.image.get_alpha() * self.glow['intensity'])
@@ -325,10 +358,10 @@ class Entity(pygame.sprite.Sprite):
             if abs(self.velocity[1]) < 0:
                 return
 
-            top = self.rect.top - collidable.rect.centery
-            bottom = self.rect.bottom - collidable.rect.centery
-
-            if top > bottom:
+            top = abs(self.rect.top - collidable.rect.centery)
+            bottom = abs(self.rect.bottom - collidable.rect.centery)
+            
+            if top < bottom:
                 self.rect.top = collidable.rect.bottom
                 self.collide_points['top'] = True
 
@@ -336,10 +369,10 @@ class Entity(pygame.sprite.Sprite):
 
                 if collidable not in self.collisions:
                     self.collisions.append(collidable)
-                
+                    
                 self.velocity[1] = 0
 
-            elif top < bottom:
+            else:
                 self.rect.bottom = collidable.rect.top
                 self.collide_points['bottom'] = True
 
@@ -353,21 +386,37 @@ class Entity(pygame.sprite.Sprite):
         return callback_collision  
 
     def apply_gravity(self, dt):
+        grav = self.gravity_info['gravity']
+        max_grav = self.gravity_info['max_gravity']
+
         if not self.collide_points['bottom']:
-            self.velocity[1] += Entity.GRAVITY * dt if self.velocity[1] < Entity.MAX_GRAVITY * dt else 0
+            self.velocity[1] += grav * dt if self.velocity[1] < max_grav * dt else 0
 
         else:
             if dt == 0:
                 self.velocity[1] = 0
 
             else:
-                self.velocity[1] = Entity.GRAVITY / dt
+                self.velocity[1] = grav / dt
+
+    def set_gravity(self, frames, grav=None, max_grav=None):
+        if grav is None:
+            grav = Entity.GRAVITY
+
+        if max_grav is None:
+            max_grav = Entity.MAX_GRAVITY
+
+        self.gravity_info['frames'] = frames
+        self.gravity_info['gravity'] = grav
+        self.gravity_info['max_gravity'] = max_grav
 
 class Component(pygame.sprite.Sprite):
     def __init__(self, position, img, dimensions, strata, alpha=None):
         pygame.sprite.Sprite.__init__(self)
         self.active = True
         self.strata = strata
+
+        self.uses_entity_surface = False
 
         if isinstance(img, tuple):
             self.image = pygame.Surface(dimensions).convert_alpha()
@@ -400,71 +449,116 @@ class Component(pygame.sprite.Sprite):
         return pygame.mask.from_surface(self.image)
 
     def display(self, scene, dt):
-        scene.ui_surface.blit(
-            self.image, 
-            (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
-        )
-
-def check_pixel_collision(primary_sprite, secondary_sprite):
-    collision = None
-    if not isinstance(secondary_sprite, pygame.sprite.Group):
-        group = pygame.sprite.Group(secondary_sprite)
-        collision = pygame.sprite.spritecollide(primary_sprite, group, False, pygame.sprite.collide_mask)
-        group.remove(secondary_sprite)
-
-    else:
-        collision = pygame.sprite.spritecollide(primary_sprite, secondary_sprite, False, pygame.sprite.collide_mask)
-
-    return collision
-
-def check_line_collision(start, end, sprites):
-    clipped_sprites = []
-
-    for sprite in sprites:
-        if sprite.rect.clipline(start, end):
-            clipped_sprites.append(sprite)
-
-    return clipped_sprites
-
-def get_distance(primary_sprite, secondary_sprite):
-    rx = abs(secondary_sprite.rect.x - primary_sprite.rect.x)
-    ry = abs(secondary_sprite.rect.y - primary_sprite.rect.y)
-
-    return math.sqrt(((rx **2) + (ry **2)))
-
-def get_closest_sprite(primary_sprite, sprites):
-    if len(sprites) == 1:
-        return sprites[0]
+        if self.uses_entity_surface:
+            scene.entity_surface.blit(
+                self.image, 
+                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
+            )
             
-    sprite_area = {}
+        else:
+            scene.ui_surface.blit(
+                self.image, 
+                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
+            )
 
-    for sprite in sprites:
-        distance = get_distance(primary_sprite, sprite)
-        sprite_area[sprite] = distance
+class SpriteMethods:
+    @staticmethod
+    def check_pixel_collision(primary_sprite, secondary_sprite):
+        collision = None
+        if not isinstance(secondary_sprite, pygame.sprite.Group):
+            group = pygame.sprite.Group(secondary_sprite)
+            collision = pygame.sprite.spritecollide(primary_sprite, group, False, pygame.sprite.collide_mask)
+            group.remove(secondary_sprite)
 
-    min_value = min(sprite_area.values())
-    for sprite, area in sprite_area.items():
-        if area == min_value:
-            return sprite
+        else:
+            collision = pygame.sprite.spritecollide(primary_sprite, secondary_sprite, False, pygame.sprite.collide_mask)
 
-    return None
+        return collision
 
-def create_outline(sprite, color, display, size=1):
-    surface = sprite.mask.to_surface(
-        setcolor=color, 
-        unsetcolor=(0, 0, 0, 0)
-    )
-    surface.set_colorkey((0, 0, 0))
+    @staticmethod
+    def check_line_collision(start, end, sprites):
+        clipped_sprites = []
 
-    for i in range(size):
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+        for sprite in sprites:
+            if sprite.rect.clipline(start, end):
+                clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
 
-        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        return clipped_sprites
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+    @staticmethod
+    def get_distance(primary_sprite, secondary_sprite):
+        if isinstance(primary_sprite, pygame.sprite.Sprite) and isinstance(secondary_sprite, pygame.sprite.Sprite):
+            rx = abs(secondary_sprite.rect.x - primary_sprite.rect.x)
+            ry = abs(secondary_sprite.rect.y - primary_sprite.rect.y)
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+            return math.sqrt(((rx **2) + (ry **2)))
+        
+        else:
+            rx = abs(secondary_sprite[0] - primary_sprite[0])
+            ry = abs(secondary_sprite[1] - primary_sprite[1])
+
+            return math.sqrt(((rx **2) + (ry **2)))  
+
+    @staticmethod
+    def get_closest_sprite(primary_sprite, sprites):
+        if len(sprites) == 1:
+            return sprites[0]
+                
+        sprite_area = {}
+
+        for sprite in sprites:
+            distance = SpriteMethods.get_distance(primary_sprite, sprite)
+            sprite_area[sprite] = distance
+
+        min_value = min(sprite_area.values())
+        for sprite, area in sprite_area.items():
+            if area == min_value:
+                return sprite
+
+        return None
+
+    @staticmethod
+    def create_outline_edge(sprite, color, display, size=1):
+        surface = pygame.Surface(sprite.image.get_size())
+        surface.set_colorkey((0, 0, 0))
+        for point in sprite.mask.outline():
+            surface.set_at(point, color)
+
+        for i in range(size):
+            #display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+             #display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+            # display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+            # display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+
+            display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+            display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+
+    @staticmethod
+    def create_outline_full(sprite, color, display, size=1):
+        surface = sprite.mask.to_surface(
+            setcolor=color, 
+            unsetcolor=(0, 0, 0, 0)
+        )
+        surface.set_colorkey((0, 0, 0))
+
+        for i in range(size):
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+
+            display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+            display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+
+            display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
+            display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  

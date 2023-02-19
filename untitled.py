@@ -7,6 +7,7 @@ def main(screen, clock, scene_handler):
         quit = scene_handler.update()
         pygame.display.flip()
 
+        pygame.display.set_caption(f'{TITLE} | fps: {round(clock.get_fps(), 1)}')
         clock.tick(FRAME_RATE)
 
 if __name__ == '__main__':

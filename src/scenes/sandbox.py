@@ -1,12 +1,14 @@
-from src.engine import Camera
+from src.engine import BoxCamera
 
-from src.entities.tiles import Block, Platform, Ramp, DamageTile
+from src.entities.tiles import Block, Platform, Ramp, Floor
 from src.entities.player import Player
+from src.entities.enemy import Stelemental
 
 from src.scenes.scene import Scene
 
+from src.ui.healthbar import Healthbar
+
 import pygame
-import os
 
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=None):
@@ -14,36 +16,55 @@ class Sandbox(Scene):
 
         self.player = Player((615, 1200), 4)
 
-        self.camera = Camera.Box(self.player)
+        self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
         
-        floor = Block((0, 1500), (155, 155, 255), (10000, 50), 5) 
+        self.ui = {
+            'healthbar': Healthbar(self.player),
+        }
 
-        wall_a = Block((-20, 0), (155, 155, 255), (20, 1500), 5)
-        wall_b = Block((10000, 0), (155, 155, 255), (20, 1500), 5)
+        self.tiles = {
+            'floors': [Floor((0, 1500), (155, 155, 255), (10000, 75), 5)],
 
-        block_a = Block((596, 1405), (155, 155, 255), (48, 96), 5)  
-        block_b = Block((836, 1405), (155, 155, 255), (48, 96), 5)  
-        block_c = Block((196, 1453), (155, 155, 255), (96, 48), 5)  
+            'walls': [
+                Block((-20, 0), (155, 155, 255), (20, 1500), 5),        
+                Block((10000, 0), (155, 155, 255), (20, 1500), 5)
+            ],
 
-        ramp_a = Ramp((500, 1405), 0, 'right', (155, 155, 255), 5)
-        ramp_b = Ramp((884, 1405), 0, 'left', (155, 155, 255), 5)
-        ramp_c = Ramp((100, 1405), 1, 'right', (155, 155, 255), 5)
-        ramp_d = Ramp((292, 1405), 1, 'left', (155, 155, 255), 5)
+            'blocks': [
+                Block((596, 1405), (155, 155, 255), (48, 96), 5),
+                Block((836, 1405), (155, 155, 255), (48, 96), 5),
+                Block((196, 1453), (155, 155, 255), (96, 48), 5), 
+                Block((1400, 1452), (155, 155, 255), (48, 48), 5),
+                Block((1600, 1404), (155, 155, 255), (48, 48), 5), 
+                Block((1800, 1356), (155, 155, 255), (48, 48), 5), 
+                Block((2000, 1308), (155, 155, 255), (48, 48), 5),   
+                Block((2800, 1452), (155, 155, 255), (48, 48), 5), 
+                Block((2600, 1404), (155, 155, 255), (48, 48), 5),
+                Block((2400, 1356), (155, 155, 255), (48, 48), 5),
+                Block((2200, 1308), (155, 155, 255), (48, 48), 5) 
+            ],
 
-        platform = Platform((644, 1405), (125, 125, 255), (192, 8), 3)
+            'ramps': [
+                Ramp((500, 1405), 0, 'right', (155, 155, 255), 5),
+                Ramp((884, 1405), 0, 'left', (155, 155, 255), 5),
+                Ramp((100, 1405), 1, 'right', (155, 155, 255), 5),
+                Ramp((292, 1405), 1, 'left', (155, 155, 255), 5)
+            ],
 
-        damage_a = DamageTile((2000, 1405), (255, 0, 0), (100, 100), 3)
+            'platforms': [Platform((644, 1405), (125, 125, 255), (192, 8), 3)]
+        }
 
-        self.add_sprites(
-            self.player,
-            floor, 
-            wall_a, wall_b,
-            block_a, block_b, block_c,
-            platform,
-            ramp_a, ramp_b, ramp_c, ramp_d,
-            damage_a
-        )
+        self.add_sprites(self.player)
+
+        self.add_sprites(Stelemental((1000, 1300), 6))
+
+        for sprite_list in self.tiles.values():
+            for sprite in sprite_list:
+                self.add_sprites(sprite)
+
+        for sprite in self.ui.values():
+            self.add_sprites(sprite)
 
     def display(self, screen, clock, dt):
         if self.dt_info['frames'] > 0:
@@ -53,8 +74,13 @@ class Sandbox(Scene):
         dt = 3 if dt > 3 else dt
         dt = round(dt, 1)
 
+        entity_view = pygame.Rect(
+            self.camera_offset[0] - self.view.width * .5, self.camera_offset[1] - self.view.height * .5, 
+            self.view.width * 2, self.view.height * 2
+        )
+
         self.background_surface.fill((0, 0, 0, 255), self.view)
-        self.entity_surface.fill((0, 0, 0, 255))
+        self.entity_surface.fill((0, 0, 0, 255), entity_view)
         self.ui_surface.fill((0, 0, 0, 0), self.view)
 
         display_order = self.sort_sprites(self.sprites)
@@ -64,10 +90,10 @@ class Sandbox(Scene):
                     continue
 
                 sprite.display(self, dt)
-
+                
         self.camera_offset = self.camera.update(dt)
         self.mouse.display(self)
-        
+
         screen.blit(self.background_surface, (0, 0))
         screen.blit(self.entity_surface, (-self.camera_offset[0], -self.camera_offset[1]))
         screen.blit(self.ui_surface, (0, 0))

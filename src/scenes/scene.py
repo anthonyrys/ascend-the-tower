@@ -1,5 +1,5 @@
 from src.constants import SCREEN_DIMENSIONS
-from src.particle_fx import Particle
+from src.entities.particle_fx import Particle
 
 import pygame
 
@@ -91,7 +91,7 @@ class Scene:
 
             sprite.on_key_up(self, event.key)
 
-    def set_dt_multiplier(self, duration, multiplier):
+    def set_dt_multiplier(self, multiplier, duration):
         self.dt_info['max_frames'] = duration
         self.dt_info['frames'] = duration
 

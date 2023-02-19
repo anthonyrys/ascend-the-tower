@@ -24,7 +24,7 @@ class Particle(Entity):
 
 class Circle(Particle):
     def __init__(self, info_class, position, color, radius, width):
-        super().__init__(info_class, position, (0, 0, 0, 0), (radius * 2, radius * 2), None)
+        super().__init__(info_class, position, (0, 0, 0), (radius * 2, radius * 2), None)
 
         self.position, self.base_position = position, position
         self.radius, self.base_radius = radius, radius
@@ -47,11 +47,13 @@ class Circle(Particle):
         self.radius = self.base_radius + ((self.info['radius'] - self.base_radius) * Easings.ease_out_cubic(abs_prog))
         self.width = self.base_width + round((self.info['width'] - self.base_width) * Easings.ease_in_sine(abs_prog))
 
+        self.image.fill((0, 0, 0))
         pygame.draw.circle(
-            scene.entity_surface, 
-            self.color, self.rect.center, self.radius, self.width
+            self.image,
+            self.color, (self.image.get_width() * .5, self.image.get_height() * .5), self.radius, self.width
         )
 
+        super().display(scene, dt)
         self.frame_count += 1 * dt
 
 class Image(Particle):
@@ -69,5 +71,5 @@ class Image(Particle):
 
         self.image.set_alpha(self.alpha + ((self.info['alpha'] - self.alpha) * Easings.ease_out_sine(abs_prog)))
 
-        scene.entity_surface.blit(self.image, self.rect)
+        super().display(scene, dt)
         self.frame_count += 1 * dt
