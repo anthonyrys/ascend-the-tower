@@ -1,6 +1,6 @@
 from src.constants import PRIMARY_COLOR
 from src.engine import SpriteMethods
-from src.entities.particle_fx import Particle, Circle, Image
+from src.entities.particle_fx import Circle, Image
 
 from src.core_systems.combat_handler import CombatMethods
 
@@ -38,7 +38,7 @@ class Ability:
 class Dash(Ability):
     def __init__(self, character):
         super().__init__(character)
-        self.ability_id = 'base_a0'
+        self.ability_id = 'dash'
 
         self.ability_info['cooldown_timer'] = 45
         self.ability_info['velocity'] = character.movement_info['max_movespeed'] * 3
@@ -60,7 +60,7 @@ class Dash(Ability):
 class Teleport(Ability):
     def __init__(self, character):
         super().__init__(character)
-        self.ability_id = 'base_a1'
+        self.ability_id = 'teleport'
 
         self.img_scale = 1.5
         self.image = pygame.image.load(os.path.join('imgs', 'player', 'teleport.png')).convert_alpha()
@@ -75,65 +75,11 @@ class Teleport(Ability):
         self.ability_info['cooldown_timer'] = 60
         self.ability_info['speed'] = 60
         self.ability_info['gravity_frames'] = 20
-        self.ability_info['hit_immunity'] = 30
+        self.ability_info['hit_immunity'] = 10
 
         self.ability_info['damage'] = 25
 
         self.keybind_info['keybinds'] = [1]
-
-    def call(self, scene, keybind=None): 
-        if self.ability_info['cooldown'] > 0:
-            return
-
-        if (SpriteMethods.get_distance(self.character.center_position, scene.mouse.entity_pos) < 75):
-            return
-
-        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
-
-        self.overrides = True
-        self.state = 'active'
-
-        self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
-
-        distance = SpriteMethods.get_distance(self.character.center_position, self.destination)
-        self.velocity = [
-            (self.destination[0] - self.character.rect.centerx) / (distance / self.ability_info['speed']),
-            (self.destination[1] - self.character.rect.centery) / (distance / self.ability_info['speed'])
-        ]
-        self.character.velocity = [self.velocity[0] * .5, self.velocity[1] * .5]
-
-        self.destination[0] += self.velocity[0] * 2
-        self.destination[1] += self.velocity[1] * 2
-
-        self.character.image = self.image
-
-        self.character.glow['active'] = True
-        self.character.glow['size'] = 1.75
-        self.character.glow['intensity'] = .15
-
-        self.character.immunities['contact&'] = True
-
-        particles = []
-        pos = self.character.center_position
-        for _ in range(5):
-            cir = Circle(
-                    Particle.Info(
-                        65, 
-                        position= (pos[0] + random.randint(-100, 100), pos[1] + random.randint(-100, 100)), 
-                        radius=0, 
-                        width=0
-                    ),
-                    pos, PRIMARY_COLOR, 6, 0
-                )
-            
-            cir.glow['active'] = True
-            cir.glow['size'] = 1.2
-            cir.glow['intensity'] = .25
-
-            particles.append(cir)
-
-        scene.add_sprites(particles)    
-        scene.camera.set_camera_tween(50)
 
     def on_collide_tile(self, scene, dt, tile):
         self.character.velocity = [round(-self.velocity[0] * .3, 1), round(-self.velocity[1] * .3, 1)]
@@ -149,18 +95,13 @@ class Teleport(Ability):
 
         pos = enemy.center_position
         for _ in range(8):
-            cir = Circle(
-                    Particle.Info(
-                        125, 
-                        position=(
-                            pos[0] + random.randint(-250, 250), 
-                            pos[1] + random.randint(-250, 250)
-                        ), 
+            cir = Circle(pos, PRIMARY_COLOR, 8, 0)
+            cir.set_goal(
+                        75, 
+                        position=(pos[0] + random.randint(-250, 250), pos[1] + random.randint(-250, 250)), 
                         radius=0, 
                         width=0
-                    ),
-                    pos, PRIMARY_COLOR, 8, 0
-                )
+                    )
 
             cir.glow['active'] = True
             cir.glow['size'] = 1.5
@@ -172,7 +113,65 @@ class Teleport(Ability):
             self.character.immunities['contact'] = self.ability_info['hit_immunity']
 
         scene.add_sprites(particles)   
-    
+
+    def call(self, scene, keybind=None): 
+        if self.ability_info['cooldown'] > 0:
+            return
+        
+        self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
+
+        tiles = [s for s in scene.sprites if isinstance(s, Tile) and not isinstance(s, Platform)]
+        tile_col = SpriteMethods.check_line_collision(self.character.center_position, self.destination, tiles)
+        if tile_col != []:
+            self.destination = list(tile_col[0][1][0])
+
+        distance = SpriteMethods.get_distance(self.character.center_position, self.destination)
+
+        if distance < 75:
+            return
+
+        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+
+        self.overrides = True
+        self.state = 'active'
+
+        self.velocity = [
+            (self.destination[0] - self.character.rect.centerx) / (distance / self.ability_info['speed']),
+            (self.destination[1] - self.character.rect.centery) / (distance / self.ability_info['speed'])
+        ]
+        self.character.velocity = [round(self.velocity[0] * .5, 1), round(self.velocity[1] * .5, 1)]
+
+        self.destination[0] += self.velocity[0] * 2
+        self.destination[1] += self.velocity[1] * 2
+
+        self.character.image = self.image
+
+        self.character.glow['active'] = True
+        self.character.glow['size'] = 1.75
+        self.character.glow['intensity'] = .15
+
+        self.character.immunities['contact&'] = True
+
+        particles = []
+        pos = self.character.center_position
+        for _ in range(5):
+            cir = Circle(pos, PRIMARY_COLOR, 6, 0)
+            cir.set_goal(
+                        50, 
+                        position=(pos[0] + random.randint(-100, 100), pos[1] + random.randint(-100, 100)), 
+                        radius=0, 
+                        width=0
+                    )
+            
+            cir.glow['active'] = True
+            cir.glow['size'] = 1.2
+            cir.glow['intensity'] = .25
+
+            particles.append(cir)
+
+        scene.add_sprites(particles)    
+        scene.camera.set_camera_tween(50)
+
     def update(self, scene, dt):
         if self.state != 'active':
             super().update(scene, dt)
@@ -214,8 +213,8 @@ class Teleport(Ability):
             if not collision:
                 pos = self.character.center_position
                 for _ in range(8):
-                    cir = Circle(
-                            Particle.Info(
+                    cir = Circle(pos, PRIMARY_COLOR, 8, 0)
+                    cir.set_goal(
                                 125, 
                                 position=(
                                     pos[0] + random.randint(-150, 150) + (self.character.velocity[0] * 10), 
@@ -223,9 +222,9 @@ class Teleport(Ability):
                                 ), 
                                 radius=0, 
                                 width=0
-                            ),
-                            pos, PRIMARY_COLOR, 8, 0
-                        )
+                            )
+                    
+                    cir.set_easings(position='tooo')
 
                     cir.glow['active'] = True
                     cir.glow['size'] = 1.5
@@ -233,8 +232,7 @@ class Teleport(Ability):
 
                     particles.append(cir)
         
-
-            scene.add_sprites(particles)    
+            scene.add_sprites(particles)   
 
             self.velocity = []
             self.destination = []
@@ -250,9 +248,5 @@ class Teleport(Ability):
         self.character.apply_afterimages(scene, False)   
 
         scene.add_sprites(
-            Image(
-                Particle.Info(15, alpha=0),
-                self.character.true_position, 
-                self.character.image.copy(), self.character.strata - 1, 255
-            )
+            Image(self.character.true_position, self.character.image.copy(), self.character.strata - 1, 255).set_goal(15, alpha=0)
         )

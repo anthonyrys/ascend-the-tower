@@ -1,11 +1,12 @@
 from src.engine import Entity, Inputs
-from src.spritesheet_loader import load_spritesheet
-from src.entities.particle_fx import Particle, Circle, Image
 
 from src.core_systems.abilities import Dash, Teleport
 from src.core_systems.combat_handler import CombatMethods
 
+from src.entities.particle_fx import Circle, Image
 from src.entities.tiles import Block, Platform, Ramp, Floor
+
+from src.misc.spritesheet_loader import load_spritesheet
 
 import pygame
 import math
@@ -144,27 +145,18 @@ class Player(Entity):
             self.movement_info['jumps'] -= 1
             self.cooldowns['jump'] = self.cooldown_timers['jump']
 
-            pos = (
+            pos =(
                 self.rect.centerx,
                 self.rect.centery + 20
             )
 
-            particles = []
-            particles.append(
-                Circle(
-                    Particle.Info(15, position=(pos[0] - 40, pos[1] + 10), radius=0, width=0),
-                    pos, (255, 255, 255), 6, 0
-                )
-            )
+            circle_left = Circle(pos, (255, 255, 255), 6, 0)
+            circle_left.set_goal(15, position=(pos[0] - 40, pos[1] + 10), radius=0, width=0)
 
-            particles.append(
-                Circle(
-                    Particle.Info(15, position=(pos[0] + 40, pos[1] + 10), radius=0, width=0),
-                    pos, (255, 255, 255), 6, 0
-                )
-            )
+            circle_right = Circle(pos, (255, 255, 255), 6, 0)
+            circle_right.set_goal(15, position=(pos[0] + 40, pos[1] + 10), radius=0, width=0)
 
-            scene.add_sprites(particles)    
+            scene.add_sprites(circle_left, circle_right)    
 
     def on_healed(self, scene, info):
         ...
@@ -310,18 +302,20 @@ class Player(Entity):
 
         x_pos = self.rect.left - self.rect.width * .5
         afterimage_plr = Image(
-            Particle.Info(5, alpha=0),
             (x_pos, self.rect.y), 
             self.image.copy(), self.strata - 1, 50
         )
+        
+        afterimage_plr.set_goal(5, alpha=0)
 
         afterimage_halo = None
         if halo:
             afterimage_halo = Image(
-                Particle.Info(5, alpha=0),
                 (self.rect.left - self.halo.rect_offset[0], self.rect.y - self.halo.rect_offset[1]),
                 self.halo.image.copy(), self.strata - 1, 50
             )
+
+            afterimage_halo.set_goal(5, alpha=0)
 
         scene.add_sprites(afterimage_plr, afterimage_halo)
 

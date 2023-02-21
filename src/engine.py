@@ -22,7 +22,6 @@ class Easings:
     def ease_in_cir(abs_prog):
         return 1 - math.sqrt(1 - math.pow(abs_prog, 2))
 
-
     @staticmethod
     def ease_out_sine(abs_prog):
         return math.sin((abs_prog * math.pi) / 2)
@@ -38,6 +37,10 @@ class Easings:
     @staticmethod
     def ease_out_cir(abs_prog):
         return math.sqrt(1 - math.pow(abs_prog - 1, 2))
+
+    @staticmethod
+    def custom_position_particle_fx(abs_prog):
+        return 1 - pow(1 - abs_prog, 4)
 
 class Fonts:
     FONT_PATH = os.path.join('imgs', 'fonts')
@@ -361,7 +364,7 @@ class Entity(pygame.sprite.Sprite):
             top = abs(self.rect.top - collidable.rect.centery)
             bottom = abs(self.rect.bottom - collidable.rect.centery)
             
-            if top < bottom:
+            if top < bottom and collidable.special != 'floor':
                 self.rect.top = collidable.rect.bottom
                 self.collide_points['top'] = True
 
@@ -410,7 +413,7 @@ class Entity(pygame.sprite.Sprite):
         self.gravity_info['gravity'] = grav
         self.gravity_info['max_gravity'] = max_grav
 
-class Component(pygame.sprite.Sprite):
+class Frame(pygame.sprite.Sprite):
     def __init__(self, position, img, dimensions, strata, alpha=None):
         pygame.sprite.Sprite.__init__(self)
         self.active = True
@@ -516,6 +519,26 @@ class SpriteMethods:
                 return sprite
 
         return None
+
+    def get_sprite_colors(primary_sprite):
+        iteration_threshold = .1
+        iterations = int(((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold)
+
+        colors = []
+        for _ in range(iterations):
+            found_pixel = False
+            x = 0
+            y = 0
+
+            while not found_pixel:
+                x = random.randint(0, primary_sprite.image.get_width() - 1)
+                y = random.randint(0, primary_sprite.image.get_height() - 1)
+
+                found_pixel = primary_sprite.image.get_at((x, y)) != ((0, 0, 0, 0))
+                
+            colors.append(primary_sprite.image.get_at([x, y]))
+
+        return colors
 
     @staticmethod
     def create_outline_edge(sprite, color, display, size=1):

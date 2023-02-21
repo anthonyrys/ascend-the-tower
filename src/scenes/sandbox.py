@@ -1,8 +1,8 @@
 from src.engine import BoxCamera
 
-from src.entities.tiles import Block, Platform, Ramp, Floor
-from src.entities.player import Player
 from src.entities.enemy import Stelemental
+from src.entities.player import Player
+from src.entities.tiles import Block, Platform, Ramp, Floor
 
 from src.scenes.scene import Scene
 
@@ -24,7 +24,7 @@ class Sandbox(Scene):
         }
 
         self.tiles = {
-            'floors': [Floor((0, 1500), (155, 155, 255), (10000, 75), 5)],
+            'floors': [Floor((0, 1500), (155, 155, 255), (10000, 100), 5)],
 
             'walls': [
                 Block((-20, 0), (155, 155, 255), (20, 1500), 5),        
@@ -56,8 +56,7 @@ class Sandbox(Scene):
         }
 
         self.add_sprites(self.player)
-
-        self.add_sprites(Stelemental((1000, 1300), 6))
+        self.add_sprites(Stelemental((1000, 1300), 6), Stelemental((1100, 1225), 6))
 
         for sprite_list in self.tiles.values():
             for sprite in sprite_list:
@@ -100,4 +99,3 @@ class Sandbox(Scene):
 
         self.frame_count_raw += 1 * dt
         self.frame_count = round(self.frame_count_raw)
-        

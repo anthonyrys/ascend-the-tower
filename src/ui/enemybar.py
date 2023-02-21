@@ -1,9 +1,9 @@
-from src.engine import Component
+from src.engine import Frame
 
 import pygame
 import os
 
-class Enemybar(Component):
+class Enemybar(Frame):
     def __init__(self, sprite):
         img = pygame.image.load(os.path.join('imgs', 'ui', 'enemy-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * 1.25, img.get_height() * 1.25))

@@ -1,5 +1,6 @@
 from src.engine import Entity
-from src.spritesheet_loader import load_spritesheet
+
+from src.misc.spritesheet_loader import load_spritesheet
 
 import pygame
 import os
@@ -7,6 +8,8 @@ import os
 class Tile(Entity):
     def __init__(self, position, img, dimensions, strata=None, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
+
+        self.special = None
 
     def display(self, scene, dt):
         super().display(scene, dt)
@@ -21,6 +24,8 @@ class Block(Tile):
 class Floor(Tile):
     def __init__(self, position, img, dimensions, strata=None):
         super().__init__(position, img, dimensions, strata)
+
+        self.special = 'floor'
 
     def display(self, scene, dt):
         super().display(scene, dt)

@@ -1,9 +1,9 @@
-from src.engine import Component
+from src.engine import Frame
 
 import pygame
 import os
 
-class Healthbar(Component):
+class Healthbar(Frame):
     def __init__(self, player):
         img = pygame.image.load(os.path.join('imgs', 'ui', 'health-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
