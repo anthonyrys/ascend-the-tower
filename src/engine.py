@@ -388,19 +388,19 @@ class Entity(pygame.sprite.Sprite):
 
         return callback_collision  
 
-    def apply_gravity(self, dt):
+    def apply_gravity(self, dt, multiplier=1.0):
         grav = self.gravity_info['gravity']
         max_grav = self.gravity_info['max_gravity']
 
         if not self.collide_points['bottom']:
-            self.velocity[1] += grav * dt if self.velocity[1] < max_grav * dt else 0
+            self.velocity[1] += (grav * dt if self.velocity[1] < max_grav * dt else 0) * multiplier
 
         else:
             if dt == 0:
                 self.velocity[1] = 0
 
             else:
-                self.velocity[1] = grav / dt
+                self.velocity[1] = (grav / dt) * multiplier
 
     def set_gravity(self, frames, grav=None, max_grav=None):
         if grav is None:
@@ -520,9 +520,10 @@ class SpriteMethods:
 
         return None
 
-    def get_sprite_colors(primary_sprite):
+    @staticmethod
+    def get_sprite_colors(primary_sprite, multiplier=1):
         iteration_threshold = .1
-        iterations = int(((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold)
+        iterations = int((((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold) * multiplier)
 
         colors = []
         for _ in range(iterations):

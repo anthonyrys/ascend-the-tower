@@ -7,12 +7,17 @@ from src.entities.tiles import Block, Platform, Ramp, Floor
 from src.scenes.scene import Scene
 
 from src.ui.healthbar import Healthbar
+from src.ui.expbar import Expbar
 
 import pygame
+import random
+import os
 
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
+
+        self.in_menu = False
 
         self.player = Player((615, 1200), 4)
 
@@ -21,7 +26,10 @@ class Sandbox(Scene):
         
         self.ui = {
             'healthbar': Healthbar(self.player),
+            'expbar': Expbar(self. player),
         }
+
+        self.player.healthbar = self.ui['healthbar']
 
         self.tiles = {
             'floors': [Floor((0, 1500), (155, 155, 255), (10000, 100), 5)],
@@ -56,7 +64,6 @@ class Sandbox(Scene):
         }
 
         self.add_sprites(self.player)
-        self.add_sprites(Stelemental((1000, 1300), 6), Stelemental((1100, 1225), 6))
 
         for sprite_list in self.tiles.values():
             for sprite in sprite_list:
@@ -65,6 +72,8 @@ class Sandbox(Scene):
         for sprite in self.ui.values():
             self.add_sprites(sprite)
 
+        self.enemy_info = [[120, 120], [0, 3]]
+
     def display(self, screen, clock, dt):
         if self.dt_info['frames'] > 0:
             dt *= self.dt_info['multiplier']
@@ -72,7 +81,7 @@ class Sandbox(Scene):
 
         dt = 3 if dt > 3 else dt
         dt = round(dt, 1)
-
+        
         entity_view = pygame.Rect(
             self.camera_offset[0] - self.view.width * .5, self.camera_offset[1] - self.view.height * .5, 
             self.view.width * 2, self.view.height * 2
@@ -82,6 +91,15 @@ class Sandbox(Scene):
         self.entity_surface.fill((0, 0, 0, 255), entity_view)
         self.ui_surface.fill((0, 0, 0, 0), self.view)
 
+        self.enemy_info[1][0] = len([s for s in self.sprites if isinstance(s, Stelemental)])
+        if self.enemy_info[0][0] >= self.enemy_info[0][1]:
+            self.enemy_info[0][0] = 0
+
+            if self.enemy_info[1][0] < self.enemy_info[1][1]:
+                self.add_sprites(Stelemental((random.randint(800, 1400), random.randint(1000, 1600)), 6))
+
+        self.enemy_info[0][0] += 1 * dt
+
         display_order = self.sort_sprites(self.sprites)
         for _, v in sorted(display_order.items()):
             for sprite in v: 
@@ -89,10 +107,10 @@ class Sandbox(Scene):
                     continue
 
                 sprite.display(self, dt)
-                
+
         self.camera_offset = self.camera.update(dt)
         self.mouse.display(self)
-
+        
         screen.blit(self.background_surface, (0, 0))
         screen.blit(self.entity_surface, (-self.camera_offset[0], -self.camera_offset[1]))
         screen.blit(self.ui_surface, (0, 0))

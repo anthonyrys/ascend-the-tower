@@ -57,7 +57,7 @@ class Scene:
 
         return display_order
         
-    def display(self, clock, screen):
+    def display(self, screen, clock, dt):
         ...
 
     def get_selected_interactable(self):

@@ -1,12 +1,14 @@
+from src.constants import ENEMY_COLOR
 from src.engine import Entity, Inputs
 
-from src.core_systems.abilities import Dash, Teleport
-from src.core_systems.combat_handler import CombatMethods
+from src.core_systems.abilities import Dash, PrimaryAttack
+from src.core_systems.combat_handler import Combat
+from src.core_systems.level_handler import Level
 
 from src.entities.particle_fx import Circle, Image
 from src.entities.tiles import Block, Platform, Ramp, Floor
 
-from src.misc.spritesheet_loader import load_spritesheet
+from src.services.spritesheet_loader import load_spritesheet
 
 import pygame
 import math
@@ -15,9 +17,8 @@ import os
 class Player(Entity):
     class Halo(Entity):
         def __init__(self, position, img, strata):
-            self.img_scale = 1.5
-
-            img = pygame.transform.scale(img, (img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
+            img_scale = 1.5
+            img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
             img.set_colorkey((0, 0, 0, 0))
 
             super().__init__(position, img, None, strata)
@@ -46,11 +47,25 @@ class Player(Entity):
         self.timed_inputs = {}
         self.timed_input_buffer = 7
 
-        self.movement_info = {
+        self.healthbar = None
+
+        self.state_info = {
+            'dead': False,
+            'movement': None
+        }
+
+        self.stats = {
+            'speed': [3, 12],
+            'health': 100,
+            'damage': 25,
+            'crit_strike_chance': .20,
+            'crit_strike_multiplier': 1.5,
+        }
+
+        self.default_movement_info = {
             'direction': 0,
 
             'friction': .75,
-            'base_friction': .75,
             'friction_frames': 0,
 
             'per_frame_movespeed': 3,
@@ -61,38 +76,46 @@ class Player(Entity):
             'max_jumps': 2
         }
 
-        self.combat_info = {
+        self.movement_info = self.default_movement_info.copy()
+
+        self.default_combat_info = {
             'max_health': 100,
-            'health': 55,
+            'health': 100,
             'regen_info': [.01, [0, 30]],
 
-            'knockback_resistance': 1
+            'base_damage': 25,
+            'crit_strike_chance': .20,
+            'crit_strike_multiplier': 1.5,
+
+            'knockback_resistance': 1,
+
+            'immunities': Combat.get_immunity_dict(),
+            'mitigations': {}
         }
         
-        self.state_info = {
-            'dead': False,
-            'movement': None
-        }
+        self.combat_info = self.default_combat_info.copy()
 
-        self.imgs = {}
-        self.damage_img = 0
-        self.max_damage_img = 0
-        self.img_frames = {}
-        self.img_frames_raw = {}
-        self.img_scale = 1.5
+        self.img_info = {
+            'imgs': {},
+            'scale': 1.5,
 
-        self.frame_info = {
-            'idle': [50, 50],
-            'run': [2, 2, 2, 2, 2],
-            'jump': [1],
-            'fall': [1]
+            'frames': {},
+            'frames_raw': {},
+            'frame_info': {
+                'idle': [50, 50],
+                'run': [2, 2, 2, 2, 2],
+                'jump': [1],
+                'fall': [1]
+            },
+
+            'damage_frames': 0,
+            'damage_frames_max': 0,
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
-            self.imgs[name] = load_spritesheet(os.path.join('imgs', 'player', f'player-{name}.png'), self.frame_info[name])
-
-            self.img_frames[name] = 0
-            self.img_frames_raw[name] = 0
+            self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
+            self.img_info['frames'][name] = 0
+            self.img_info['frames_raw'][name] = 0
 
         self.cooldown_timers = {
             'jump': 8
@@ -101,17 +124,24 @@ class Player(Entity):
         self.cooldowns = {}
         for cd in self.cooldown_timers.keys():
             self.cooldowns[cd] = 0
-        
+
+        self.equipment = {}
         self.abilities = {
             'dash': Dash(self), 
-            'teleport': Teleport(self),
+            'primary': PrimaryAttack(self),
             'ability_1': None,
             'ability_2': None,
             'ability_3': None
         }
-        
         self.talents = []
-        self.immunities = {}
+
+        self.level_info = {
+            'level': 1,
+            'experience': 0,
+            'max_experience': Level.BASE_PLAYER_EXPERIENCE_CAP
+        }
+
+        self.on_stats_changed()
 
     def on_key_down(self, scene, key):
         for action, keybinds in Inputs.KEYBINDS.items():
@@ -129,6 +159,9 @@ class Player(Entity):
             self.timed_inputs[action] = self.timed_input_buffer
 
     def on_mouse_down(self, scene, key):
+        if scene.in_menu:
+            return
+    
         for ability in [s for s in self.abilities.values() if s is not None]:
             if key not in ability.keybind_info['keybinds']:
                 continue
@@ -158,12 +191,15 @@ class Player(Entity):
 
             scene.add_sprites(circle_left, circle_right)    
 
+    def on_death(self, scene, info):
+        ...
+
     def on_healed(self, scene, info):
         ...
 
     def on_damaged(self, scene, sprite, info):
         scene.set_dt_multiplier(.2, 5)
-        self.immunities[info['type']] = 45
+        self.combat_info['immunities'][info['type']] = 30
 
         if sprite.rect.centerx > self.rect.centerx:
             self.velocity[0] = -self.movement_info['max_movespeed'] * 2
@@ -181,8 +217,37 @@ class Player(Entity):
         scene.camera.set_camera_shake(20, 10)
 
         self.set_friction(20, .5)
-        self.damage_img = 30
-        self.max_damage_img = 30
+        self.img_info['damage_frames'] = 30
+        self.img_info['damage_frames_max'] = 30
+
+    def on_experience_gained(self, scene):
+        ...
+
+    def on_level_up(self, scene):
+        ...
+
+    def on_stats_changed(self):
+        self.stats = {
+            'speed': [3, 12],
+            'health': 100,
+            'damage': 25,
+            'crit_strike_chance': .20,
+            'crit_strike_multiplier': 1.5,
+        }
+
+        self.movement_info['per_frame_movespeed'] = self.stats['speed'][0]
+        self.movement_info['max_movespeed'] = self.stats['speed'][1]
+
+        difference = self.stats['health'] - self.combat_info['max_health']
+        self.combat_info['max_health'] = self.stats['health']
+        self.combat_info['health'] += difference
+
+        self.combat_info['base_damage'] = self.stats['damage']
+        self.combat_info['crit_strike_chance'] = self.stats['crit_strike_chance']
+        self.combat_info['crit_strike_multiplier'] = self.stats['crit_strike_multiplier']
+
+    def on_equipment_changed(self):
+        ...
 
     def apply_movement(self, scene):
         pressed = Inputs.pressed
@@ -299,23 +364,22 @@ class Player(Entity):
     def apply_afterimages(self, scene, halo=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed']:
             return
-
-        x_pos = self.rect.left - self.rect.width * .5
+        
         afterimage_plr = Image(
-            (x_pos, self.rect.y), 
+            self.center_position, 
             self.image.copy(), self.strata - 1, 50
         )
         
-        afterimage_plr.set_goal(5, alpha=0)
+        afterimage_plr.set_goal(5, alpha=0, dimensions=self.image.get_size())
 
         afterimage_halo = None
         if halo:
             afterimage_halo = Image(
-                (self.rect.left - self.halo.rect_offset[0], self.rect.y - self.halo.rect_offset[1]),
+                (self.rect.centerx - self.halo.rect_offset[0], self.rect.centery - self.halo.rect_offset[1] * 1.8),
                 self.halo.image.copy(), self.strata - 1, 50
             )
 
-            afterimage_halo.set_goal(5, alpha=0)
+            afterimage_halo.set_goal(5, alpha=0, dimensions=self.halo.image.get_size())
 
         scene.add_sprites(afterimage_plr, afterimage_halo)
 
@@ -350,27 +414,29 @@ class Player(Entity):
         if self.state_info['movement'] == 'run':
             et = 1 if abs(self.velocity[0] / self.movement_info['max_movespeed']) > 1 else abs(self.velocity[0] / self.movement_info['max_movespeed'])
 
-        if len(self.imgs[self.state_info['movement']]) <= self.img_frames[self.state_info['movement']]:
-            self.img_frames[self.state_info['movement']] = 0
-            self.img_frames_raw[self.state_info['movement']] = 0
+        if len(self.img_info['imgs'][self.state_info['movement']]) <= self.img_info['frames'][self.state_info['movement']]:
+            self.img_info['frames'][self.state_info['movement']] = 0
+            self.img_info['frames_raw'][self.state_info['movement']] = 0
 
-        img = self.imgs[self.state_info['movement']][self.img_frames[self.state_info['movement']]]
+        img = self.img_info['imgs'][self.state_info['movement']][self.img_info['frames'][self.state_info['movement']]]
 
-        self.img_frames_raw[self.state_info['movement']]  += (1 * et) * dt
-        self.img_frames[self.state_info['movement']] = round(self.img_frames_raw[self.state_info['movement']])
+        self.img_info['frames_raw'][self.state_info['movement']]  += (1 * et) * dt
+        self.img_info['frames'][self.state_info['movement']] = round(self.img_info['frames_raw'][self.state_info['movement']])
 
-        for frame in self.img_frames:
+        for frame in self.img_info['frames']:
             if self.state_info['movement'] == frame:
                 continue
 
-            if self.img_frames[frame] == 0:
+            if self.img_info['frames'][frame] == 0:
                 continue
 
-            self.img_frames[frame] = 0
-            self.img_frames_raw[frame] = 0
+            self.img_info['frames'][frame] = 0
+            self.img_info['frames_raw'][frame] = 0
 
-        self.image = pygame.transform.scale(img, (img.get_width() * self.img_scale, img.get_height() * self.img_scale)).convert_alpha()
-        self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
+        self.image = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale'])).convert_alpha()
+
+        if dt != 0:
+            self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def set_friction(self, frames, friction):
         self.movement_info['friction_frames'] = frames
@@ -394,8 +460,8 @@ class Player(Entity):
             self.movement_info['friction_frames'] -= 1 * dt
 
         elif self.movement_info['friction_frames'] <= 0:
-            if self.movement_info['friction'] != self.movement_info['base_friction']:
-                self.movement_info['friction'] = self.movement_info['base_friction']
+            if self.movement_info['friction'] != self.default_movement_info['friction']:
+                self.movement_info['friction'] = self.default_movement_info['friction']
                 self.movement_info['friction_frames'] = 0
 
         self.combat_info['regen_info'][1][0] += 1 * dt
@@ -403,18 +469,21 @@ class Player(Entity):
             self.combat_info['regen_info'][1][0] = 0
 
             if self.combat_info['health'] < self.combat_info['max_health']:
-                CombatMethods.register_heal(
+                Combat.register_heal(
                     scene,
                     self, 
                     {'type': 'status', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
                 )
 
-        for immunity in self.immunities.keys():
-            if self.immunities.get(immunity):
-                if self.immunities[immunity] <= 0 or '&' in immunity:
-                    continue
+        for immunity in self.combat_info['immunities'].keys():
+            if '&' in immunity or self.combat_info['immunities'][immunity] == 0:
+                continue
 
-                self.immunities[immunity] -= 1 * dt
+            if self.combat_info['immunities'][immunity] < 0:
+                self.combat_info['immunities'][immunity] = 0
+                continue
+
+            self.combat_info['immunities'][immunity] -= 1 * dt
 
         for ability in [s for s in self.abilities.values() if s is not None]:
             ability.update(scene, dt)  
@@ -426,7 +495,7 @@ class Player(Entity):
             if ability.overrides:
                 super().display(scene, dt)
                 return
-
+            
         self.apply_gravity(dt)
         self.apply_movement(scene)
         
@@ -445,14 +514,15 @@ class Player(Entity):
         self.set_images(scene, dt)
 
         super().display(scene, dt)
-        if self.damage_img > 0:
+        if self.img_info['damage_frames'] > 0:
             img = self.mask.to_surface(
-                setcolor=(242, 59, 76),
+                setcolor=ENEMY_COLOR,
                 unsetcolor=(0, 0, 0, 0)
             )
-            img.set_alpha(255 * (self.damage_img / self.max_damage_img)) 
+
+            img.set_alpha(255 * (self.img_info['damage_frames'] / self.img_info['damage_frames_max'])) 
             scene.entity_surface.blit(img, (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]))
 
-            self.damage_img -= 1 * dt
+            self.img_info['damage_frames'] -= 1 * dt
 
         self.halo.display(self, scene, dt)

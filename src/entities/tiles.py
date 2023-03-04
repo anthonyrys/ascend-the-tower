@@ -1,6 +1,6 @@
 from src.engine import Entity
 
-from src.misc.spritesheet_loader import load_spritesheet
+from src.services.spritesheet_loader import load_spritesheet
 
 import pygame
 import os

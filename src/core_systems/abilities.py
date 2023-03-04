@@ -1,22 +1,24 @@
-from src.constants import PRIMARY_COLOR
+from src.constants import PLAYER_COLOR
 from src.engine import SpriteMethods
 from src.entities.particle_fx import Circle, Image
 
-from src.core_systems.combat_handler import CombatMethods
+from src.core_systems.combat_handler import Combat
 
 from src.entities.tiles import Tile, Platform
 from src.entities.enemy import Enemy
 
 import pygame
 import random
+import inspect
+import sys
 import os
 
 class Ability:
+    ABILITY_ID = None
+
     def __init__(self, character):
         self.character = character
         self.overrides = False
-
-        self.ability_id = None
 
         self.ability_info = {
             'cooldown_timer': 0,
@@ -28,6 +30,17 @@ class Ability:
             'keybinds': []
         }
 
+    @staticmethod
+    def get_all_abilities():
+        ability_list = []
+        for ability in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+            if not issubclass(ability[1], Ability) or ability[1].ABILITY_ID is None:
+                continue
+
+            ability_list.append(ability[1])
+
+        return ability_list
+            
     def call(self, scene, keybind=None):
         print(f'{self.ability_id}::call()')
     
@@ -36,11 +49,12 @@ class Ability:
             self.ability_info['cooldown'] -= 1 * dt
 
 class Dash(Ability):
+    ABILITY_ID = 'dash@'
+
     def __init__(self, character):
         super().__init__(character)
-        self.ability_id = 'dash'
 
-        self.ability_info['cooldown_timer'] = 45
+        self.ability_info['cooldown_timer'] = 30
         self.ability_info['velocity'] = character.movement_info['max_movespeed'] * 3
 
         self.keybind_info['double_tap'] = True
@@ -57,13 +71,14 @@ class Dash(Ability):
         elif keybind == 'right':
             self.character.velocity[0] = self.ability_info['velocity']
 
-class Teleport(Ability):
+class PrimaryAttack(Ability):
+    ABILITY_ID = 'primary@'
+
     def __init__(self, character):
         super().__init__(character)
-        self.ability_id = 'teleport'
 
         self.img_scale = 1.5
-        self.image = pygame.image.load(os.path.join('imgs', 'player', 'teleport.png')).convert_alpha()
+        self.image = pygame.image.load(os.path.join('imgs', 'abilities', 'primary.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.image.get_width() * self.img_scale, self.image.get_height() * self.img_scale)).convert_alpha()
 
         self.state = 'inactive'
@@ -72,12 +87,14 @@ class Teleport(Ability):
         self.velocity = []
         self.destination = []
 
-        self.ability_info['cooldown_timer'] = 60
+        self.ability_info['cooldown_timer'] = 30
+
         self.ability_info['speed'] = 60
         self.ability_info['gravity_frames'] = 20
-        self.ability_info['hit_immunity'] = 10
 
-        self.ability_info['damage'] = 25
+        self.ability_info['hit_immunity'] = 10
+        self.ability_info['damage'] = character.combat_info['base_damage']
+        self.ability_info['damage_type'] = 'physical'
 
         self.keybind_info['keybinds'] = [1]
 
@@ -86,16 +103,16 @@ class Teleport(Ability):
 
     def on_collide_enemy(self, scene, dt, enemy):
         particles = []
-        CombatMethods.register_damage(
+        Combat.register_damage(
             scene,
             self.character, 
             enemy,
-            {'type': 'contact', 'amount': self.ability_info['damage'], 'velocity': self.character.velocity}
+            {'type': self.ability_info['damage_type'], 'amount': self.ability_info['damage'], 'velocity': self.character.velocity}
         )
 
         pos = enemy.center_position
         for _ in range(8):
-            cir = Circle(pos, PRIMARY_COLOR, 8, 0)
+            cir = Circle(pos, PLAYER_COLOR, 8, 0)
             cir.set_goal(
                         75, 
                         position=(pos[0] + random.randint(-250, 250), pos[1] + random.randint(-250, 250)), 
@@ -110,9 +127,10 @@ class Teleport(Ability):
             particles.append(cir)
                     
             self.character.velocity = [round(-self.velocity[0] * .5, 1), round(-abs(self.velocity[1] * .3), 1)]
-            self.character.immunities['contact'] = self.ability_info['hit_immunity']
+            self.character.combat_info['immunities']['contact'] = self.ability_info['hit_immunity']
 
         scene.add_sprites(particles)   
+        scene.set_dt_multiplier(.25, 10)
 
     def call(self, scene, keybind=None): 
         if self.ability_info['cooldown'] > 0:
@@ -150,12 +168,12 @@ class Teleport(Ability):
         self.character.glow['size'] = 1.75
         self.character.glow['intensity'] = .15
 
-        self.character.immunities['contact&'] = True
+        self.character.combat_info['immunities']['contact&'] = True
 
         particles = []
         pos = self.character.center_position
         for _ in range(5):
-            cir = Circle(pos, PRIMARY_COLOR, 6, 0)
+            cir = Circle(pos, PLAYER_COLOR, 6, 0)
             cir.set_goal(
                         50, 
                         position=(pos[0] + random.randint(-100, 100), pos[1] + random.randint(-100, 100)), 
@@ -187,6 +205,12 @@ class Teleport(Ability):
 
         enemies = [s for s in scene.sprites if isinstance(s, Enemy)]
         for enemy in enemies:
+            if enemy.combat_info['immunities'][self.ability_info['damage_type'] + '&']:
+                continue
+
+            if enemy.combat_info['immunities'][self.ability_info['damage_type']] > 0:
+                continue
+        
             if not self.character.rect.colliderect(enemy.rect):
                 if SpriteMethods.get_distance(self.character, enemy) > self.character.rect.height * 1.25:
                     continue
@@ -202,18 +226,18 @@ class Teleport(Ability):
             self.character.glow['size'] = 1.1
             self.character.glow['intensity'] = .25
 
-            particles = []
             if isinstance(collision, Tile):
                 self.on_collide_tile(scene, dt, collision)
 
             elif isinstance(collision, Enemy):
-                scene.set_dt_multiplier(.25, 10)
                 self.on_collide_enemy(scene, dt, collision)
                 
-            if not collision:
+            elif not collision:
                 pos = self.character.center_position
+                particles = []
+
                 for _ in range(8):
-                    cir = Circle(pos, PRIMARY_COLOR, 8, 0)
+                    cir = Circle(pos, PLAYER_COLOR, 8, 0)
                     cir.set_goal(
                                 125, 
                                 position=(
@@ -232,13 +256,13 @@ class Teleport(Ability):
 
                     particles.append(cir)
         
-            scene.add_sprites(particles)   
+                scene.add_sprites(particles)
 
             self.velocity = []
             self.destination = []
             self.state = 'inactive'
 
-            self.character.immunities['contact&'] = False
+            self.character.combat_info['immunities']['contact&'] = False
             self.overrides = False
 
             return
