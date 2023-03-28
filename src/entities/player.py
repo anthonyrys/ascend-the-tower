@@ -4,6 +4,7 @@ from src.engine import Entity, Inputs
 from src.core_systems.abilities import Dash, PrimaryAttack
 from src.core_systems.combat_handler import Combat
 from src.core_systems.level_handler import Level
+from src.core_systems.talents import Talent
 
 from src.entities.particle_fx import Circle, Image
 from src.entities.tiles import Block, Platform, Ramp, Floor
@@ -58,7 +59,7 @@ class Player(Entity):
             'speed': [3, 12],
             'health': 100,
             'damage': 25,
-            'crit_strike_chance': .20,
+            'crit_strike_chance': .15,
             'crit_strike_multiplier': 1.5,
         }
 
@@ -81,7 +82,7 @@ class Player(Entity):
         self.default_combat_info = {
             'max_health': 100,
             'health': 100,
-            'regen_info': [.01, [0, 30]],
+            'regen_info': [.01, [0, 60]],
 
             'base_damage': 25,
             'crit_strike_chance': .20,
@@ -108,8 +109,9 @@ class Player(Entity):
                 'fall': [1]
             },
 
-            'damage_frames': 0,
-            'damage_frames_max': 0,
+            'pulse_frames': 0,
+            'pulse_frames_max': 0,
+            'pulse_frame_color': ()
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
@@ -133,7 +135,10 @@ class Player(Entity):
             'ability_2': None,
             'ability_3': None
         }
+
         self.talents = []
+        for talent in Talent.get_all_talents():
+            self.talents.append(talent(self))
 
         self.level_info = {
             'level': 1,
@@ -217,8 +222,9 @@ class Player(Entity):
         scene.camera.set_camera_shake(20, 10)
 
         self.set_friction(20, .5)
-        self.img_info['damage_frames'] = 30
-        self.img_info['damage_frames_max'] = 30
+        self.img_info['pulse_frames'] = 30
+        self.img_info['pulse_frames_max'] = 30
+        self.img_info['pulse_frame_color'] = ENEMY_COLOR
 
     def on_experience_gained(self, scene):
         ...
@@ -227,14 +233,6 @@ class Player(Entity):
         ...
 
     def on_stats_changed(self):
-        self.stats = {
-            'speed': [3, 12],
-            'health': 100,
-            'damage': 25,
-            'crit_strike_chance': .20,
-            'crit_strike_multiplier': 1.5,
-        }
-
         self.movement_info['per_frame_movespeed'] = self.stats['speed'][0]
         self.movement_info['max_movespeed'] = self.stats['speed'][1]
 
@@ -243,8 +241,11 @@ class Player(Entity):
         self.combat_info['health'] += difference
 
         self.combat_info['base_damage'] = self.stats['damage']
+
         self.combat_info['crit_strike_chance'] = self.stats['crit_strike_chance']
         self.combat_info['crit_strike_multiplier'] = self.stats['crit_strike_multiplier']
+
+        Talent.reset_talents(self)
 
     def on_equipment_changed(self):
         ...
@@ -472,7 +473,7 @@ class Player(Entity):
                 Combat.register_heal(
                     scene,
                     self, 
-                    {'type': 'status', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
+                    {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
                 )
 
         for immunity in self.combat_info['immunities'].keys():
@@ -496,6 +497,11 @@ class Player(Entity):
                 super().display(scene, dt)
                 return
             
+        for talent in self.talents:
+            talent.update(scene, dt)  
+
+        self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
+
         self.apply_gravity(dt)
         self.apply_movement(scene)
         
@@ -514,15 +520,14 @@ class Player(Entity):
         self.set_images(scene, dt)
 
         super().display(scene, dt)
-        if self.img_info['damage_frames'] > 0:
+        if self.img_info['pulse_frames'] > 0:
             img = self.mask.to_surface(
-                setcolor=ENEMY_COLOR,
+                setcolor=self.img_info['pulse_frame_color'],
                 unsetcolor=(0, 0, 0, 0)
             )
 
-            img.set_alpha(255 * (self.img_info['damage_frames'] / self.img_info['damage_frames_max'])) 
+            img.set_alpha(255 * (self.img_info['pulse_frames'] / self.img_info['pulse_frames_max'])) 
             scene.entity_surface.blit(img, (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]))
 
-            self.img_info['damage_frames'] -= 1 * dt
-
+            self.img_info['pulse_frames'] -= 1 * dt
         self.halo.display(self, scene, dt)

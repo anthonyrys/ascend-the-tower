@@ -120,8 +120,8 @@ class Stelemental(Enemy):
         self.movement_info['max_movespeed'] = 5
 
         self.combat_info = {
-            'max_health': 50,
-            'health': 50,
+            'max_health': 100,
+            'health': 100,
 
             'contact_damage': 30,
             'crit_strike_chance': 0,
@@ -137,7 +137,7 @@ class Stelemental(Enemy):
             'level': 1,
 
             'experience_amount': 4,
-            'experience_multiplier': 2,
+            'experience_multiplier': 1,
 
             'health_scaling': .95,
             'damage_scaling': .9,
@@ -169,16 +169,17 @@ class Stelemental(Enemy):
         scene.del_sprites(self)
 
     def on_damaged(self, scene, sprite, info):
-        info_velocity = info['velocity']
-        self.velocity[0] = info_velocity[0]
-        
-        if info_velocity[1] >= 0:
-            self.velocity[1] = info_velocity[1]
-        elif sprite.velocity[1] < 0:
-            self.velocity[1] = -info_velocity[1]
+        if 'velocity' in info:
+            info_velocity = info['velocity']
+            self.velocity[0] = info_velocity[0]
+            
+            if info_velocity[1] >= 0:
+                self.velocity[1] = info_velocity[1]
+            elif sprite.velocity[1] < 0:
+                self.velocity[1] = -info_velocity[1]
 
-        self.velocity[0] = round(self.velocity[0] * self.combat_info['knockback_resistance'], 1)
-        self.velocity[1] = round(self.velocity[1] * self.combat_info['knockback_resistance'], 1) * .5
+            self.velocity[0] = round(self.velocity[0] * self.combat_info['knockback_resistance'], 1)
+            self.velocity[1] = round(self.velocity[1] * self.combat_info['knockback_resistance'], 1) * .5
 
         self.img_info['damage_frames'] = 10
         self.img_info['damage_frames_max'] = 10
@@ -199,10 +200,10 @@ class Stelemental(Enemy):
             particles.append(cir)
         scene.add_sprites(particles)
 
-        if info['crit']:
-            self.health_ui.set_pulse(10, (251, 204, 97))
-        else:
+        if not info['crit']:
             self.health_ui.set_pulse(10, (225, 225, 225))
+        else:
+            self.health_ui.set_pulse(10, (251, 204, 97))
 
     def on_contact(self, scene, dt):
         Combat.register_damage(

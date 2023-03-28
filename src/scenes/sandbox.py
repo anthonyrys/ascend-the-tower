@@ -72,7 +72,7 @@ class Sandbox(Scene):
         for sprite in self.ui.values():
             self.add_sprites(sprite)
 
-        self.enemy_info = [[120, 120], [0, 3]]
+        self.enemy_info = [[120, 60], [0, 3]]
 
     def display(self, screen, clock, dt):
         if self.dt_info['frames'] > 0:

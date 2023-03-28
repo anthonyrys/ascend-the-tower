@@ -15,7 +15,7 @@ class Healthbar(Frame):
 
         self.player = player
         self.frame = img
-        self.content_size = [img.get_width(), img.get_height()]
+        self.content_size = [img.get_width() * .825, img.get_height()]
 
         self.previous_health_percentage = 1
         self.tween_info = {

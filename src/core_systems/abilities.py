@@ -2,6 +2,7 @@ from src.constants import PLAYER_COLOR
 from src.engine import SpriteMethods
 from src.entities.particle_fx import Circle, Image
 
+from src.core_systems.talents import Talent
 from src.core_systems.combat_handler import Combat
 
 from src.entities.tiles import Tile, Platform
@@ -42,14 +43,17 @@ class Ability:
         return ability_list
             
     def call(self, scene, keybind=None):
-        print(f'{self.ability_id}::call()')
+        print(f'{self.ABILITY_ID}::call()')
+
+        if self.ABILITY_ID is not None:
+            Talent.call_talents(scene, self.character, {f'on_{self.ABILITY_ID}': self})
     
     def update(self, scene, dt):
         if self.ability_info['cooldown'] > 0:
             self.ability_info['cooldown'] -= 1 * dt
 
 class Dash(Ability):
-    ABILITY_ID = 'dash@'
+    ABILITY_ID = '@dash'
 
     def __init__(self, character):
         super().__init__(character)
@@ -63,8 +67,9 @@ class Dash(Ability):
     def call(self, scene, keybind=None):
         if self.ability_info['cooldown'] > 0:
             return
-        
+
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        super().call(scene, keybind)
 
         if keybind == 'left':
             self.character.velocity[0] = -self.ability_info['velocity']
@@ -72,7 +77,7 @@ class Dash(Ability):
             self.character.velocity[0] = self.ability_info['velocity']
 
 class PrimaryAttack(Ability):
-    ABILITY_ID = 'primary@'
+    ABILITY_ID = '@primary'
 
     def __init__(self, character):
         super().__init__(character)
@@ -103,12 +108,15 @@ class PrimaryAttack(Ability):
 
     def on_collide_enemy(self, scene, dt, enemy):
         particles = []
-        Combat.register_damage(
+        info = Combat.register_damage(
             scene,
             self.character, 
             enemy,
             {'type': self.ability_info['damage_type'], 'amount': self.ability_info['damage'], 'velocity': self.character.velocity}
         )
+
+        if info:
+            Talent.call_talents(scene, self.character, {'on_player_attack': info})
 
         pos = enemy.center_position
         for _ in range(8):
@@ -147,8 +155,11 @@ class PrimaryAttack(Ability):
 
         if distance < 75:
             return
-
+        
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        self.ability_info['damage'] = self.character.combat_info['base_damage']
+
+        super().call(scene, keybind)
 
         self.overrides = True
         self.state = 'active'
