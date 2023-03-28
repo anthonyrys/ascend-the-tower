@@ -1,4 +1,4 @@
-from src.engine import Entity
+from scripts.engine import Entity
 
 import pygame
 

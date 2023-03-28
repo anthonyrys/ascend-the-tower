@@ -11,18 +11,18 @@ def main(screen, clock, scene_handler):
         clock.tick(FRAME_RATE)
 
 if __name__ == '__main__':
-    from src.constants import (
+    from scripts.constants import (
         TITLE,
         FRAME_RATE,
         SCREEN_DIMENSIONS,
         SCREEN_COLOR
     )
-    from src.engine import (
+    from scripts.engine import (
         Fonts,
         Inputs
     )
 
-    from src.scenes.scene_handler import SceneHandler
+    from scripts.scenes.scene_handler import SceneHandler
 
     import pygame
     import sys

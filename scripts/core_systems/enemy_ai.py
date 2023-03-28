@@ -1,4 +1,4 @@
-from src.engine import SpriteMethods
+from scripts.engine import SpriteMethods
 
 import pygame
 

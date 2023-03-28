@@ -1,13 +1,14 @@
-from src.engine import BoxCamera
+from scripts.engine import BoxCamera
 
-from src.entities.enemy import Stelemental
-from src.entities.player import Player
-from src.entities.tiles import Block, Platform, Ramp, Floor
+from scripts.entities.enemy import Stelemental
+from scripts.entities.player import Player
+from scripts.entities.tiles import Block, Platform, Ramp, Floor
 
-from src.scenes.scene import Scene
+from scripts.scenes.scene import Scene
 
-from src.ui.healthbar import Healthbar
-from src.ui.expbar import Expbar
+from scripts.ui.card import Card
+from scripts.ui.healthbar import Healthbar
+from scripts.ui.expbar import Expbar
 
 import pygame
 import random
@@ -16,6 +17,8 @@ import os
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
+
+        Card.init()
 
         self.in_menu = False
 

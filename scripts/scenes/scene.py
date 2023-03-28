@@ -1,5 +1,5 @@
-from src.constants import SCREEN_DIMENSIONS
-from src.entities.particle_fx import Particle
+from scripts.constants import SCREEN_DIMENSIONS
+from scripts.entities.particle_fx import Particle
 
 import pygame
 

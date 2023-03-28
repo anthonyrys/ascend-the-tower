@@ -1,4 +1,4 @@
-from src.constants import SCREEN_DIMENSIONS
+from scripts.constants import SCREEN_DIMENSIONS
 
 import pygame
 import random
@@ -43,7 +43,7 @@ class Easings:
         return 1 - pow(1 - abs_prog, 4)
 
 class Fonts:
-    FONT_PATH = os.path.join('imgs', 'fonts')
+    FONT_PATH = os.path.join('imgs', 'ui', 'fonts')
 
     FONT_KEYS = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',

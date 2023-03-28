@@ -1,6 +1,6 @@
-from src.engine import Easings, Entity, SpriteMethods
+from scripts.engine import Easings, Entity, SpriteMethods
 
-from src.core_systems.level_handler import Level
+from scripts.core_systems.level_handler import Level
 
 import pygame
 import math

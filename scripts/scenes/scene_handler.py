@@ -1,13 +1,13 @@
-from src.engine import Inputs
-from src.constants import (
+from scripts.engine import Inputs
+from scripts.constants import (
     SCREEN_COLOR,
     SCREEN_DIMENSIONS,
     FRAME_RATE
 )
 
-from src.scenes.sandbox import Sandbox
+from scripts.scenes.sandbox import Sandbox
 
-from src.ui.mouse import Mouse
+from scripts.ui.mouse import Mouse
 
 import pygame
 import time

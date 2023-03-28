@@ -1,5 +1,5 @@
-from src.constants import UI_HEALTH_COLOR, ENEMY_COLOR
-from src.engine import Easings, Frame
+from scripts.constants import UI_HEALTH_COLOR, ENEMY_COLOR
+from scripts.engine import Easings, Frame
 
 import pygame
 import os
@@ -7,7 +7,7 @@ import os
 class Healthbar(Frame):
     def __init__(self, player):
         img_scale = 3
-        img = pygame.image.load(os.path.join('imgs', 'ui', 'hud', 'player-frame.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('imgs', 'ui', 'player', 'player-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale))
 
         super().__init__((0, 0), pygame.Surface((img.get_width(), img.get_height())).convert_alpha(), None, 2)

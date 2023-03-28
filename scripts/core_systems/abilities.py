@@ -1,12 +1,12 @@
-from src.constants import PLAYER_COLOR
-from src.engine import SpriteMethods
-from src.entities.particle_fx import Circle, Image
+from scripts.constants import PLAYER_COLOR
+from scripts.engine import SpriteMethods
+from scripts.entities.particle_fx import Circle, Image
 
-from src.core_systems.talents import Talent
-from src.core_systems.combat_handler import Combat
+from scripts.core_systems.talents import Talent
+from scripts.core_systems.combat_handler import Combat
 
-from src.entities.tiles import Tile, Platform
-from src.entities.enemy import Enemy
+from scripts.entities.tiles import Tile, Platform
+from scripts.entities.enemy import Enemy
 
 import pygame
 import random
@@ -83,7 +83,7 @@ class PrimaryAttack(Ability):
         super().__init__(character)
 
         self.img_scale = 1.5
-        self.image = pygame.image.load(os.path.join('imgs', 'abilities', 'primary.png')).convert_alpha()
+        self.image = pygame.image.load(os.path.join('imgs', 'entities', 'particles', 'abilities', 'primary.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.image.get_width() * self.img_scale, self.image.get_height() * self.img_scale)).convert_alpha()
 
         self.state = 'inactive'

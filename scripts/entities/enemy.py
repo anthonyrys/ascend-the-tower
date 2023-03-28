@@ -1,13 +1,13 @@
-from src.constants import ENEMY_COLOR
-from src.engine import Entity, SpriteMethods
+from scripts.constants import ENEMY_COLOR
+from scripts.engine import Entity, SpriteMethods
 
-from src.core_systems.combat_handler import Combat
-from src.core_systems.enemy_ai import Flyer
-from src.core_systems.level_handler import Level
+from scripts.core_systems.combat_handler import Combat
+from scripts.core_systems.enemy_ai import Flyer
+from scripts.core_systems.level_handler import Level
 
-from src.entities.particle_fx import Circle, Experience
+from scripts.entities.particle_fx import Circle, Experience
 
-from src.ui.enemybar import Enemybar
+from scripts.ui.enemybar import Enemybar
 
 import pygame
 import random
@@ -107,8 +107,8 @@ class Enemy(Entity):
 class Stelemental(Enemy):
     def __init__(self, position, strata):
         img_scale = 2.5
-        img = pygame.image.load(os.path.join('imgs', 'enemies', 'stelemental.png'))
-        img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale))
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', 'stelemental.png'))
+        img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
 
         super().__init__(position, img, None, strata, None)
 

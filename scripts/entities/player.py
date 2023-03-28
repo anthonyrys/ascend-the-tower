@@ -1,15 +1,15 @@
-from src.constants import ENEMY_COLOR
-from src.engine import Entity, Inputs
+from scripts.constants import ENEMY_COLOR
+from scripts.engine import Entity, Inputs
 
-from src.core_systems.abilities import Dash, PrimaryAttack
-from src.core_systems.combat_handler import Combat
-from src.core_systems.level_handler import Level
-from src.core_systems.talents import Talent
+from scripts.core_systems.abilities import Dash, PrimaryAttack
+from scripts.core_systems.combat_handler import Combat
+from scripts.core_systems.level_handler import Level
+from scripts.core_systems.talents import Talent
 
-from src.entities.particle_fx import Circle, Image
-from src.entities.tiles import Block, Platform, Ramp, Floor
+from scripts.entities.particle_fx import Circle, Image
+from scripts.entities.tiles import Block, Platform, Ramp, Floor
 
-from src.services.spritesheet_loader import load_spritesheet
+from scripts.services.spritesheet_loader import load_spritesheet
 
 import pygame
 import math
@@ -41,7 +41,7 @@ class Player(Entity):
 
     def __init__(self, position, strata=None):
         super().__init__(position, pygame.Surface((24, 48)).convert_alpha(), None, strata)
-        self.halo = self.Halo(position, pygame.image.load(os.path.join('imgs', 'player', 'halo.png')).convert_alpha(), self.strata)
+        self.halo = self.Halo(position, pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha(), self.strata)
 
         self.rect_offset = [self.rect.width / 2, 0]
 
@@ -115,7 +115,7 @@ class Player(Entity):
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
-            self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
+            self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
             self.img_info['frames'][name] = 0
             self.img_info['frames_raw'][name] = 0
 

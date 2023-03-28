@@ -1,6 +1,6 @@
-from src.engine import Entity
+from scripts.engine import Entity
 
-from src.services.spritesheet_loader import load_spritesheet
+from scripts.services.spritesheet_loader import load_spritesheet
 
 import pygame
 import os
@@ -32,7 +32,7 @@ class Floor(Tile):
 
 class Ramp(Tile):
     def __init__(self, position, ramp_type, direction, color, strata=None):
-        imgs = load_spritesheet(os.path.join('imgs', 'tiles', 'ramps.png'))
+        imgs = load_spritesheet(os.path.join('imgs', 'entities', 'tiles', 'ramps.png'))
         img = imgs[ramp_type]
 
         position = list(position)

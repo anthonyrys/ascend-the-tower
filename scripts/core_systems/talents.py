@@ -1,6 +1,8 @@
-from src.engine import SpriteMethods
+from scripts.engine import SpriteMethods
 
-from src.core_systems.combat_handler import Combat
+from scripts.core_systems.combat_handler import Combat
+
+from scripts.ui.card import Card
 
 import inspect
 import sys
@@ -18,6 +20,17 @@ class Talent:
             'cooldown': 0
 		}
 		
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': None,
+			'symbols': []
+		}
+
+		return card_info
+	
 	@staticmethod
 	def get_all_talents():
 		talent_list = []
@@ -74,6 +87,21 @@ class Vamprism(Talent):
 		'description': 'Heal a portion of the damage you deal.'
 	}
 
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'vamprism',
+			'symbols': [
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['heal'],
+				Card.SYMBOLS['talent']['attack/kill']
+			]
+		}
+
+		return card_info
+
 	def __init__(self, player):
 		super().__init__(player)
 
@@ -92,6 +120,21 @@ class ComboStar(Talent):
 		'name': 'Combo Star',
 		'description': 'Deal additional damage when chaining your attacks in quick succession.'
 	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'combo-star',
+			'symbols': [
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['attack/kill']
+			]
+		}
+
+		return card_info
 
 	def __init__(self, player):
 		super().__init__(player)
@@ -128,6 +171,21 @@ class FloatLikeAButterfly(Talent):
 		'name': 'Float Like A Butterfly',
 		'description': 'Increased mobility when dashing.'
 	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'float-like-a-butterfly',
+			'symbols': [
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['speed'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
 	
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
@@ -143,6 +201,21 @@ class StingLikeABee(Talent):
 		'name': 'Sting Like A Bee',
 		'description': 'Increased critical strike chance when you are fast.'
 	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'sting-like-a-bee',
+			'symbols': [
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['other']
+			]
+		}
+
+		return card_info
 
 	def __init__(self, player):
 		super().__init__(player)
@@ -176,6 +249,21 @@ class Marksman(Talent):
 		'name': 'Marksman',
 		'description': 'Your primary ability deals more damage the farther your target is.'
 	}
+	
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'marksman',
+			'symbols': [
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
 
 	def __init__(self, player):
 		super().__init__(player)
