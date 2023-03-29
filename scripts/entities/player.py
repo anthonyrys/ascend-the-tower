@@ -2,12 +2,11 @@ from scripts.constants import ENEMY_COLOR
 from scripts.engine import Entity, Inputs
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
-from scripts.core_systems.combat_handler import Combat
-from scripts.core_systems.level_handler import Level
-from scripts.core_systems.talents import Talent
+from scripts.core_systems.combat_handler import register_heal, get_immunity_dict
+from scripts.core_systems.level_handler import BASE_PLAYER_EXPERIENCE_CAP
+from scripts.core_systems.talents import reset_talents
 
 from scripts.entities.particle_fx import Circle, Image
-from scripts.entities.tiles import Block, Platform, Ramp, Floor
 
 from scripts.services.spritesheet_loader import load_spritesheet
 
@@ -31,16 +30,21 @@ class Player(Entity):
             self.sin_amplifier = 1
             self.sin_frequency = .05
 
+            self.sin_count = 0
+
         def display(self, player, scene, dt):
             self.rect.x = player.rect.x
             self.rect.y = player.rect.y
             
-            self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (scene.frame_count)))) + (self.image.get_height() * .65)
+            self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count)))) + (self.image.get_height() * .65)
+            self.sin_count += 1 * dt
 
             super().display(scene, dt)
 
     def __init__(self, position, strata=None):
         super().__init__(position, pygame.Surface((24, 48)).convert_alpha(), None, strata)
+        self.sprite_id = 'player'
+
         self.halo = self.Halo(position, pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha(), self.strata)
 
         self.rect_offset = [self.rect.width / 2, 0]
@@ -90,7 +94,7 @@ class Player(Entity):
 
             'knockback_resistance': 1,
 
-            'immunities': Combat.get_immunity_dict(),
+            'immunities': get_immunity_dict(),
             'mitigations': {}
         }
         
@@ -137,13 +141,11 @@ class Player(Entity):
         }
 
         self.talents = []
-        for talent in Talent.get_all_talents():
-            self.talents.append(talent(self))
 
         self.level_info = {
             'level': 1,
             'experience': 0,
-            'max_experience': Level.BASE_PLAYER_EXPERIENCE_CAP
+            'max_experience': BASE_PLAYER_EXPERIENCE_CAP
         }
 
         self.on_stats_changed()
@@ -245,7 +247,7 @@ class Player(Entity):
         self.combat_info['crit_strike_chance'] = self.stats['crit_strike_chance']
         self.combat_info['crit_strike_multiplier'] = self.stats['crit_strike_multiplier']
 
-        Talent.reset_talents(self)
+        reset_talents(self)
 
     def on_equipment_changed(self):
         ...
@@ -287,8 +289,8 @@ class Player(Entity):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        if not [c for c in self.collisions if isinstance(c, Ramp)]:
-            self.apply_collision_x_default([s for s in scene.sprites if isinstance(s, Block)])
+        if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
+            self.apply_collision_x_default([s for s in scene.sprites if s.secondary_sprite_id == 'block'])
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -296,15 +298,15 @@ class Player(Entity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Block)]):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id == 'block']):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if isinstance(s, Floor)]):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id == 'floor']):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
      
-        platforms = [s for s in scene.sprites if isinstance(s, Platform)]
+        platforms = [s for s in scene.sprites if s.secondary_sprite_id == 'platform']
         for platform in platforms:
             if not self.rect.colliderect(platform.rect):
                 if platform in self.collision_ignore:
@@ -331,7 +333,7 @@ class Player(Entity):
                         
                 self.velocity[1] = 0
 
-        ramps = [s for s in scene.sprites if isinstance(s, Ramp)]
+        ramps = [s for s in scene.sprites if s.secondary_sprite_id == 'ramp']
         for ramp in ramps:
             if not self.rect.colliderect(ramp.rect):
                 if ramp in self.collision_ignore:
@@ -470,7 +472,7 @@ class Player(Entity):
             self.combat_info['regen_info'][1][0] = 0
 
             if self.combat_info['health'] < self.combat_info['max_health']:
-                Combat.register_heal(
+                register_heal(
                     scene,
                     self, 
                     {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}

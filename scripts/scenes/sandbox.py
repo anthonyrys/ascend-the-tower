@@ -1,4 +1,4 @@
-from scripts.engine import BoxCamera
+from scripts.engine import BoxCamera, Entity
 
 from scripts.entities.enemy import Stelemental
 from scripts.entities.player import Player
@@ -6,23 +6,19 @@ from scripts.entities.tiles import Block, Platform, Ramp, Floor
 
 from scripts.scenes.scene import Scene
 
-from scripts.ui.card import Card
 from scripts.ui.healthbar import Healthbar
 from scripts.ui.expbar import Expbar
+from scripts.ui.card import Card
 
 import pygame
 import random
-import os
 
 class Sandbox(Scene):
     def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
 
-        Card.init()
-
-        self.in_menu = False
-
         self.player = Player((615, 1200), 4)
+        self.enemy_info = [[120, 60], [0, 3]]
 
         self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
@@ -75,8 +71,6 @@ class Sandbox(Scene):
         for sprite in self.ui.values():
             self.add_sprites(sprite)
 
-        self.enemy_info = [[120, 60], [0, 3]]
-
     def display(self, screen, clock, dt):
         if self.dt_info['frames'] > 0:
             dt *= self.dt_info['multiplier']
@@ -91,22 +85,27 @@ class Sandbox(Scene):
         )
 
         self.background_surface.fill((0, 0, 0, 255), self.view)
-        self.entity_surface.fill((0, 0, 0, 255), entity_view)
+        self.entity_surface.fill((0, 0, 0, 0), entity_view)
         self.ui_surface.fill((0, 0, 0, 0), self.view)
 
-        self.enemy_info[1][0] = len([s for s in self.sprites if isinstance(s, Stelemental)])
+        self.enemy_info[1][0] = len([s for s in self.sprites if s.secondary_sprite_id == 'stelemental'])
         if self.enemy_info[0][0] >= self.enemy_info[0][1]:
             self.enemy_info[0][0] = 0
 
             if self.enemy_info[1][0] < self.enemy_info[1][1]:
                 self.add_sprites(Stelemental((random.randint(800, 1400), random.randint(1000, 1600)), 6))
 
-        self.enemy_info[0][0] += 1 * dt
+        if not self.paused:
+            self.enemy_info[0][0] += 1 * dt
 
         display_order = self.sort_sprites(self.sprites)
         for _, v in sorted(display_order.items()):
             for sprite in v: 
                 if not sprite.active:
+                    continue
+
+                if isinstance(sprite, Entity) and self.paused:
+                    sprite.display(self, 0)
                     continue
 
                 sprite.display(self, dt)

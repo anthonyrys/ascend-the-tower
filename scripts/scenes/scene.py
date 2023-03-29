@@ -22,6 +22,9 @@ class Scene:
         self.frame_count = 0
         self.frame_count_raw = 0
 
+        self.in_menu = False
+        self.paused = False
+
     @staticmethod
     def sort_sprites(sprites):
         display_order = {}

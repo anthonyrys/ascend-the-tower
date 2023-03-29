@@ -24,6 +24,8 @@ if __name__ == '__main__':
 
     from scripts.scenes.scene_handler import SceneHandler
 
+    from scripts.ui.card import Card
+
     import pygame
     import sys
     
@@ -37,6 +39,7 @@ if __name__ == '__main__':
 
     Fonts.init()
     Inputs.init()
+    Card.init()
 
     main(screen, clock, SceneHandler(screen, clock))
     

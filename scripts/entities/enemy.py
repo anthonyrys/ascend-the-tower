@@ -1,11 +1,11 @@
 from scripts.constants import ENEMY_COLOR
-from scripts.engine import Entity, SpriteMethods
+from scripts.engine import Entity, get_sprite_colors, check_pixel_collision, create_outline_edge
 
-from scripts.core_systems.combat_handler import Combat
+from scripts.core_systems.combat_handler import get_immunity_dict, register_damage
 from scripts.core_systems.enemy_ai import Flyer
-from scripts.core_systems.level_handler import Level
+from scripts.core_systems.level_handler import register_experience, calculate_experience
 
-from scripts.entities.particle_fx import Circle, Experience
+from scripts.entities.particle_fx import Circle
 
 from scripts.ui.enemybar import Enemybar
 
@@ -18,6 +18,8 @@ class Enemy(Entity):
     def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
 
+        self.sprite_id = 'enemy'
+        
         self.ai = None
         self.health_ui = Enemybar(self)
 
@@ -46,7 +48,7 @@ class Enemy(Entity):
 
             'knockback_resistance': 1,
             
-            'immunities': Combat.get_immunity_dict(),
+            'immunities': get_immunity_dict(),
             'mitigations': {}
         }
 
@@ -66,22 +68,13 @@ class Enemy(Entity):
         }
 
     def on_death(self, scene, info):
-        amount = Level.calculate_experience(self.level_info['level'], self.level_info['experience_multiplier'])
-        
-        particles = []
-        for _ in range(self.level_info['experience_amount']):
-            exp = Experience(self.rect.center, (166, 225, 136), 5, 0, round(amount / self.level_info['experience_amount']))
-            exp.glow['active'] = True
-            exp.glow['intensity'] = .15
-            
-            exp.set_goal(25, position=[
-                self.rect.centerx + random.randint(-50, 50),
-                self.rect.centery + random.randint(-50, 50)
-            ])
-
-            particles.append(exp)
-
-        scene.add_sprites(particles)
+        register_experience(
+            scene,
+            calculate_experience(
+                self.level_info['level'],
+                self.level_info['experience_multiplier']
+            )
+        )
 
     def set_stats(self):
         self.combat_info['max_health'] = round(math.pow(self.combat_info['max_health'] * (self.level_info['level']), self.level_info['health_scaling']))
@@ -112,6 +105,7 @@ class Stelemental(Enemy):
 
         super().__init__(position, img, None, strata, None)
 
+        self.secondary_sprite_id = 'stelemental'
         self.ai = Flyer(self)
 
         self.movement_info['friction'] = 2
@@ -120,8 +114,8 @@ class Stelemental(Enemy):
         self.movement_info['max_movespeed'] = 5
 
         self.combat_info = {
-            'max_health': 100,
-            'health': 100,
+            'max_health': 75,
+            'health': 75,
 
             'contact_damage': 30,
             'crit_strike_chance': 0,
@@ -129,7 +123,7 @@ class Stelemental(Enemy):
 
             'knockback_resistance': .75,
             
-            'immunities': Combat.get_immunity_dict(),
+            'immunities': get_immunity_dict(),
             'mitigations': {}
         }
 
@@ -137,7 +131,7 @@ class Stelemental(Enemy):
             'level': 1,
 
             'experience_amount': 4,
-            'experience_multiplier': 1,
+            'experience_multiplier': 1.2,
 
             'health_scaling': .95,
             'damage_scaling': .9,
@@ -152,7 +146,7 @@ class Stelemental(Enemy):
 
         pos = self.center_position
         particles = []
-        for color in SpriteMethods.get_sprite_colors(self, 2):
+        for color in get_sprite_colors(self, 2):
             cir = Circle(pos, color, 10, 0)
             cir.set_goal(
                         120, 
@@ -186,7 +180,7 @@ class Stelemental(Enemy):
 
         pos = self.center_position
         particles = []
-        for color in SpriteMethods.get_sprite_colors(self):
+        for color in get_sprite_colors(self):
             cir = Circle(pos, color, 10, 0)
             cir.set_goal(
                         100, 
@@ -206,7 +200,7 @@ class Stelemental(Enemy):
             self.health_ui.set_pulse(10, (251, 204, 97))
 
     def on_contact(self, scene, dt):
-        Combat.register_damage(
+        register_damage(
             scene,
             self,
             scene.player,
@@ -216,10 +210,10 @@ class Stelemental(Enemy):
     def display(self, scene, dt):
         self.ai.update(scene, dt, scene.player)
 
-        if SpriteMethods.check_pixel_collision(self, scene.player):
+        if check_pixel_collision(self, scene.player):
             self.on_contact(scene, dt)
 
-        SpriteMethods.create_outline_edge(self, ENEMY_COLOR, scene.entity_surface, 3)
+        create_outline_edge(self, ENEMY_COLOR, scene.entity_surface, 3)
 
         if self.combat_info['health'] < self.combat_info['max_health']:
             self.health_ui.display(scene, dt)

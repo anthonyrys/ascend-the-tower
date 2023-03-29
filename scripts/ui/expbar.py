@@ -11,6 +11,8 @@ class Expbar(Frame):
         img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale))
 
         super().__init__((0, 0), pygame.Surface((img.get_width(), img.get_height())).convert_alpha(), None, 1)
+        self.sprite_id = 'expbar'
+
         self.image.set_colorkey((0, 0, 0)) 
 
         self.player = player

@@ -1,18 +1,26 @@
 from scripts.constants import PLAYER_COLOR
-from scripts.engine import SpriteMethods
+from scripts.engine import check_line_collision, check_pixel_collision, get_distance
+
 from scripts.entities.particle_fx import Circle, Image
 
-from scripts.core_systems.talents import Talent
-from scripts.core_systems.combat_handler import Combat
-
-from scripts.entities.tiles import Tile, Platform
-from scripts.entities.enemy import Enemy
+from scripts.core_systems.talents import call_talents
+from scripts.core_systems.combat_handler import register_damage
 
 import pygame
 import random
 import inspect
 import sys
 import os
+
+def get_all_abilities():
+    ability_list = []
+    for ability in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        if not issubclass(ability[1], Ability) or ability[1].ABILITY_ID is None:
+            continue
+
+        ability_list.append(ability[1])
+
+    return ability_list
 
 class Ability:
     ABILITY_ID = None
@@ -30,23 +38,12 @@ class Ability:
             'double_tap': False,
             'keybinds': []
         }
-
-    @staticmethod
-    def get_all_abilities():
-        ability_list = []
-        for ability in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-            if not issubclass(ability[1], Ability) or ability[1].ABILITY_ID is None:
-                continue
-
-            ability_list.append(ability[1])
-
-        return ability_list
             
     def call(self, scene, keybind=None):
         print(f'{self.ABILITY_ID}::call()')
 
         if self.ABILITY_ID is not None:
-            Talent.call_talents(scene, self.character, {f'on_{self.ABILITY_ID}': self})
+            call_talents(scene, self.character, {f'on_{self.ABILITY_ID}': self})
     
     def update(self, scene, dt):
         if self.ability_info['cooldown'] > 0:
@@ -108,7 +105,7 @@ class PrimaryAttack(Ability):
 
     def on_collide_enemy(self, scene, dt, enemy):
         particles = []
-        info = Combat.register_damage(
+        info = register_damage(
             scene,
             self.character, 
             enemy,
@@ -116,7 +113,7 @@ class PrimaryAttack(Ability):
         )
 
         if info:
-            Talent.call_talents(scene, self.character, {'on_player_attack': info})
+            call_talents(scene, self.character, {'on_player_attack': info})
 
         pos = enemy.center_position
         for _ in range(8):
@@ -146,12 +143,13 @@ class PrimaryAttack(Ability):
         
         self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
 
-        tiles = [s for s in scene.sprites if isinstance(s, Tile) and not isinstance(s, Platform)]
-        tile_col = SpriteMethods.check_line_collision(self.character.center_position, self.destination, tiles)
+        tiles = [s for s in scene.sprites if s.sprite_id == 'tile' and s.secondary_sprite_id != 'platform']
+
+        tile_col = check_line_collision(self.character.center_position, self.destination, tiles)
         if tile_col != []:
             self.destination = list(tile_col[0][1][0])
 
-        distance = SpriteMethods.get_distance(self.character.center_position, self.destination)
+        distance = get_distance(self.character.center_position, self.destination)
 
         if distance < 75:
             return
@@ -207,14 +205,14 @@ class PrimaryAttack(Ability):
             return
         
         collision = None
-        collidables = [s for s in scene.sprites if isinstance(s, Tile) and not isinstance(s, Platform)]
+        collidables = [s for s in scene.sprites if s.sprite_id == 'tile' and s.secondary_sprite_id != 'platform']
         for collidable in collidables:
-            if not SpriteMethods.check_pixel_collision(self.character, collidable):
+            if not check_pixel_collision(self.character, collidable):
                 continue
 
             collision = collidable
 
-        enemies = [s for s in scene.sprites if isinstance(s, Enemy)]
+        enemies = [s for s in scene.sprites if s.sprite_id == 'enemy']
         for enemy in enemies:
             if enemy.combat_info['immunities'][self.ability_info['damage_type'] + '&']:
                 continue
@@ -223,12 +221,12 @@ class PrimaryAttack(Ability):
                 continue
         
             if not self.character.rect.colliderect(enemy.rect):
-                if SpriteMethods.get_distance(self.character, enemy) > self.character.rect.height * 1.25:
+                if get_distance(self.character, enemy) > self.character.rect.height * 1.25:
                     continue
                 
             collision = enemy
         
-        if SpriteMethods.get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None:
+        if get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None:
             self.character.apply_collision_x(scene)
             self.character.apply_collision_y(scene, dt)
             self.character.set_gravity(self.ability_info['gravity_frames'], 1, 5)
@@ -237,13 +235,7 @@ class PrimaryAttack(Ability):
             self.character.glow['size'] = 1.1
             self.character.glow['intensity'] = .25
 
-            if isinstance(collision, Tile):
-                self.on_collide_tile(scene, dt, collision)
-
-            elif isinstance(collision, Enemy):
-                self.on_collide_enemy(scene, dt, collision)
-                
-            elif not collision:
+            if not collision:
                 pos = self.character.center_position
                 particles = []
 
@@ -268,6 +260,12 @@ class PrimaryAttack(Ability):
                     particles.append(cir)
         
                 scene.add_sprites(particles)
+
+            elif collision.sprite_id == 'tile':
+                self.on_collide_tile(scene, dt, collision)
+
+            elif collision.sprite_id == 'enemy':
+                self.on_collide_enemy(scene, dt, collision)
 
             self.velocity = []
             self.destination = []

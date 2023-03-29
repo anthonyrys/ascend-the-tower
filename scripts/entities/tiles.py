@@ -8,8 +8,7 @@ import os
 class Tile(Entity):
     def __init__(self, position, img, dimensions, strata=None, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
-
-        self.special = None
+        self.sprite_id = 'tile'
 
     def display(self, scene, dt):
         super().display(scene, dt)
@@ -17,6 +16,7 @@ class Tile(Entity):
 class Block(Tile):
     def __init__(self, position, img, dimensions, strata=None):
         super().__init__(position, img, dimensions, strata)
+        self.secondary_sprite_id = 'block'
 
     def display(self, scene, dt):
         super().display(scene, dt)
@@ -24,8 +24,7 @@ class Block(Tile):
 class Floor(Tile):
     def __init__(self, position, img, dimensions, strata=None):
         super().__init__(position, img, dimensions, strata)
-
-        self.special = 'floor'
+        self.secondary_sprite_id = 'floor'
 
     def display(self, scene, dt):
         super().display(scene, dt)
@@ -59,6 +58,7 @@ class Ramp(Tile):
         )
 
         super().__init__(position, img, None, strata)
+        self.secondary_sprite_id = 'ramp'
 
         self.ramp_type = ramp_type
         self.direction = direction
@@ -98,6 +98,7 @@ class Ramp(Tile):
 class Platform(Tile):
     def __init__(self, position, img, dimensions, strata=None):
         super().__init__(position, img, dimensions, strata)
+        self.secondary_sprite_id = 'platform'
 
     def display(self, scene, dt):
         super().display(scene, dt)

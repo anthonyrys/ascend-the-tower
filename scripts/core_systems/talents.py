@@ -1,11 +1,40 @@
-from scripts.engine import SpriteMethods
+from scripts.engine import get_distance
 
-from scripts.core_systems.combat_handler import Combat
+from scripts.core_systems.combat_handler import register_damage, register_heal
 
 from scripts.ui.card import Card
 
 import inspect
 import sys
+
+def get_all_talents():
+	talent_list = []
+	for talent in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+		if not issubclass(talent[1], Talent) or talent[1].TALENT_ID is None:
+			continue
+			
+		talent_list.append(talent[1])
+			
+	return talent_list
+
+def get_talent(player, talent_id):
+	for talent in player.talents:
+		if talent.TALENT_ID != talent_id:
+			continue
+
+		return talent
+	
+def call_talents(scene, player, calls):
+	for call, info in calls.items():
+		for talent in player.talents:
+			if call not in talent.TALENT_CALLS:
+				continue
+				
+			talent.call(call, scene, info)
+
+def reset_talents(player):
+	for talent in player.talents:
+		talent.reset()
 
 class Talent:
 	TALENT_ID = None
@@ -32,39 +61,6 @@ class Talent:
 		return card_info
 	
 	@staticmethod
-	def get_all_talents():
-		talent_list = []
-		for talent in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-			if not issubclass(talent[1], Talent) or talent[1].TALENT_ID is None:
-				continue
-			
-			talent_list.append(talent[1])
-			
-		return talent_list
-	
-	@staticmethod
-	def get_talent(player, talent_id):
-		for talent in player.talents:
-			if talent.TALENT_ID != talent_id:
-				continue
-
-			return talent
-	
-	@staticmethod
-	def call_talents(scene, player, calls):
-		for call, info in calls.items():
-			for talent in player.talents:
-				if call not in talent.TALENT_CALLS:
-					continue
-				
-				talent.call(call, scene, info)
-
-	@staticmethod
-	def reset_talents(player):
-		for talent in player.talents:
-			talent.reset()
-
-	@staticmethod
 	def check_draw_condition(player):
 		return True
 
@@ -78,8 +74,8 @@ class Talent:
 		if self.talent_info['cooldown'] > 0:
 			self.talent_info['cooldown'] -= 1 * dt
 
-class Vamprism(Talent):
-	TALENT_ID = 'vamprism'
+class Vampirism(Talent):
+	TALENT_ID = 'vampirism'
 	TALENT_CALLS = ['on_player_attack']
 
 	TALENT_DESCRIPTION = {
@@ -92,7 +88,7 @@ class Vamprism(Talent):
 		card_info = {
 			'type': 'talent',
 			
-			'icon': 'vamprism',
+			'icon': 'vampirism',
 			'symbols': [
 				Card.SYMBOLS['type']['talent'],
 				Card.SYMBOLS['action']['heal'],
@@ -110,7 +106,7 @@ class Vamprism(Talent):
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
-		Combat.register_heal(scene, self.player, {'type': 'status', 'amount': info['amount'] * self.talent_info['heal_amount']})
+		register_heal(scene, self.player, {'type': 'status', 'amount': info['amount'] * self.talent_info['heal_amount']})
 
 class ComboStar(Talent):
 	TALENT_ID = 'combo_star'
@@ -150,7 +146,7 @@ class ComboStar(Talent):
 		super().call(call, scene, info)
 		
 		damage = info['amount'] * self.talent_info['multiplier']
-		Combat.register_damage(scene, self.player, info['target'], {'type': info['type'], 'amount': damage})
+		register_damage(scene, self.player, info['target'], {'type': info['type'], 'amount': damage})
 
 		self.talent_info['time'] = self.talent_info['decay_time']
 		if self.talent_info['multiplier'] < self.talent_info['multiplier_cap']:
@@ -217,18 +213,18 @@ class StingLikeABee(Talent):
 
 		return card_info
 
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'float_like_a_butterfly'):
+			return True
+		
+		return False
+		
 	def __init__(self, player):
 		super().__init__(player)
 
 		self.talent_info['crit_chance_increase'] = .2
 		self.talent_info['crit_chance_given'] = False
-
-	@staticmethod
-	def check_draw_condition(player):
-		if Talent.get_talent(player, 'float_like_a_butterfly'):
-			return True
-		
-		return False
 
 	def update(self, scene, dt):
 		if self.player.velocity[0] <= self.player.movement_info['max_movespeed']:
@@ -273,7 +269,7 @@ class Marksman(Talent):
 		self.talent_info['max_distance'] = False
 
 	def call(self, call, scene, info):
-		distance = SpriteMethods.get_distance(self.player.center_position, info.destination)
+		distance = get_distance(self.player.center_position, info.destination)
 		if distance < self.talent_info['min_distance']:
 			return
 		

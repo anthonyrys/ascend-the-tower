@@ -205,6 +205,9 @@ class Entity(pygame.sprite.Sprite):
 
     def __init__(self, position, img, dimensions, strata, alpha=None):
         pygame.sprite.Sprite.__init__(self)
+        self.sprite_id = None
+        self.secondary_sprite_id = None
+
         self.active = True
         self.strata = strata
 
@@ -364,7 +367,7 @@ class Entity(pygame.sprite.Sprite):
             top = abs(self.rect.top - collidable.rect.centery)
             bottom = abs(self.rect.bottom - collidable.rect.centery)
             
-            if top < bottom and collidable.special != 'floor':
+            if top < bottom and collidable.secondary_sprite_id != 'floor':
                 self.rect.top = collidable.rect.bottom
                 self.collide_points['top'] = True
 
@@ -415,11 +418,17 @@ class Entity(pygame.sprite.Sprite):
 
 class Frame(pygame.sprite.Sprite):
     def __init__(self, position, img, dimensions, strata, alpha=None):
+        self.sprite_id = None
+        self.secondary_sprite_id = None
+
         pygame.sprite.Sprite.__init__(self)
         self.active = True
         self.strata = strata
 
         self.uses_entity_surface = False
+        
+        self.hovering = False
+        self.pressed = False
 
         if isinstance(img, tuple):
             self.image = pygame.Surface(dimensions).convert_alpha()
@@ -441,6 +450,8 @@ class Frame(pygame.sprite.Sprite):
 
         self.rect = self.image.get_bounding_rect()
         self.rect.x, self.rect.y = position
+
+        self.hover_rect = pygame.Rect(self.rect.x, self.rect.y, 0, 0)
         
         self.original_rect = self.image.get_bounding_rect()
         self.original_rect.x, self.original_rect.y = position
@@ -452,6 +463,9 @@ class Frame(pygame.sprite.Sprite):
         return pygame.mask.from_surface(self.image)
 
     def display(self, scene, dt):
+        self.hover_rect.x = self.rect.x
+        self.hover_rect.y = self.rect.y
+
         if self.uses_entity_surface:
             scene.entity_surface.blit(
                 self.image, 
@@ -464,125 +478,126 @@ class Frame(pygame.sprite.Sprite):
                 (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
             )
 
-class SpriteMethods:
-    @staticmethod
-    def check_pixel_collision(primary_sprite, secondary_sprite):
-        collision = None
-        if not isinstance(secondary_sprite, pygame.sprite.Group):
-            group = pygame.sprite.Group(secondary_sprite)
-            collision = pygame.sprite.spritecollide(primary_sprite, group, False, pygame.sprite.collide_mask)
-            group.remove(secondary_sprite)
+    def on_hover_start(self, scene):
+        ...
 
-        else:
-            collision = pygame.sprite.spritecollide(primary_sprite, secondary_sprite, False, pygame.sprite.collide_mask)
+    def on_hover_end(self, scene):
+        ...
 
-        return collision
+    def on_press(self, scene):
+        ...
 
-    @staticmethod
-    def check_line_collision(start, end, sprites):
-        clipped_sprites = []
+def check_pixel_collision(primary_sprite, secondary_sprite):
+    collision = None
+    if not isinstance(secondary_sprite, pygame.sprite.Group):
+        group = pygame.sprite.Group(secondary_sprite)
+        collision = pygame.sprite.spritecollide(primary_sprite, group, False, pygame.sprite.collide_mask)
+        group.remove(secondary_sprite)
 
-        for sprite in sprites:
-            if sprite.rect.clipline(start, end):
-                clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
+    else:
+        collision = pygame.sprite.spritecollide(primary_sprite, secondary_sprite, False, pygame.sprite.collide_mask)
 
-        return clipped_sprites
+    return collision
 
-    @staticmethod
-    def get_distance(primary_sprite, secondary_sprite):
-        if isinstance(primary_sprite, pygame.sprite.Sprite) and isinstance(secondary_sprite, pygame.sprite.Sprite):
-            rx = abs(secondary_sprite.rect.x - primary_sprite.rect.x)
-            ry = abs(secondary_sprite.rect.y - primary_sprite.rect.y)
+def check_line_collision(start, end, sprites):
+    clipped_sprites = []
 
-            return math.sqrt(((rx **2) + (ry **2)))
+    for sprite in sprites:
+        if sprite.rect.clipline(start, end):
+            clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
+
+    return clipped_sprites
+
+def get_distance(primary_sprite, secondary_sprite):
+    if isinstance(primary_sprite, pygame.sprite.Sprite) and isinstance(secondary_sprite, pygame.sprite.Sprite):
+        rx = abs(secondary_sprite.rect.x - primary_sprite.rect.x)
+        ry = abs(secondary_sprite.rect.y - primary_sprite.rect.y)
+
+        return math.sqrt(((rx **2) + (ry **2)))
         
-        else:
-            rx = abs(secondary_sprite[0] - primary_sprite[0])
-            ry = abs(secondary_sprite[1] - primary_sprite[1])
+    else:
+        rx = abs(secondary_sprite[0] - primary_sprite[0])
+        ry = abs(secondary_sprite[1] - primary_sprite[1])
 
-            return math.sqrt(((rx **2) + (ry **2)))  
+        return math.sqrt(((rx **2) + (ry **2)))  
 
-    @staticmethod
-    def get_closest_sprite(primary_sprite, sprites):
-        if len(sprites) == 1:
-            return sprites[0]
+def get_closest_sprite(primary_sprite, sprites):
+    if len(sprites) == 1:
+        return sprites[0]
                 
-        sprite_area = {}
+    sprite_area = {}
 
-        for sprite in sprites:
-            distance = SpriteMethods.get_distance(primary_sprite, sprite)
-            sprite_area[sprite] = distance
+    for sprite in sprites:
+        distance = get_distance(primary_sprite, sprite)
+        sprite_area[sprite] = distance
 
-        min_value = min(sprite_area.values())
-        for sprite, area in sprite_area.items():
-            if area == min_value:
-                return sprite
+    min_value = min(sprite_area.values())
+    for sprite, area in sprite_area.items():
+        if area == min_value:
+            return sprite
 
-        return None
+    return None
 
-    @staticmethod
-    def get_sprite_colors(primary_sprite, multiplier=1):
-        iteration_threshold = .1
-        iterations = int((((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold) * multiplier)
+def get_sprite_colors(primary_sprite, multiplier=1):
+    iteration_threshold = .1
+    iterations = int((((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold) * multiplier)
 
-        colors = []
-        for _ in range(iterations):
-            found_pixel = False
-            x = 0
-            y = 0
+    colors = []
+    for _ in range(iterations):
+        found_pixel = False
+        x = 0
+        y = 0
 
-            while not found_pixel:
-                x = random.randint(0, primary_sprite.image.get_width() - 1)
-                y = random.randint(0, primary_sprite.image.get_height() - 1)
+        while not found_pixel:
+            x = random.randint(0, primary_sprite.image.get_width() - 1)
+            y = random.randint(0, primary_sprite.image.get_height() - 1)
 
-                found_pixel = primary_sprite.image.get_at((x, y)) != ((0, 0, 0, 0))
+            found_pixel = primary_sprite.image.get_at((x, y)) != ((0, 0, 0, 0))
                 
-            colors.append(primary_sprite.image.get_at([x, y]))
+        colors.append(primary_sprite.image.get_at([x, y]))
 
-        return colors
+    return colors
 
-    @staticmethod
-    def create_outline_edge(sprite, color, display, size=1):
-        surface = pygame.Surface(sprite.image.get_size())
-        surface.set_colorkey((0, 0, 0))
-        for point in sprite.mask.outline():
-            surface.set_at(point, color)
+def create_outline_edge(sprite, color, display, size=1):
+    surface = pygame.Surface(sprite.image.get_size())
+    surface.set_colorkey((0, 0, 0))
+    for point in sprite.mask.outline():
+        surface.set_at(point, color)
 
-        for i in range(size):
-            #display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
-             #display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-            # display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
-            # display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+    for i in range(size):
+        #display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+        #display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+        # display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        # display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
 
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
 
-            display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-            display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
 
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
 
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
 
-    @staticmethod
-    def create_outline_full(sprite, color, display, size=1):
-        surface = sprite.mask.to_surface(
-            setcolor=color, 
-            unsetcolor=(0, 0, 0, 0)
-        )
-        surface.set_colorkey((0, 0, 0))
+def create_outline_full(sprite, color, display, size=1):
+    surface = sprite.mask.to_surface(
+        setcolor=color, 
+        unsetcolor=(0, 0, 0, 0)
+    )
+    surface.set_colorkey((0, 0, 0))
 
-        for i in range(size):
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+    for i in range(size):
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
 
-            display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-            display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
 
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
 
-            display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
-            display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  

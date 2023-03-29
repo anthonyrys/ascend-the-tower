@@ -1,4 +1,4 @@
-from scripts.engine import SpriteMethods
+from scripts.engine import get_distance
 
 import pygame
 
@@ -25,7 +25,7 @@ class Flyer(AiTemplate):
         self.ai_config['can_collide'] = False
 
     def update(self, scene, dt, target):
-        distance = SpriteMethods.get_distance(self.sprite, target)
+        distance = get_distance(self.sprite, target)
         if distance <= self.ai_config['aggro_distance'] and not self.ai_config['is_aggro']:
             self.ai_config['is_aggro'] = True
             
