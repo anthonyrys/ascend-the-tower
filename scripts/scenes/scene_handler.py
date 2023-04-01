@@ -7,6 +7,7 @@ from scripts.constants import (
 
 from scripts.scenes.sandbox import Sandbox
 
+from scripts.ui.card import Card
 from scripts.ui.mouse import Mouse
 
 import pygame
@@ -28,6 +29,8 @@ class SceneHandler:
         self.stored_scenes = []
 
         self.last_time = time.time()
+
+        Card.init()
 
     def set_new_scene(self):
         ...

@@ -35,6 +35,8 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
         info['amount'] * (1 + DAMAGE_VARIATION_PERCENTAGE)
         )
 
+    info['amount'] *= primary_sprite.combat_info['damage_multiplier']
+
     info['crit'] = False
     if primary_sprite.combat_info['crit_strike_chance'] > 0 and round(random.uniform(0, 1), 2) <= primary_sprite.combat_info['crit_strike_chance']:
         info['amount'] *= primary_sprite.combat_info['crit_strike_multiplier']

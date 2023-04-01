@@ -1,14 +1,14 @@
-from scripts.constants import ENEMY_COLOR
+from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
 from scripts.engine import Entity, Inputs
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.combat_handler import register_heal, get_immunity_dict
-from scripts.core_systems.level_handler import BASE_PLAYER_EXPERIENCE_CAP
-from scripts.core_systems.talents import reset_talents
 
 from scripts.entities.particle_fx import Circle, Image
 
 from scripts.services.spritesheet_loader import load_spritesheet
+
+from scripts.ui.text_box import TextBox
 
 import pygame
 import math
@@ -59,14 +59,6 @@ class Player(Entity):
             'movement': None
         }
 
-        self.stats = {
-            'speed': [3, 12],
-            'health': 100,
-            'damage': 25,
-            'crit_strike_chance': .15,
-            'crit_strike_multiplier': 1.5,
-        }
-
         self.default_movement_info = {
             'direction': 0,
 
@@ -88,8 +80,11 @@ class Player(Entity):
             'health': 100,
             'regen_info': [.01, [0, 60]],
 
+            'damage_multiplier': 1.0,
+            'healing_multiplier': 1.0,
+
             'base_damage': 25,
-            'crit_strike_chance': .20,
+            'crit_strike_chance': .15,
             'crit_strike_multiplier': 1.5,
 
             'knockback_resistance': 1,
@@ -131,7 +126,6 @@ class Player(Entity):
         for cd in self.cooldown_timers.keys():
             self.cooldowns[cd] = 0
 
-        self.equipment = {}
         self.abilities = {
             'dash': Dash(self), 
             'primary': PrimaryAttack(self),
@@ -141,14 +135,6 @@ class Player(Entity):
         }
 
         self.talents = []
-
-        self.level_info = {
-            'level': 1,
-            'experience': 0,
-            'max_experience': BASE_PLAYER_EXPERIENCE_CAP
-        }
-
-        self.on_stats_changed()
 
     def on_key_down(self, scene, key):
         for action, keybinds in Inputs.KEYBINDS.items():
@@ -202,7 +188,20 @@ class Player(Entity):
         ...
 
     def on_healed(self, scene, info):
-        ...
+        if info['type'] == 'passive': 
+            return
+        
+        img = TextBox((0, 0), info['amount'], color=HEAL_COLOR, size=1.0).image.copy()
+        particle = Image((50, 50), img, 5, 255)
+        particle.set_goal(
+            50, 
+            position=(50, 100),
+            alpha=0,
+            dimensions=(img.get_width(), img.get_height())
+        )
+        particle.uses_ui_surface = True
+        
+        scene.add_sprites(particle)
 
     def on_damaged(self, scene, sprite, info):
         scene.set_dt_multiplier(.2, 5)
@@ -228,29 +227,17 @@ class Player(Entity):
         self.img_info['pulse_frames_max'] = 30
         self.img_info['pulse_frame_color'] = ENEMY_COLOR
 
-    def on_experience_gained(self, scene):
-        ...
+        img = TextBox((0, 0), info['amount'], color=UI_HEALTH_COLOR, size=1.0).image.copy()
+        particle = Image((50, 50), img, 5, 255)
+        particle.set_goal(
+            50, 
+            position=(50, 100),
+            alpha=0,
+            dimensions=(img.get_width(), img.get_height())
+        )
+        particle.uses_ui_surface = True
 
-    def on_level_up(self, scene):
-        ...
-
-    def on_stats_changed(self):
-        self.movement_info['per_frame_movespeed'] = self.stats['speed'][0]
-        self.movement_info['max_movespeed'] = self.stats['speed'][1]
-
-        difference = self.stats['health'] - self.combat_info['max_health']
-        self.combat_info['max_health'] = self.stats['health']
-        self.combat_info['health'] += difference
-
-        self.combat_info['base_damage'] = self.stats['damage']
-
-        self.combat_info['crit_strike_chance'] = self.stats['crit_strike_chance']
-        self.combat_info['crit_strike_multiplier'] = self.stats['crit_strike_multiplier']
-
-        reset_talents(self)
-
-    def on_equipment_changed(self):
-        ...
+        scene.add_sprites(particle)
 
     def apply_movement(self, scene):
         pressed = Inputs.pressed
@@ -369,7 +356,7 @@ class Player(Entity):
             return
         
         afterimage_plr = Image(
-            self.center_position, 
+            self.center_position,
             self.image.copy(), self.strata - 1, 50
         )
         
@@ -406,13 +393,14 @@ class Player(Entity):
         img = None
         et = 1
 
-        mouse_pos_x = scene.mouse.rect.centerx + scene.camera_offset[0]
+        if dt != 0:
+            mouse_pos_x = scene.mouse.rect.centerx + scene.camera_offset[0]
 
-        if mouse_pos_x > self.rect.centerx:
-            self.movement_info['direction'] = 1
+            if mouse_pos_x > self.rect.centerx:
+                self.movement_info['direction'] = 1
 
-        elif mouse_pos_x < self.rect.centerx:
-            self.movement_info['direction'] = -1
+            elif mouse_pos_x < self.rect.centerx:
+                self.movement_info['direction'] = -1
 
         if self.state_info['movement'] == 'run':
             et = 1 if abs(self.velocity[0] / self.movement_info['max_movespeed']) > 1 else abs(self.velocity[0] / self.movement_info['max_movespeed'])
@@ -437,9 +425,7 @@ class Player(Entity):
             self.img_info['frames_raw'][frame] = 0
 
         self.image = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale'])).convert_alpha()
-
-        if dt != 0:
-            self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
+        self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def set_friction(self, frames, friction):
         self.movement_info['friction_frames'] = frames
@@ -532,4 +518,5 @@ class Player(Entity):
             scene.entity_surface.blit(img, (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]))
 
             self.img_info['pulse_frames'] -= 1 * dt
+
         self.halo.display(self, scene, dt)

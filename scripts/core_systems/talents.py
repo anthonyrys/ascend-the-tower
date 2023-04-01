@@ -40,6 +40,11 @@ class Talent:
 	TALENT_ID = None
 	TALENT_CALLS = []
 
+	DESCRIPTION = {
+		'name': None,
+		'description': None
+	}
+
 	def __init__(self, player):
 		self.player = player
 		self.overrides = False
@@ -65,7 +70,8 @@ class Talent:
 		return True
 
 	def call(self, call, scene, info=None):
-		print(f'{self.TALENT_ID}::call({call})')
+		# print(f'{self.TALENT_ID}::call({call})')
+		...
 
 	def reset(self):
 		...
@@ -78,8 +84,8 @@ class Vampirism(Talent):
 	TALENT_ID = 'vampirism'
 	TALENT_CALLS = ['on_player_attack']
 
-	TALENT_DESCRIPTION = {
-		'name': 'Vamprism',
+	DESCRIPTION = {
+		'name': 'Vampirism',
 		'description': 'Heal a portion of the damage you deal.'
 	}
 
@@ -112,9 +118,9 @@ class ComboStar(Talent):
 	TALENT_ID = 'combo_star'
 	TALENT_CALLS = ['on_player_attack']
 
-	TALENT_DESCRIPTION = {
+	DESCRIPTION = {
 		'name': 'Combo Star',
-		'description': 'Deal additional damage when chaining your attacks in quick succession.'
+		'description': 'Deal additional damage when chaining|your attacks in quick succession.'
 	}
 
 	@staticmethod
@@ -144,16 +150,15 @@ class ComboStar(Talent):
 
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
-		
-		damage = info['amount'] * self.talent_info['multiplier']
-		register_damage(scene, self.player, info['target'], {'type': info['type'], 'amount': damage})
 
 		self.talent_info['time'] = self.talent_info['decay_time']
 		if self.talent_info['multiplier'] < self.talent_info['multiplier_cap']:
+			self.player.combat_info['damage_multiplier'] = round(self.player.combat_info['damage_multiplier'] + self.talent_info['per_multiplier'], 2)
 			self.talent_info['multiplier'] = round(self.talent_info['multiplier'] + self.talent_info['per_multiplier'], 2)
 
 	def update(self, scene, dt):
 		if self.talent_info['time'] <= 0 and self.talent_info['multiplier'] != 0:
+			self.player.combat_info['damage_multiplier'] = round(self.player.combat_info['damage_multiplier'] - self.talent_info['multiplier'], 2)
 			self.talent_info['multiplier'] = 0
 
 		elif self.talent_info['time'] > 0:
@@ -163,9 +168,9 @@ class FloatLikeAButterfly(Talent):
 	TALENT_ID = 'float_like_a_butterfly'
 	TALENT_CALLS = ['on_@dash']
 
-	TALENT_DESCRIPTION = {
+	DESCRIPTION = {
 		'name': 'Float Like A Butterfly',
-		'description': 'Increased mobility when dashing.'
+		'description': 'Gain an empowered dash.'
 	}
 
 	@staticmethod
@@ -191,11 +196,10 @@ class FloatLikeAButterfly(Talent):
 
 class StingLikeABee(Talent):
 	TALENT_ID = 'sting_like_a_bee'
-	TALENT_CALLS = []
 
-	TALENT_DESCRIPTION = {
+	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Increased critical strike chance when you are fast.'
+		'description': 'Increased critical strike chance when|you are fast.'
 	}
 
 	@staticmethod
@@ -215,6 +219,9 @@ class StingLikeABee(Talent):
 
 	@staticmethod
 	def check_draw_condition(player):
+		if get_talent(player, 'temperance'):
+			return False
+		
 		if get_talent(player, 'float_like_a_butterfly'):
 			return True
 		
@@ -227,12 +234,12 @@ class StingLikeABee(Talent):
 		self.talent_info['crit_chance_given'] = False
 
 	def update(self, scene, dt):
-		if self.player.velocity[0] <= self.player.movement_info['max_movespeed']:
+		if abs(self.player.velocity[0]) <= self.player.movement_info['max_movespeed']:
 			if self.talent_info['crit_chance_given']:
 				self.talent_info['crit_chance_given'] = False
 				self.player.combat_info['crit_strike_chance'] -= .2
 
-		if self.player.velocity[0] > self.player.movement_info['max_movespeed']:
+		if abs(self.player.velocity[0]) > self.player.movement_info['max_movespeed']:
 			if not self.talent_info['crit_chance_given']:
 				self.talent_info['crit_chance_given'] = True
 				self.player.combat_info['crit_strike_chance'] += .2
@@ -241,9 +248,9 @@ class Marksman(Talent):
 	TALENT_ID = 'marksman'
 	TALENT_CALLS = ['on_@primary']
 
-	TALENT_DESCRIPTION = {
+	DESCRIPTION = {
 		'name': 'Marksman',
-		'description': 'Your primary ability deals more damage the farther your target is.'
+		'description': 'Your primary attack deals more|damage the farther your target is.'
 	}
 	
 	@staticmethod
@@ -277,3 +284,34 @@ class Marksman(Talent):
 
 		distance = round(distance / self.talent_info['per_damage_distance_ratio'][1])
 		info.ability_info['damage'] *= round(distance * self.talent_info['per_damage_distance_ratio'][0], 2) + 1
+
+class Temperance(Talent):
+	TALENT_ID = 'temperance'
+
+	DESCRIPTION = {
+		'name': 'Temperance',
+		'description': 'You can no longer critical strike|but gain a permanent 25 percent|damage increase.'
+	}
+
+	def __init__(self, player):
+		super().__init__(player)
+
+		self.talent_info['damage_multiplier'] = 0.25
+
+		self.player.combat_info['damage_multiplier'] = round(self.player.combat_info['damage_multiplier'] + self.talent_info['damage_multiplier'], 2)
+		self.player.combat_info['crit_strike_chance'] = -100
+		
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'temperance',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['other'],
+				Card.SYMBOLS['talent']['passive']
+			]
+		}
+
+		return card_info

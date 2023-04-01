@@ -40,10 +40,12 @@ class Ability:
         }
             
     def call(self, scene, keybind=None):
-        print(f'{self.ABILITY_ID}::call()')
+        # print(f'{self.ABILITY_ID}::call()')
 
         if self.ABILITY_ID is not None:
             call_talents(scene, self.character, {f'on_{self.ABILITY_ID}': self})
+
+        call_talents(scene, self.character, {'on_ability': self})
     
     def update(self, scene, dt):
         if self.ability_info['cooldown'] > 0:
@@ -278,8 +280,4 @@ class PrimaryAttack(Ability):
 
         self.character.rect.x += round(self.velocity[0] * dt)
         self.character.rect.y += round(self.velocity[1] * dt)
-        self.character.apply_afterimages(scene, False)   
-
-        scene.add_sprites(
-            Image(self.character.true_position, self.character.image.copy(), self.character.strata - 1, 255).set_goal(15, alpha=0)
-        )
+        self.character.apply_afterimages(scene, False)

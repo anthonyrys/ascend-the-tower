@@ -20,13 +20,11 @@ class Mouse(pygame.sprite.Sprite):
             if not check_pixel_collision(self, sprite):
                 if not self.rect.colliderect(sprite.hover_rect):
                     if sprite.hovering:
-                        sprite.hovering = False
                         sprite.on_hover_end(scene)
 
                 continue
             
             if not sprite.hovering:
-                sprite.hovering = True
                 sprite.on_hover_start(scene)
 
     def display(self, scene):

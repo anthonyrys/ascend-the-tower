@@ -1,5 +1,7 @@
 from scripts.constants import SCREEN_DIMENSIONS
 
+from scripts.services.spritesheet_loader import load_spritesheet
+
 import pygame
 import random
 import math
@@ -49,25 +51,29 @@ class Fonts:
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ':', ',', ';', '\'', '\"', '(', '!', '?', ')', '+', '-', '*', '/', '=' 
     ]
-    FONT_KEYS_SPECIAL = [
-        'g', 'p', 'q', 'y', 
-        '.', ':', ',', ';'
-    ]
 
-    fonts = {}
-    font_offsets = {
-        'default': {}
+    fonts = {
+        'default': {
+            'info': {
+                'key_spacing': [10, 32],
+                'key_padding': 5,
+
+                'key_specials': ['g', 'p', 'q', 'y'],
+                'key_special_y': 11,
+            },
+
+            'letters': {}
+        }
     }
     
     def init():
         for font_file in os.listdir(Fonts.FONT_PATH):
             name = font_file.split('.')[0]
 
-            img = pygame.image.load(os.path.join(Fonts.FONT_PATH, font_file)).convert_alpha()
-            img.set_colorkey((0, 0, 0))
+            imgs = load_spritesheet(os.path.join(Fonts.FONT_PATH, font_file))
 
-            for key in Fonts.FONT_KEYS:
-                ...
+            for index, key in enumerate(Fonts.FONT_KEYS):
+                Fonts.fonts[name]['letters'][key] = imgs[index]
 
 class Inputs:
     KEYBINDS = {
@@ -211,6 +217,8 @@ class Entity(pygame.sprite.Sprite):
         self.active = True
         self.strata = strata
 
+        self.uses_ui_surface = False
+
         if isinstance(img, tuple):
             self.image = pygame.Surface(dimensions).convert_alpha()
             self.image.set_colorkey((0, 0, 0))
@@ -301,10 +309,17 @@ class Entity(pygame.sprite.Sprite):
                 (self.rect.x - self.rect_offset[0] - offset[0], self.rect.y - self.rect_offset[1] - offset[0], 0, 0),
             )
 
-        scene.entity_surface.blit(
-            self.image, 
-            (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
-        )
+        if self.uses_ui_surface:
+            scene.ui_surface.blit(
+                self.image, 
+                (self.rect.x + self.rect_offset[0], self.rect.y + self.rect_offset[1], 0, 0),
+            )
+            
+        else:
+            scene.entity_surface.blit(
+                self.image, 
+                (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
+            )
 
     def apply_collision_x_default(self, collidables):
         callback_collision = []
@@ -565,11 +580,6 @@ def create_outline_edge(sprite, color, display, size=1):
         surface.set_at(point, color)
 
     for i in range(size):
-        #display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
-        #display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-        # display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
-        # display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-
         display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
         display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
 

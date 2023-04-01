@@ -1,6 +1,9 @@
-from scripts.engine import Frame, Easings
+from scripts.constants import SCREEN_DIMENSIONS
+from scripts.engine import Frame, Easings, create_outline_edge
 
 from scripts.services.spritesheet_loader import load_spritesheet
+
+from scripts.ui.text_box import TextBox
 
 import pygame
 import random
@@ -105,6 +108,12 @@ class Card(Frame):
         self.hover_rect.width = self.rect.width
         self.hover_rect.height = self.rect.height + 16
 
+        self.hover_info_name = TextBox((0, self.rect.bottom + 50), self.draw.DESCRIPTION['name'])
+        self.hover_info_name.rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_info_name.image.get_width() * .5)
+
+        self.hover_info_description = TextBox((0, self.rect.bottom + 110), self.draw.DESCRIPTION['description'], size=.5)
+        self.hover_info_description.rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_info_description.image.get_width() * .5)
+
         if spawn is not None:
             if spawn == 'y':
                 self.rect.y = 0 - (self.image.get_height())
@@ -156,7 +165,8 @@ class Card(Frame):
         
         if self.tween_info['flag'] == 'del':
             return
-
+        
+        self.hovering = True
         self.tween_info['position'] = [self.hover_info['x'], self.hover_info['y']]
         self.tween_info['base_position'] = [self.original_rect.x, self.original_rect.y]
 
@@ -166,6 +176,8 @@ class Card(Frame):
         self.tween_info['easing'] = self.hover_info['easing']
         self.tween_info['flag'] = 'hover_start'
 
+        scene.add_sprites(self.hover_info_name, self.hover_info_description)
+
     def on_hover_end(self, scene):
         if self.tween_info['flag'] == 'init':
             return
@@ -173,6 +185,7 @@ class Card(Frame):
         if self.tween_info['flag'] == 'del':
             return
 
+        self.hovering = False
         self.tween_info['position'] = [self.original_rect.x, self.original_rect.y]
         self.tween_info['base_position'] = [self.rect.x, self.rect.y]
 
@@ -181,6 +194,8 @@ class Card(Frame):
 
         self.tween_info['easing'] = self.hover_info['easing']
         self.tween_info['flag'] = 'hover_end'
+
+        scene.del_sprites(self.hover_info_name, self.hover_info_description)
 
     def on_mouse_down(self, scene, event):
         if not self.hovering:
@@ -192,7 +207,8 @@ class Card(Frame):
         if self.tween_info['flag'] == 'init' or self.tween_info['flag'] == 'del':
             return
 
-        self.on_select(scene, self, self.drawed_cards)
+        scene.del_sprites(self.hover_info_name, self.hover_info_description)
+        self.on_select(self, self.drawed_cards)
 
     def display(self, scene, dt):
         if self.tween_info['frames'] < self.tween_info['frames_max']:
@@ -215,5 +231,8 @@ class Card(Frame):
             if self.tween_info['on_finished'] is not None:
                 self.tween_info['on_finished']()
                 self.tween_info['on_finished'] = None
+
+        if self.hovering:
+            create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)
 
         super().display(scene, dt)

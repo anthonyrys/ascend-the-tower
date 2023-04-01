@@ -82,14 +82,12 @@ class Circle(Particle):
         self.frame_count += 1 * dt
 
 class Image(Particle):
-    def __init__(self, position, img, strata, alpha, target=None):
+    def __init__(self, position, img, strata, alpha):
         super().__init__(position, img, None, strata, alpha)
         
         self.alpha = self.image.get_alpha()
         self.position, self.original_position = position, position
-
-        self.target = target
-
+        
         self.easing_styles['alpha'] = getattr(Easings, 'ease_in_sine')
         self.easing_styles['dimensions'] = getattr(Easings, 'ease_out_quint')
 
@@ -106,14 +104,12 @@ class Image(Particle):
             self.original_image.get_height() + ((self.goal_info['dimensions'][1] - self.original_image.get_height()) * self.easing_styles['dimensions'](abs_prog)))
         )
 
-        if self.target is None:
-            self.rect = self.image.get_rect(center = self.original_position)
+        if 'position' in self.goal_info:
+            self.rect.x = self.original_position[0] + (self.goal_info['position'][0] - self.original_position[0]) * self.easing_styles['position'](abs_prog)
+            self.rect.y = self.original_position[1] + (self.goal_info['position'][1] - self.original_position[1]) * self.easing_styles['position'](abs_prog)
+
         else:
-            self.rect = self.image.get_rect(center = (
-                self.target.center_position[0] - self.target.rect_offset[0],
-                self.target.center_position[1] - self.target.rect_offset[1]
-                )
-            )
+            self.rect = self.image.get_rect(center = self.original_position)
 
         self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * self.easing_styles['alpha'](abs_prog)))
 

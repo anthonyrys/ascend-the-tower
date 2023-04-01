@@ -1,13 +1,13 @@
-from scripts.constants import ENEMY_COLOR
+from scripts.constants import ENEMY_COLOR, CRIT_COLOR
 from scripts.engine import Entity, get_sprite_colors, check_pixel_collision, create_outline_edge
 
 from scripts.core_systems.combat_handler import get_immunity_dict, register_damage
 from scripts.core_systems.enemy_ai import Flyer
-from scripts.core_systems.level_handler import register_experience, calculate_experience
 
-from scripts.entities.particle_fx import Circle
+from scripts.entities.particle_fx import Circle, Image
 
-from scripts.ui.enemybar import Enemybar
+from scripts.ui.info_bar import EnemyBar
+from scripts.ui.text_box import TextBox
 
 import pygame
 import random
@@ -21,7 +21,7 @@ class Enemy(Entity):
         self.sprite_id = 'enemy'
         
         self.ai = None
-        self.health_ui = Enemybar(self)
+        self.health_ui = EnemyBar(self)
 
         self.movement_info = {
             'direction': None,
@@ -42,6 +42,9 @@ class Enemy(Entity):
             'max_health': 100,
             'health': 100,
 
+            'damage_multiplier': 1.0,
+            'healing_multiplier': 1.0,
+
             'contact_damage': 0,
             'crit_strike_chance': 0,
             'crit_strike_multiplier': 0,
@@ -54,8 +57,7 @@ class Enemy(Entity):
 
         self.level_info = {
             'level': 0,
-            'experience_amount': 0,
-            'experience_multiplier': 1,
+
             'health_scaling': 1.0,
             'damage_scaling': 1.0,
             'crit_chance_scaling': 1.0,
@@ -68,13 +70,27 @@ class Enemy(Entity):
         }
 
     def on_death(self, scene, info):
-        register_experience(
-            scene,
-            calculate_experience(
-                self.level_info['level'],
-                self.level_info['experience_multiplier']
-            )
+        ...
+
+    def on_damaged(self, scene, sprite, info):
+        color = (225, 225, 225)
+        size = .5
+
+        if info['crit']:
+           color = CRIT_COLOR
+           size = .6
+            
+        img = TextBox((0, 0), info['amount'], color=color, size=size).image.copy()
+
+        particle = Image(self.rect.center, img, 5, 255)
+        particle.set_goal(
+            30, 
+            position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
+            alpha=0,
+            dimensions=(img.get_width(), img.get_height())
         )
+
+        scene.add_sprites(particle)
 
     def set_stats(self):
         self.combat_info['max_health'] = round(math.pow(self.combat_info['max_health'] * (self.level_info['level']), self.level_info['health_scaling']))
@@ -117,6 +133,9 @@ class Stelemental(Enemy):
             'max_health': 75,
             'health': 75,
 
+            'damage_multiplier': 1.0,
+            'healing_multiplier': 1.0,
+
             'contact_damage': 30,
             'crit_strike_chance': 0,
             'crit_strike_multiplier': 0,
@@ -129,9 +148,6 @@ class Stelemental(Enemy):
 
         self.level_info = {
             'level': 1,
-
-            'experience_amount': 4,
-            'experience_multiplier': 1.2,
 
             'health_scaling': .95,
             'damage_scaling': .9,
@@ -163,6 +179,8 @@ class Stelemental(Enemy):
         scene.del_sprites(self)
 
     def on_damaged(self, scene, sprite, info):
+        super().on_damaged(scene, sprite, info)
+
         if 'velocity' in info:
             info_velocity = info['velocity']
             self.velocity[0] = info_velocity[0]
@@ -197,7 +215,7 @@ class Stelemental(Enemy):
         if not info['crit']:
             self.health_ui.set_pulse(10, (225, 225, 225))
         else:
-            self.health_ui.set_pulse(10, (251, 204, 97))
+            self.health_ui.set_pulse(10, CRIT_COLOR)
 
     def on_contact(self, scene, dt):
         register_damage(

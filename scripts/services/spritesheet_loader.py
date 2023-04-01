@@ -5,7 +5,7 @@ import os
 config = json.load(open(os.path.join('data', 'config.json')))
 spritesheet_stop_code = tuple(config['spritesheet_stop_code'])
 
-def load_spritesheet(pngpath, frames=None):
+def load_spritesheet(pngpath, frames=None, colorkey=(0, 0, 0)):
     imgs = []   
     sheet = pygame.image.load(pngpath).convert_alpha()
 
@@ -22,7 +22,7 @@ def load_spritesheet(pngpath, frames=None):
     
         stop = i
         img = pygame.Surface((stop - start, height)).convert_alpha()
-        img.set_colorkey((0, 0, 0))
+        img.set_colorkey(colorkey)
         img.blit(sheet, (0, 0), (start, 0, stop - start, height))
 
         if frames:
