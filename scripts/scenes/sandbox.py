@@ -85,10 +85,10 @@ class Sandbox(Scene):
     def remove_cards(self, selected_card, cards):
         for card in cards:
             card.tween_info['base_position'] = [card.original_rect.x, card.original_rect.y]
-            card.tween_info['position'] = [card.rect.x, SCREEN_DIMENSIONS[1]]
+            card.tween_info['position'] = [card.rect.x, SCREEN_DIMENSIONS[1] * 1.1]
 
             if card == selected_card:
-                card.tween_info['position'] = [card.rect.x, 0 - card.rect.height]
+                card.tween_info['position'] = [card.rect.x, 0 - card.rect.height * 1.1]
                 card.tween_info['on_finished'] = lambda: self.del_sprites(cards)
 
             card.tween_info['frames'] = 0
@@ -96,7 +96,7 @@ class Sandbox(Scene):
                 
             card.tween_info['flag'] = 'del'
 
-        self.player.talents.append(selected_card.draw(self.player))
+        self.player.talents.append(selected_card.draw(self, self.player))
 
         if selected_card.info['type'] == 'talent':
             print(f'selected card: {selected_card.draw.TALENT_ID}')

@@ -1,7 +1,7 @@
 from scripts.constants import ENEMY_COLOR, CRIT_COLOR
 from scripts.engine import Entity, get_sprite_colors, check_pixel_collision, create_outline_edge
 
-from scripts.core_systems.combat_handler import get_immunity_dict, register_damage
+from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_damage
 from scripts.core_systems.enemy_ai import Flyer
 
 from scripts.entities.particle_fx import Circle, Image
@@ -72,7 +72,7 @@ class Enemy(Entity):
     def on_death(self, scene, info):
         ...
 
-    def on_damaged(self, scene, sprite, info):
+    def on_damaged(self, scene, info):
         color = (225, 225, 225)
         size = .5
 
@@ -82,7 +82,9 @@ class Enemy(Entity):
             
         img = TextBox((0, 0), info['amount'], color=color, size=size).image.copy()
 
-        particle = Image(self.rect.center, img, 5, 255)
+        particle = Image(self.rect.center, img, 6, 255)
+        particle.set_easings(alpha='ease_in_quint')
+    
         particle.set_goal(
             30, 
             position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
@@ -143,7 +145,7 @@ class Stelemental(Enemy):
             'knockback_resistance': .75,
             
             'immunities': get_immunity_dict(),
-            'mitigations': {}
+            'mitigations': get_mitigation_dict()
         }
 
         self.level_info = {
@@ -178,8 +180,10 @@ class Stelemental(Enemy):
         scene.add_sprites(particles)
         scene.del_sprites(self)
 
-    def on_damaged(self, scene, sprite, info):
-        super().on_damaged(scene, sprite, info)
+    def on_damaged(self, scene, info):
+        super().on_damaged(scene, info)
+
+        sprite = info['primary']
 
         if 'velocity' in info:
             info_velocity = info['velocity']

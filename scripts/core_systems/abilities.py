@@ -132,12 +132,12 @@ class PrimaryAttack(Ability):
             cir.glow['intensity'] = .25
 
             particles.append(cir)
-                    
-            self.character.velocity = [round(-self.velocity[0] * .5, 1), round(-abs(self.velocity[1] * .3), 1)]
-            self.character.combat_info['immunities']['contact'] = self.ability_info['hit_immunity']
+ 
+        self.character.velocity = [round(-self.velocity[0] * .5, 1), round(-abs(self.velocity[1] * .3), 1)]
+        self.character.combat_info['immunities']['contact'] = self.ability_info['hit_immunity']
 
-        scene.add_sprites(particles)   
         scene.set_dt_multiplier(.25, 10)
+        scene.add_sprites(particles)   
 
     def call(self, scene, keybind=None): 
         if self.ability_info['cooldown'] > 0:

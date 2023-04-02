@@ -2,7 +2,8 @@ from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
 from scripts.engine import Entity, Inputs
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
-from scripts.core_systems.combat_handler import register_heal, get_immunity_dict
+from scripts.core_systems.talents import call_talents
+from scripts.core_systems.combat_handler import register_heal, get_immunity_dict, get_mitigation_dict
 
 from scripts.entities.particle_fx import Circle, Image
 
@@ -90,7 +91,7 @@ class Player(Entity):
             'knockback_resistance': 1,
 
             'immunities': get_immunity_dict(),
-            'mitigations': {}
+            'mitigations': get_mitigation_dict()
         }
         
         self.combat_info = self.default_combat_info.copy()
@@ -134,9 +135,14 @@ class Player(Entity):
             'ability_3': None
         }
 
+        self.ability_override = False
+
         self.talents = []
 
     def on_key_down(self, scene, key):
+        if scene.paused:
+            return
+
         for action, keybinds in Inputs.KEYBINDS.items():
             if key not in keybinds:
                 continue
@@ -192,10 +198,10 @@ class Player(Entity):
             return
         
         img = TextBox((0, 0), info['amount'], color=HEAL_COLOR, size=1.0).image.copy()
-        particle = Image((50, 50), img, 5, 255)
+        particle = Image((125, 50), img, 5, 255)
         particle.set_goal(
             50, 
-            position=(50, 100),
+            position=(125, 100),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
@@ -203,7 +209,9 @@ class Player(Entity):
         
         scene.add_sprites(particle)
 
-    def on_damaged(self, scene, sprite, info):
+    def on_damaged(self, scene, info):
+        sprite = info['primary']
+
         scene.set_dt_multiplier(.2, 5)
         self.combat_info['immunities'][info['type']] = 30
 
@@ -236,6 +244,8 @@ class Player(Entity):
             dimensions=(img.get_width(), img.get_height())
         )
         particle.uses_ui_surface = True
+
+        call_talents(scene, self, {'on_damaged': info})
 
         scene.add_sprites(particle)
 
@@ -464,6 +474,9 @@ class Player(Entity):
                     {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
                 )
 
+        if self.combat_info['health'] > self.combat_info['max_health']:
+            self.combat_info['health'] = self.combat_info['max_health']
+
         for immunity in self.combat_info['immunities'].keys():
             if '&' in immunity or self.combat_info['immunities'][immunity] == 0:
                 continue
@@ -474,38 +487,65 @@ class Player(Entity):
 
             self.combat_info['immunities'][immunity] -= 1 * dt
 
+        del_list = []
+        for mitigation in self.combat_info['mitigations']:
+            if '&' in mitigation:
+                continue
+        
+            for name, values in self.combat_info['mitigations'][mitigation].items():
+                if values[1] <= 0:
+                    del_list.append([mitigation, name])
+                    continue
+
+                self.combat_info['mitigations'][mitigation][name][1] -= 1 * dt
+
+        for item in del_list:
+            del self.combat_info['mitigations'][item[0]][item[1]]
+
         for ability in [s for s in self.abilities.values() if s is not None]:
             ability.update(scene, dt)  
 
+        self.ability_override = False
         for ability in [s for s in self.abilities.values() if s is not None]:
             if ability is None:
                 continue
     
             if ability.overrides:
-                super().display(scene, dt)
-                return
+                self.ability_override = True
+
+        if self.ability_override:
+            for talent in self.talents:
+                talent.update(scene, dt)  
+
+            self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
+
+            super().display(scene, dt)
+            return     
+               
+        if not scene.paused:
+            self.apply_gravity(dt)
+            self.apply_movement(scene)
+            
+            if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
+                self.velocity[0] = 0
+
+            self.rect.x += round(self.velocity[0] * dt)
+            self.apply_collision_x(scene)
+
+            self.rect.y += round(self.velocity[1] * dt)
+            self.apply_collision_y(scene, dt)
+
+            self.apply_afterimages(scene)
+
+            self.set_frame_state()
+            
+        self.halo.display(self, scene, dt)
+        self.set_images(scene, dt)
             
         for talent in self.talents:
             talent.update(scene, dt)  
 
         self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
-
-        self.apply_gravity(dt)
-        self.apply_movement(scene)
-        
-        if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
-            self.velocity[0] = 0
-
-        self.rect.x += round(self.velocity[0] * dt)
-        self.apply_collision_x(scene)
-
-        self.rect.y += round(self.velocity[1] * dt)
-        self.apply_collision_y(scene, dt)
-
-        self.apply_afterimages(scene)
-
-        self.set_frame_state()
-        self.set_images(scene, dt)
 
         super().display(scene, dt)
         if self.img_info['pulse_frames'] > 0:
@@ -518,5 +558,3 @@ class Player(Entity):
             scene.entity_surface.blit(img, (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]))
 
             self.img_info['pulse_frames'] -= 1 * dt
-
-        self.halo.display(self, scene, dt)

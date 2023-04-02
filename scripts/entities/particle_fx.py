@@ -61,18 +61,23 @@ class Circle(Particle):
 
         abs_prog = self.frame_count / self.frame_count_max
 
-        self.rect.center = (
+        self.radius = self.base_radius + ((self.goal_info['radius'] - self.base_radius) * self.easing_styles['radius'](abs_prog))
+
+        if 'width' in self.goal_info:
+            self.width = self.base_width + round((self.goal_info['width'] - self.base_width) * self.easing_styles['width'](abs_prog))
+
+        self.image = pygame.transform.scale(self.image, (self.radius * 2, self.radius * 2))
+        self.image.set_colorkey((0, 0, 0))
+        self.image.fill((0, 0, 0))
+
+        self.rect = self.image.get_rect(center=(
             self.base_position[0] + (self.goal_info['position'][0] - self.base_position[0]) * self.easing_styles['position'](abs_prog),
-            self.base_position[1] + (self.goal_info['position'][1] - self.base_position[1]) * self.easing_styles['position'](abs_prog),
+            self.base_position[1] + (self.goal_info['position'][1] - self.base_position[1]) * self.easing_styles['position'](abs_prog))
         )
 
         if self.gravity:
             self.rect.y += self.gravity * self.frame_count
 
-        self.radius = self.base_radius + ((self.goal_info['radius'] - self.base_radius) * self.easing_styles['radius'](abs_prog))
-        self.width = self.base_width + round((self.goal_info['width'] - self.base_width) * self.easing_styles['width'](abs_prog))
-
-        self.image.fill((0, 0, 0))
         pygame.draw.circle(
             self.image,
             self.color, (self.image.get_width() * .5, self.image.get_height() * .5), self.radius, self.width
@@ -98,11 +103,12 @@ class Image(Particle):
 
         abs_prog = self.frame_count / self.frame_count_max
 
-        self.image = pygame.transform.scale(
-            self.original_image,
-            (self.original_image.get_width() + ((self.goal_info['dimensions'][0] - self.original_image.get_width()) * self.easing_styles['dimensions'](abs_prog)),
-            self.original_image.get_height() + ((self.goal_info['dimensions'][1] - self.original_image.get_height()) * self.easing_styles['dimensions'](abs_prog)))
-        )
+        if 'dimensions' in self.goal_info:
+            self.image = pygame.transform.scale(
+                self.original_image,
+                (self.original_image.get_width() + ((self.goal_info['dimensions'][0] - self.original_image.get_width()) * self.easing_styles['dimensions'](abs_prog)),
+                self.original_image.get_height() + ((self.goal_info['dimensions'][1] - self.original_image.get_height()) * self.easing_styles['dimensions'](abs_prog)))
+            )
 
         if 'position' in self.goal_info:
             self.rect.x = self.original_position[0] + (self.goal_info['position'][0] - self.original_position[0]) * self.easing_styles['position'](abs_prog)

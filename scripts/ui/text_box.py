@@ -45,12 +45,22 @@ class TextBox(Frame):
 
         return surf
 
-    def __init__(self, position, text, color=(255, 255, 255), size=1.0, font='default', center=True):
+    def __init__(self, position, text, color=(255, 255, 255), size=1.0, font='default', center=True, text_width=40):
+        new_text = ''
+        char_count = 0
+        for char in str(text):
+            new_text += char
+            char_count += 1
+
+            if char == ' ' and char_count >= text_width:
+                new_text += '|'
+                char_count = 0
+
         self.color = color
         self.size = size
         self.font = font
 
-        self.texts = str(text).split('|')
+        self.texts = new_text.split('|')
         self.lines = []
 
         img_size = [0, 0]

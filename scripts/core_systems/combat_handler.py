@@ -15,6 +15,18 @@ def get_immunity_dict():
 
     return immunity_list
 
+def get_mitigation_dict():
+    mitigation_dict = {}
+
+    for dmg_type in DAMAGE_TYPES:
+        mitigation_dict[dmg_type] = {}
+        mitigation_dict[dmg_type + '&'] = {}
+
+        mitigation_dict['all'] = {}
+        mitigation_dict['all&'] = {}
+
+    return mitigation_dict
+
 def register_damage(scene, primary_sprite, secondary_sprite, info):
     if info['type'] not in DAMAGE_TYPES:
         return False
@@ -28,6 +40,7 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     if secondary_sprite.combat_info['immunities'][info['type']] > 0:
         return False
         
+    info['primary'] = primary_sprite
     info['target'] = secondary_sprite
         
     info['amount'] = random.uniform(
@@ -42,7 +55,25 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
         info['amount'] *= primary_sprite.combat_info['crit_strike_multiplier']
         info['crit'] = True
 
+    mitigated_amount = 0
+    for val in list(secondary_sprite.combat_info['mitigations'][info['type'] + '&'].values()):
+        mitigated_amount += val
+
+    for val in list(secondary_sprite.combat_info['mitigations'][info['type']].values()):
+        mitigated_amount += val[0]
+
+    for val in list(secondary_sprite.combat_info['mitigations']['all&'].values()):
+        mitigated_amount += val
+
+    for val in list(secondary_sprite.combat_info['mitigations']['all'].values()):
+        mitigated_amount += val[0]
+
+    if mitigated_amount > 1:
+        mitigated_amount = 1
+
+    info['amount'] = info['amount'] * (1 - mitigated_amount)
     info['amount'] = round(info['amount'])
+
     if secondary_sprite.combat_info['health'] <= info['amount']:
         secondary_sprite.combat_info['health'] = 0
         secondary_sprite.on_death(scene, info)
@@ -50,7 +81,7 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     else:
         secondary_sprite.combat_info['health'] -= info['amount']
 
-    secondary_sprite.on_damaged(scene, primary_sprite, info)
+    secondary_sprite.on_damaged(scene, info)
 
     # print(f'{primary_sprite} damage >> {secondary_sprite}; ({info["type"]}, {info["amount"]}, {info["crit"]})')
     return info
