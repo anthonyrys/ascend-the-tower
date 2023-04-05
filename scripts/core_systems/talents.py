@@ -377,9 +377,9 @@ class WheelOfFortune(Talent):
 		
 		self.talent_info['cooldown'] = self.talent_info['cooldown_timer']
 
-		stat = random.choice(self.talent_info['stats'].keys())
+		stat = random.choice(list(self.talent_info['stats'].keys()))
 		while stat == self.talent_info['current_stat']:
-			stat = random.choice(self.talent_info['stats'].keys())
+			stat = random.choice(list(self.talent_info['stats'].keys()))
 
 		if self.talent_info['current_stat'] is not None:
 			if self.talent_info['current_stat'] == 'max_movespeed':
