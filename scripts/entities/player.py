@@ -26,7 +26,7 @@ class Player(Entity):
 
             self.glow['active'] = True
             self.glow['size'] = 1.2
-            self.glow['intensity'] = .2
+            self.glow['intensity'] = .4
 
             self.sin_amplifier = 1
             self.sin_frequency = .05
@@ -55,8 +55,13 @@ class Player(Entity):
 
         self.healthbar = None
 
+        self.overrides = {
+            'ability': False,
+            'death': False
+        }
+
         self.state_info = {
-            'dead': False,
+            'dead': 0,
             'movement': None
         }
 
@@ -135,8 +140,6 @@ class Player(Entity):
             'ability_3': None
         }
 
-        self.ability_override = False
-
         self.talents = []
 
     def on_key_down(self, scene, key):
@@ -190,14 +193,21 @@ class Player(Entity):
 
             scene.add_sprites(circle_left, circle_right)    
 
-    def on_death(self, scene, info):
+    def on_respawn(self, scene):
         ...
+
+    def on_death(self, scene, info):
+        call_talents(scene, self, {'on_death': info})
 
     def on_healed(self, scene, info):
         if info['type'] == 'passive': 
             return
         
-        img = TextBox((0, 0), info['amount'], color=HEAL_COLOR, size=1.0).image.copy()
+        color = HEAL_COLOR
+        if 'color' in info:
+            color = info['color']
+        
+        img = TextBox((0, 0), info['amount'], color=color, size=1.0).image.copy()
         particle = Image((125, 50), img, 5, 255)
         particle.set_goal(
             50, 
@@ -505,15 +515,15 @@ class Player(Entity):
         for ability in [s for s in self.abilities.values() if s is not None]:
             ability.update(scene, dt)  
 
-        self.ability_override = False
+        self.overrides['ability'] = False
         for ability in [s for s in self.abilities.values() if s is not None]:
             if ability is None:
                 continue
     
             if ability.overrides:
-                self.ability_override = True
+                self.overrides['ability'] = True
 
-        if self.ability_override:
+        if self.overrides['ability']:
             for talent in self.talents:
                 talent.update(scene, dt)  
 

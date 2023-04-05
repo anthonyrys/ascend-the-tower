@@ -35,8 +35,8 @@ class TextBox(Frame):
 
         x = 0
         for img, letter in zip(imgs, text):
-            if letter in Fonts.fonts[self.font]['info']['key_specials']:
-                surf.blit(img, (x, (Fonts.fonts[self.font]['info']['key_special_y'] * self.size)))
+            if letter in Fonts.fonts[self.font]['info']['key_specials'].keys():
+                surf.blit(img, (x, (Fonts.fonts[self.font]['info']['key_specials'][letter] * self.size)))
                 x += img.get_width() + (Fonts.fonts[self.font]['info']['key_padding'] * self.size)
                 continue
 

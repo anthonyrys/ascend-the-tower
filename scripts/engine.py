@@ -58,8 +58,14 @@ class Fonts:
                 'key_spacing': [10, 32],
                 'key_padding': 5,
 
-                'key_specials': ['g', 'p', 'q', 'y'],
-                'key_special_y': 11,
+                'key_specials': {
+                    'g': 11, 
+                    'p': 11, 
+                    'q': 11, 
+                    'y': 11,
+
+                    ':': -4
+                }
             },
 
             'letters': {}

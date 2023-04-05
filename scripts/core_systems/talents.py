@@ -1,4 +1,4 @@
-from scripts.constants import HEAL_COLOR
+from scripts.constants import HEAL_COLOR, PLAYER_COLOR
 from scripts.engine import get_distance
 
 from scripts.core_systems.combat_handler import register_heal
@@ -149,8 +149,8 @@ class ComboStar(Talent):
 		super().__init__(scene, player)
 
 		self.talent_info['multiplier'] = 0
-		self.talent_info['per_multiplier'] = .2
-		self.talent_info['multiplier_cap'] = 1.0
+		self.talent_info['per_multiplier'] = .1
+		self.talent_info['multiplier_cap'] = .5
 
 		self.talent_info['time'] = 0
 		self.talent_info['decay_time'] = 45
@@ -206,7 +206,7 @@ class StingLikeABee(Talent):
 
 	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Gain additional critical strike chance when you are fast.'
+		'description': 'Gain additional critical strike chance when you have a speed boost.'
 	}
 
 	@staticmethod
@@ -377,9 +377,9 @@ class WheelOfFortune(Talent):
 		
 		self.talent_info['cooldown'] = self.talent_info['cooldown_timer']
 
-		stat = random.choice(list(self.talent_info['stats'].keys()))
+		stat = random.choice(self.talent_info['stats'].keys())
 		while stat == self.talent_info['current_stat']:
-			stat = random.choice(list(self.talent_info['stats'].keys()))
+			stat = random.choice(self.talent_info['stats'].keys())
 
 		if self.talent_info['current_stat'] is not None:
 			if self.talent_info['current_stat'] == 'max_movespeed':
@@ -474,7 +474,7 @@ class Recuperation(Talent):
 		for img in self.talent_info['orb_info']['imgs']:
 			img['angle'] += self.talent_info['orb_info']['angle_speed'] * dt
 
-			if self.player.ability_override:
+			if self.player.overrides['ability']:
 				continue
 
 			a = (img['angle'] - 90) * math.pi / 180
@@ -573,10 +573,11 @@ class Holdfast(Talent):
 
 class GuardianAngel(Talent):
 	TALENT_ID = 'guardian_angel'
+	TALENT_CALLS = ['on_death']
 
 	DESCRIPTION = {
 		'name': 'Guardian Angel',
-		'description': 'Upon taking fatal damage you heal a portion of your max health (once per wave).'
+		'description': 'Upon taking fatal damage you heal a portion of your max health. Can only occur 3 times.'
 	}
 
 	@staticmethod
@@ -593,3 +594,21 @@ class GuardianAngel(Talent):
 		}
 
 		return card_info
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['charges'] = 3
+	
+	def call(self, call, scene, info):
+		if self.talent_info['charges'] <= 0:
+			return
+
+		heal_amount = self.player.combat_info['max_health'] * .25
+		register_heal(scene, self.player, {'type': 'status', 'amount': heal_amount, 'color': PLAYER_COLOR})
+		
+		self.player.img_info['pulse_frames'] = 45
+		self.player.img_info['pulse_frames_max'] = 45
+		self.player.img_info['pulse_frame_color'] = PLAYER_COLOR
+
+		self.talent_info['charges'] -= 1

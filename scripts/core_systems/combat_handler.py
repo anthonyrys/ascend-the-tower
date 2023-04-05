@@ -56,16 +56,16 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
         info['crit'] = True
 
     mitigated_amount = 0
-    for val in list(secondary_sprite.combat_info['mitigations'][info['type'] + '&'].values()):
+    for val in secondary_sprite.combat_info['mitigations'][info['type'] + '&'].values():
         mitigated_amount += val
 
-    for val in list(secondary_sprite.combat_info['mitigations'][info['type']].values()):
+    for val in secondary_sprite.combat_info['mitigations'][info['type']].values():
         mitigated_amount += val[0]
 
-    for val in list(secondary_sprite.combat_info['mitigations']['all&'].values()):
+    for val in secondary_sprite.combat_info['mitigations']['all&'].values():
         mitigated_amount += val
 
-    for val in list(secondary_sprite.combat_info['mitigations']['all'].values()):
+    for val in secondary_sprite.combat_info['mitigations']['all'].values():
         mitigated_amount += val[0]
 
     if mitigated_amount > 1:
@@ -76,7 +76,10 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
 
     if secondary_sprite.combat_info['health'] <= info['amount']:
         secondary_sprite.combat_info['health'] = 0
+
+        secondary_sprite.on_damaged(scene, info)
         secondary_sprite.on_death(scene, info)
+        return info
         
     else:
         secondary_sprite.combat_info['health'] -= info['amount']

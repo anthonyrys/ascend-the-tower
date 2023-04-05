@@ -20,7 +20,7 @@ class Flyer(AiTemplate):
     def __init__(self, sprite):
         super().__init__('flyer', sprite)
 
-        self.ai_config['aggro_distance'] =  960
+        self.ai_config['aggro_distance'] =  2000
         self.ai_config['is_aggro'] = False
         self.ai_config['can_collide'] = False
 
