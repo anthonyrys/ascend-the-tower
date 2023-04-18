@@ -1,3 +1,7 @@
+'''
+Holds the InfoBar baseclass and subclasses.
+'''
+
 from scripts.constants import UI_HEALTH_COLOR
 from scripts.engine import Easings, Frame
 
@@ -7,6 +11,10 @@ import pygame
 import os
 
 class InfoBar(Frame):
+    '''
+    Frame element used to display information via bars.
+    '''
+    
     def __init__(self, position, img, dimensions, strata, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'info_bar'

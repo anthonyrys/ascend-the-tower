@@ -1,8 +1,24 @@
+'''
+Holds the Ai classes that is used by the enemy classes.
+'''
+
 from scripts.engine import get_distance
 
 import pygame
 
 class AiTemplate:
+    '''
+    Class that determines how the enemy should act and move.
+
+    Variables:
+        sprite: The enemy object.
+        ai_type: The type of AI (changed by subclasses).
+        ai_config: Information values about the AI behaivor.
+
+    Methods:
+        update(): update the enemy object every frame.
+    '''
+    
     def __init__(self, ai_type, sprite):
         self.sprite = sprite
 

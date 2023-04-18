@@ -1,3 +1,7 @@
+'''
+Holds all of the general classes and methods used throughout the game.
+'''
+
 from scripts.constants import SCREEN_DIMENSIONS
 
 from scripts.services.spritesheet_loader import load_spritesheet
@@ -8,6 +12,10 @@ import math
 import os
 
 class Easings:
+    '''
+    Contains easing methods for sprites.
+    '''
+
     @staticmethod
     def ease_in_sine(abs_prog):
         return 1 - math.cos((abs_prog * math.pi) / 2)
@@ -45,6 +53,10 @@ class Easings:
         return 1 - pow(1 - abs_prog, 4)
 
 class Fonts:
+    '''
+    Custom font rendering; Uses image spritesheets.
+    '''
+
     FONT_PATH = os.path.join('imgs', 'ui', 'fonts')
 
     FONT_KEYS = [
@@ -72,6 +84,7 @@ class Fonts:
         }
     }
     
+    # Splits the image into seperate pygame surfaces to use
     def init():
         for font_file in os.listdir(Fonts.FONT_PATH):
             name = font_file.split('.')[0]
@@ -82,15 +95,18 @@ class Fonts:
                 Fonts.fonts[name]['letters'][key] = imgs[index]
 
 class Inputs:
+    '''
+    Custom input system simplify keybinding.
+    '''
+
     KEYBINDS = {
         'left': [pygame.K_a, pygame.K_LEFT],
         'right': [pygame.K_d, pygame.K_RIGHT],
         'down': [pygame.K_s, pygame.K_DOWN],
         'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
 
-        'ability_1': [],
-        'ability_2': [],
-        'ability_3': []
+        'ability_1': [pygame.K_1],
+        'ability_2': [pygame.K_2]
     }
 
     MOVEMENT = ['left', 'right', 'down', 'jump']
@@ -126,6 +142,10 @@ class Inputs:
                 break
 
 class CameraTemplate:
+    '''
+    Template class for how camera subclasses should generally behave.
+    '''
+
     def __init__(self, focus):
         self.focus = focus
         self.offset = [0, 0]
@@ -154,6 +174,10 @@ class CameraTemplate:
         self.camera_tween_info['start_pos'] = (self.box.topleft[0] - self.box_dimensions[0], self.box.topleft[1] - self.box_dimensions[1])
 
 class BoxCamera(CameraTemplate):
+    '''
+    Camera used for the main game loop.
+    '''
+
     def __init__(self, focus):
         super().__init__(focus)
 
@@ -212,6 +236,10 @@ class BoxCamera(CameraTemplate):
             return offset
 
 class Entity(pygame.sprite.Sprite):
+    '''
+    General sprite class used for sprites rendered to the entity surface.
+    '''
+
     GRAVITY = 2
     MAX_GRAVITY = 30
 
@@ -438,6 +466,10 @@ class Entity(pygame.sprite.Sprite):
         self.gravity_info['max_gravity'] = max_grav
 
 class Frame(pygame.sprite.Sprite):
+    '''
+    General sprite class used for sprites rendered to the ui surface.
+    '''
+
     def __init__(self, position, img, dimensions, strata, alpha=None):
         self.sprite_id = None
         self.secondary_sprite_id = None
@@ -520,11 +552,11 @@ def check_pixel_collision(primary_sprite, secondary_sprite):
 
     return collision
 
-def check_line_collision(start, end, sprites):
+def check_line_collision(start, end, sprites, exclude=[]):
     clipped_sprites = []
 
     for sprite in sprites:
-        if sprite.rect.clipline(start, end):
+        if sprite.rect.clipline(start, end) and sprite.sprite_id not in exclude:
             clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
 
     return clipped_sprites

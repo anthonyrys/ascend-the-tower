@@ -1,7 +1,12 @@
+'''
+Sandbox scene used for mainly testing purposes.
+'''
+
 from scripts.constants import SCREEN_DIMENSIONS
 from scripts.engine import BoxCamera, Entity, Easings
 
 from scripts.core_systems.talents import get_all_talents
+from scripts.core_systems.abilities import get_all_abilities
 
 from scripts.entities.enemy import Stelemental
 from scripts.entities.player import Player
@@ -18,23 +23,33 @@ import random
 import math
 
 class Sandbox(Scene):
+    '''
+    Variables:
+        player: the initialized player class.
+        enemy_info: information about how the enemies should spawn.
+
+        camera: the initialized BoxCamera object.
+        camera_offset: the value by which the sprite surface should be offset by.
+
+        scene_fx: a dictionary on the different effects the scene will use.
+
+        ui: a collection of ui sprites.
+        tiles: a collection of tile sprites.
+
+    Methods:
+        remove_cards: the function given to the card object when a card is selected.
+        generate_cards: generates a list of cards for the player to choose from.
+    '''
+    
     def __init__(self, surfaces, mouse, sprites=None):
         super().__init__(surfaces, mouse, sprites)
 
         self.player = Player((2500, 1200), 4)
-        self.enemy_info = [[120, 60], [0, 3]]
+        self.enemy_info = [[0, 60], [0, 5]]
 
         self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
         
-        self.ui = {
-            'healthbar': HealthBar(self.player),
-            'temp_guide': [
-                TextBox((40, SCREEN_DIMENSIONS[1] - 50), '1: draw cards', size=.5),
-                TextBox((40, SCREEN_DIMENSIONS[1] - 100), '0: fullscreen', size=.5)
-            ]
-        }
-
         self.scene_fx = {
             'entity_dim': {
                 'type': None, 
@@ -44,6 +59,15 @@ class Sandbox(Scene):
             },
 
             'entity_zoom': {}
+        }
+
+
+        self.ui = {
+            'healthbar': HealthBar(self.player),
+            'temp_guide': [
+                TextBox((40, SCREEN_DIMENSIONS[1] - 100), '3: draw cards', size=.5),
+                TextBox((40, SCREEN_DIMENSIONS[1] - 50), '0: fullscreen', size=.5)
+            ]
         }
 
         self.player.healthbar = self.ui['healthbar']
@@ -95,7 +119,7 @@ class Sandbox(Scene):
         if self.paused:
             return
         
-        if event.key == pygame.key.key_code('1'):
+        if event.key == pygame.key.key_code('3'):
             self.generate_cards()
 
     def remove_cards(self, selected_card, cards):
@@ -112,13 +136,12 @@ class Sandbox(Scene):
                 
             card.tween_info['flag'] = 'del'
 
-        self.player.talents.append(selected_card.draw(self, self.player))
-
-        if selected_card.info['type'] == 'talent':
-            print(f'selected card: {selected_card.draw.TALENT_ID}')
+        if selected_card.draw.DRAW_TYPE == 'TALENT':
+            self.player.talents.append(selected_card.draw(self, self.player))
+            print(f'selected talent card: {selected_card.draw.TALENT_ID}')
                 
-        elif selected_card.info['type'] == 'ability':
-            print(f'selected card: {selected_card.draw.ABILITY_ID}')
+        elif selected_card.draw.DRAW_TYPE == 'ABILITY':
+            print(f'selected ability card: {selected_card.draw.ABILITY_ID}')
 
         self.in_menu = False
         self.paused = False
@@ -156,6 +179,18 @@ class Sandbox(Scene):
 
         if len(drawables) < draw_count:
             return
+        
+        for ability in get_all_abilities():
+            if ability.ABILITY_ID in ability_exclude_list:
+                continue
+
+            if ability in player_abilities:
+                continue
+
+            if not ability.check_draw_condition(self.player):
+                continue
+
+            drawables.append(ability)
             
         self.in_menu = True
         self.paused = True
@@ -178,6 +213,7 @@ class Sandbox(Scene):
 
         for draw in draws:
             cards.append(Card((x + (i * 200), y), draw, spawn='y'))
+
             i += 1
 
         for card in cards:
@@ -212,8 +248,11 @@ class Sandbox(Scene):
             self.enemy_info[0][0] = 0
 
             if self.enemy_info[1][0] < self.enemy_info[1][1]:
-                self.add_sprites(Stelemental((random.randint(2000, 2500), random.randint(1000, 1600)), 6))
-
+                if random.randint(1, 3) == 3:
+                    self.add_sprites(Stelemental((random.randint(2000, 2500), random.randint(1000, 1600)), 6, True))
+                else:
+                    self.add_sprites(Stelemental((random.randint(2000, 2500), random.randint(1000, 1600)), 6))
+                    
         self.enemy_info[0][0] += 1 * entity_dt
 
         display_order = self.sort_sprites(self.sprites)

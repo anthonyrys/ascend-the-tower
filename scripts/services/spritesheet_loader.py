@@ -1,3 +1,7 @@
+'''
+Holds the method that splites spritesheets into usable pygame surfaces.
+'''
+
 import pygame
 import json
 import os

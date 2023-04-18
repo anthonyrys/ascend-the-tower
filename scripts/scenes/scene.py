@@ -1,9 +1,45 @@
+'''
+Baseclass for the game scene.
+'''
+
 from scripts.constants import SCREEN_DIMENSIONS
 from scripts.entities.particle_fx import Particle
 
 import pygame
 
 class Scene:
+    '''
+    Variables:
+        surfaces: a list of surfaces given by the scene handler.
+        mouse: a mouse object.
+
+        view: a pygame surface view of the current screen.
+
+        dt_info: info on how delta time should be percvied.
+
+        sprites: a list of the current sprites within the scene.
+
+        frame_count: the number of frames that has passed in the scene (rounded).
+        frame_count_raw: the number of frames that has passed in the scene (not rounded).
+
+        in_menu: whether the scene is in a menu.
+        paused: whether the scene is paused.
+
+    Methods:
+        sort_sprites: sorts the sprites based on their strata level.
+
+        on_mouse_down: called when the mouse has been pressed.
+        on_mouse_down: called when the mouse has been released.
+
+        on_key_down: called when a key is pressed.
+        on_key_up: called when a key is released.
+
+        set_dt_multiplier: sets dt_info multiplier for a duration.
+
+        add_sprites: add sprites to the scene.
+        del_sorites: deletes sprites from the scene.
+    '''
+
     def __init__(self, surfaces, mouse, sprites=None):
         self.surfaces = surfaces
         self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
@@ -61,9 +97,6 @@ class Scene:
         return display_order
         
     def display(self, screen, clock, dt):
-        ...
-
-    def get_selected_interactable(self):
         ...
 
     def on_mouse_down(self, event):

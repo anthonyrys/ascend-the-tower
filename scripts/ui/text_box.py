@@ -1,8 +1,27 @@
+'''
+Holds the TextBox class.
+'''
+
 from scripts.engine import Fonts, Frame
 
 import pygame
 
 class TextBox(Frame):
+    '''
+    Frame element that utilizes the font system to display text.
+
+    Variables:
+        color: color of the text.
+        size: size of the text.
+        font: font style of the text.
+
+        texts: list of the split text.
+        lines: list of pygame surfaces used to blit the text on.
+
+    Methods:
+        create_text_line(): blits a string of text onto a pygame surface.
+    '''
+
     def create_text_line(self, text):
         text = text.lower()
         

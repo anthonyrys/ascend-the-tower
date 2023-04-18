@@ -1,3 +1,7 @@
+'''
+Holds the game constants.
+'''
+
 TITLE = 'untitled'
 FRAME_RATE = 30
 

@@ -1,7 +1,11 @@
+'''
+Holds the player class.
+'''
+
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
 from scripts.engine import Entity, Inputs
 
-from scripts.core_systems.abilities import Dash, PrimaryAttack
+from scripts.core_systems.abilities import Dash, PrimaryAttack, RainOfArrows
 from scripts.core_systems.talents import call_talents
 from scripts.core_systems.combat_handler import register_heal, get_immunity_dict, get_mitigation_dict
 
@@ -16,7 +20,55 @@ import math
 import os
 
 class Player(Entity):
+    '''
+    The class that the player controls.
+
+    Variables:
+        halo: the initialized halo class.
+        timed_inputs: dictionary to contain inputs.
+        timed_inputs_buffer: used to determine how long an input should stay in the dictionary.
+
+        healthbar: Infobar object to display player health.
+
+        overrides: dictonary of the different override scenarios.
+
+        state_info: information on the current state of the player.
+        default_movement_info: initial movement information of the player.
+        movement_info: ongoing movement information of the player.
+        default_combat_info: initial combat information of the player.
+        combat_info: ongoing combat information of the player.
+        img_info: information on how the player images should be displayed.
+
+        cooldown_timers: base timers for player actions.
+        cooldowns: ongoing cooldowns for player actions.
+
+        abilities: dictonary of the current abilities the player has.
+
+        talents: list of the current talents the player has.
+        talent_info: dictonary of the information about the talents the player has.
+
+    Methods:
+        on_jump(): called when the player presses the up key.
+        on_respawn(): called when the player respawns after death.
+        on_death(): called when the player dies.
+        on_attack(): called when the player attacks.
+        on_healed(): called when the player recives a heal.
+        on_damaged(): called when the player takes damage.
+
+        apply_movement(): uses the general inputs to determine player velocity.
+        apply_collision_x(): applies base collision for the x axis.
+        apply_collision_y(): applies base collision for the y axis.
+        apply_afterimages(): applies afterimages of the player if they have a speed boost.
+
+        set_frame_state(): sets the frame state of the player depending on movement.
+        set_images(): sets the player images.
+        set_friction(): sets the player friction temporarily.
+    '''
+
     class Halo(Entity):
+        '''
+        Cosmetic object for the player.
+        '''
         def __init__(self, position, img, strata):
             img_scale = 1.5
             img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
@@ -56,7 +108,7 @@ class Player(Entity):
         self.healthbar = None
 
         self.overrides = {
-            'ability': False,
+            'ability': None,
             'death': False
         }
 
@@ -136,11 +188,14 @@ class Player(Entity):
             'dash': Dash(self), 
             'primary': PrimaryAttack(self),
             'ability_1': None,
-            'ability_2': None,
-            'ability_3': None
+            'ability_2': None
         }
 
         self.talents = []
+        
+        self.talent_info = {
+            'has_tarot_card': False
+        }
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -149,6 +204,10 @@ class Player(Entity):
         for action, keybinds in Inputs.KEYBINDS.items():
             if key not in keybinds:
                 continue
+
+            if action in list(self.abilities.keys()):
+                if self.abilities[action]:
+                    self.abilities[action].call(scene, keybind=action)
 
             if self.timed_inputs.get(action):
                 for ability in [a for a in self.abilities.values() if a is not None and a.keybind_info['double_tap']]:
@@ -197,21 +256,33 @@ class Player(Entity):
         ...
 
     def on_death(self, scene, info):
-        call_talents(scene, self, {'on_death': info})
+        call_talents(scene, self, {'on_player_death': info})
+
+    def on_attack(self, scene, info):
+        if info:
+            call_talents(scene, self, {'on_player_attack': info})
+
+            if info['dead']:
+                call_talents(scene, self, {'on_player_kill': info})
 
     def on_healed(self, scene, info):
         if info['type'] == 'passive': 
             return
         
         color = HEAL_COLOR
+        offset = [0, 0]
+
         if 'color' in info:
             color = info['color']
+
+        if 'offset' in info:
+            offset = info['offset']
         
         img = TextBox((0, 0), info['amount'], color=color, size=1.0).image.copy()
-        particle = Image((125, 50), img, 5, 255)
+        particle = Image((125 + offset[0], 50 + offset[1]), img, 5, 255)
         particle.set_goal(
             50, 
-            position=(125, 100),
+            position=(125 + offset[0], 100 + offset[1]),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
@@ -221,6 +292,9 @@ class Player(Entity):
 
     def on_damaged(self, scene, info):
         sprite = info['primary']
+        
+        if self.overrides['ability']:
+            self.overrides['ability'].end(scene)
 
         scene.set_dt_multiplier(.2, 5)
         self.combat_info['immunities'][info['type']] = 30
@@ -255,7 +329,7 @@ class Player(Entity):
         )
         particle.uses_ui_surface = True
 
-        call_talents(scene, self, {'on_damaged': info})
+        call_talents(scene, self, {'on_player_damaged': info})
 
         scene.add_sprites(particle)
 
@@ -515,13 +589,13 @@ class Player(Entity):
         for ability in [s for s in self.abilities.values() if s is not None]:
             ability.update(scene, dt)  
 
-        self.overrides['ability'] = False
+        self.overrides['ability'] = None
         for ability in [s for s in self.abilities.values() if s is not None]:
             if ability is None:
                 continue
     
             if ability.overrides:
-                self.overrides['ability'] = True
+                self.overrides['ability'] = ability
 
         if self.overrides['ability']:
             for talent in self.talents:

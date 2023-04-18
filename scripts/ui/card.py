@@ -1,3 +1,7 @@
+'''
+Holds the card class.
+'''
+
 from scripts.constants import SCREEN_DIMENSIONS
 from scripts.engine import Frame, Easings, create_outline_edge
 
@@ -10,6 +14,34 @@ import random
 import os
 
 class Card(Frame):
+    '''
+    Used to display ability and talent information.
+
+    Variables:
+        IMG_SCALE: scale factor the images.
+        BASES: images of the card bases.
+        
+        ICONS: a collection of icons for the different types of talents/abilities.
+        SYMBOLS: a collection of symbols to display the descriptions of the different talents/abilities.
+
+        draw: the talent/ability class that was drawn.
+        info: the information of the draw variable; using fetch().
+
+        drawed_cards: a list of the other drawn cards.
+        on_select: whether the card has been selected.
+
+        tween_info: information on the easing and tweening of the object.
+        hover_info: information on the position and easing of the object when it is hovering.
+
+        hover_texts: a dictonary of TextBoxes to display when the card is hovering.
+
+    Methods:
+        create_card(): creates a new card to display.
+
+        on_hover_start(): called when mouse is hovering over the card.
+        on_hover_start(): called when mouse has stopped hovering over the card.
+    '''
+    
     IMG_SCALE = 4
 
     BASES = []
@@ -108,11 +140,23 @@ class Card(Frame):
         self.hover_rect.width = self.rect.width
         self.hover_rect.height = self.rect.height + 16
 
-        self.hover_info_name = TextBox((0, self.rect.bottom + 50), self.draw.DESCRIPTION['name'])
-        self.hover_info_name.rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_info_name.image.get_width() * .5)
+        color = (255, 255, 255)
 
-        self.hover_info_description = TextBox((0, self.rect.bottom + 110), self.draw.DESCRIPTION['description'], size=.5)
-        self.hover_info_description.rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_info_description.image.get_width() * .5)
+        self.hover_texts = {}
+
+        self.hover_texts['name'] = TextBox((0, self.rect.bottom + 50), self.draw.DESCRIPTION['name'], color=color)
+        self.hover_texts['name'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['name'].image.get_width() * .5)
+    
+        if draw.DRAW_SPECIAL:
+            self.hover_texts['special'] = TextBox((0, self.rect.bottom + 100), draw.DRAW_SPECIAL[0], size=.5, color=draw.DRAW_SPECIAL[1])
+            self.hover_texts['special'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['special'].image.get_width() * .5)
+
+            self.hover_texts['description'] = TextBox((0, self.rect.bottom + 140), self.draw.DESCRIPTION['description'], size=.5, color=color)
+            self.hover_texts['description'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['description'].image.get_width() * .5)
+
+        else:
+            self.hover_texts['description'] = TextBox((0, self.rect.bottom + 110), self.draw.DESCRIPTION['description'], size=.5, color=color)
+            self.hover_texts['description'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['description'].image.get_width() * .5)
 
         if spawn is not None:
             if spawn == 'y':
@@ -129,6 +173,7 @@ class Card(Frame):
 
     def create_card(self):
         img = random.choice(Card.BASES).copy()
+
         icon = None
         symbols = None
 
@@ -176,7 +221,7 @@ class Card(Frame):
         self.tween_info['easing'] = self.hover_info['easing']
         self.tween_info['flag'] = 'hover_start'
 
-        scene.add_sprites(self.hover_info_name, self.hover_info_description)
+        scene.add_sprites(list(self.hover_texts.values()))
 
     def on_hover_end(self, scene):
         if self.tween_info['flag'] == 'init':
@@ -195,7 +240,7 @@ class Card(Frame):
         self.tween_info['easing'] = self.hover_info['easing']
         self.tween_info['flag'] = 'hover_end'
 
-        scene.del_sprites(self.hover_info_name, self.hover_info_description)
+        scene.del_sprites(list(self.hover_texts.values()))
 
     def on_mouse_down(self, scene, event):
         if not self.hovering:
@@ -207,7 +252,7 @@ class Card(Frame):
         if self.tween_info['flag'] == 'init' or self.tween_info['flag'] == 'del':
             return
 
-        scene.del_sprites(self.hover_info_name, self.hover_info_description)
+        self.on_hover_end(scene)
         self.on_select(self, self.drawed_cards)
 
     def display(self, scene, dt):
@@ -233,6 +278,9 @@ class Card(Frame):
                 self.tween_info['on_finished'] = None
 
         if self.hovering:
-            create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)
+            if self.draw.DRAW_SPECIAL:
+                create_outline_edge(self, self.draw.DRAW_SPECIAL[1], scene.ui_surface, 3)
+            else:
+                create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)
 
         super().display(scene, dt)

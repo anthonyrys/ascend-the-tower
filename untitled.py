@@ -1,3 +1,7 @@
+'''
+The main file which should be executed.
+'''
+
 def main(screen, clock, scene_handler):
     quit = False
 
@@ -35,6 +39,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
     clock = pygame.time.Clock()
 
+    # Initializes custom classes for the game
     Fonts.init()
     Inputs.init()
 

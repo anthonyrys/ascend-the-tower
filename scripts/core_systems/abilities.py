@@ -1,16 +1,21 @@
+'''
+File that holds Ability baseclass as well as ability subclasses.
+'''
+
 from scripts.constants import PLAYER_COLOR
 from scripts.engine import check_line_collision, check_pixel_collision, get_distance
 
-from scripts.entities.particle_fx import Circle, Image
+from scripts.entities.particle_fx import Circle
 
 from scripts.core_systems.talents import call_talents
 from scripts.core_systems.combat_handler import register_damage
+
+from scripts.ui.card import Card
 
 import pygame
 import random
 import inspect
 import sys
-import os
 
 def get_all_abilities():
     ability_list = []
@@ -23,7 +28,50 @@ def get_all_abilities():
     return ability_list
 
 class Ability:
+    '''
+    Ability baseclass that is meant to be inherited from.
+
+    Variables:
+        DRAW_TYPE: used to distinguish between card types.
+        DRAW_SPECIAL: used to determine how a card is created.
+        ABILITY_ID: the id of the ability.
+        DESCRIPTION: the description of the ability; used for card creation.
+
+        character: the player object.
+        overrides: if the player should be overriden by the ability.
+
+        ability_info: used for custom ability functions.
+        keybind_info: information on which keybind activates the ability.
+
+    Methods:
+        fetch(): returns the card info.
+        check_draw_condition(): returns whether the ability is able to be drawn.
+
+        call(): calls the ability to activate. 
+        end(): terminate the ability and return to normal player state.
+        update(): update the object every frame.
+    '''
+
+    DRAW_TYPE = 'ABILITY'
+    DRAW_SPECIAL = ['ability', (255, 255, 255)]
+
     ABILITY_ID = None
+    
+    DESCRIPTION = {
+		'name': None,
+		'description': None
+	}
+
+    @staticmethod
+    def fetch():
+        card_info = {
+			'type': 'ability',
+			
+			'icon': None,
+			'symbols': []
+		}
+
+        return card_info
 
     def __init__(self, character):
         self.character = character
@@ -38,6 +86,10 @@ class Ability:
             'double_tap': False,
             'keybinds': []
         }
+
+    @staticmethod
+    def check_draw_condition(player):
+        return True
             
     def call(self, scene, keybind=None):
         # print(f'{self.ABILITY_ID}::call()')
@@ -47,6 +99,9 @@ class Ability:
 
         call_talents(scene, self.character, {'on_ability': self})
     
+    def end(self, scene):
+        ...
+
     def update(self, scene, dt):
         if self.ability_info['cooldown'] > 0:
             self.ability_info['cooldown'] -= 1 * dt
@@ -62,6 +117,10 @@ class Dash(Ability):
 
         self.keybind_info['double_tap'] = True
         self.keybind_info['keybinds'] = ['left', 'right']
+
+    @staticmethod
+    def check_draw_condition(player):
+        return False
 
     def call(self, scene, keybind=None):
         if self.ability_info['cooldown'] > 0:
@@ -81,8 +140,12 @@ class PrimaryAttack(Ability):
     def __init__(self, character):
         super().__init__(character)
 
-        self.img_scale = 1.5
-        self.image = pygame.image.load(os.path.join('imgs', 'entities', 'particles', 'abilities', 'primary.png')).convert_alpha()
+        self.img_scale = 1
+        self.img_radius = 9
+        self.image = pygame.Surface((self.img_radius * 2, self.img_radius * 2)).convert_alpha()
+        self.image.set_colorkey((0, 0, 0))
+        pygame.draw.circle(self.image, PLAYER_COLOR, self.image.get_rect().center, self.img_radius)
+        
         self.image = pygame.transform.scale(self.image, (self.image.get_width() * self.img_scale, self.image.get_height() * self.img_scale)).convert_alpha()
 
         self.state = 'inactive'
@@ -102,6 +165,12 @@ class PrimaryAttack(Ability):
 
         self.keybind_info['keybinds'] = [1]
 
+        self.ability_info['duration'] = 0
+
+    @staticmethod
+    def check_draw_condition(player):
+        return False
+
     def on_collide_tile(self, scene, dt, tile):
         self.character.velocity = [round(-self.velocity[0] * .3, 1), round(-self.velocity[1] * .3, 1)]
 
@@ -113,9 +182,8 @@ class PrimaryAttack(Ability):
             enemy,
             {'type': self.ability_info['damage_type'], 'amount': self.ability_info['damage'], 'velocity': self.character.velocity}
         )
-
-        if info:
-            call_talents(scene, self.character, {'on_player_attack': info})
+        
+        self.character.on_attack(scene, info)
 
         pos = enemy.center_position
         for _ in range(8):
@@ -164,6 +232,8 @@ class PrimaryAttack(Ability):
         self.overrides = True
         self.state = 'active'
 
+        self.ability_info['duration'] = 0
+        
         self.velocity = [
             (self.destination[0] - self.character.rect.centerx) / (distance / self.ability_info['speed']),
             (self.destination[1] - self.character.rect.centery) / (distance / self.ability_info['speed'])
@@ -173,11 +243,11 @@ class PrimaryAttack(Ability):
         self.destination[0] += self.velocity[0] * 2
         self.destination[1] += self.velocity[1] * 2
 
-        self.character.image = self.image
+        img = pygame.Surface(self.character.image.get_size()).convert_alpha()
+        img.set_colorkey((0, 0, 0))
+        img.blit(self.image, self.image.get_rect(center=img.get_rect().center))
 
-        self.character.glow['active'] = True
-        self.character.glow['size'] = 1.75
-        self.character.glow['intensity'] = .15
+        self.character.image = img
 
         self.character.combat_info['immunities']['contact&'] = True
 
@@ -200,6 +270,37 @@ class PrimaryAttack(Ability):
 
         scene.add_sprites(particles)    
         scene.camera.set_camera_tween(50)
+
+    def end(self, scene):
+        self.velocity = []
+        self.destination = []
+        self.state = 'inactive'
+
+        self.character.combat_info['immunities']['contact&'] = False
+        self.overrides = False
+
+        pos = self.character.center_position
+        particles = []
+
+        for _ in range(8):
+            cir = Circle(pos, PLAYER_COLOR, 8, 0)
+            cir.set_goal(
+                        125, 
+                        position=(
+                            pos[0] + random.randint(-150, 150) + (self.character.velocity[0] * 10), 
+                            pos[1] + random.randint(-150, 150) + (self.character.velocity[1] * 10)
+                        ), 
+                        radius=0, 
+                        width=0
+                    )
+
+            cir.glow['active'] = True
+            cir.glow['size'] = 1.5
+            cir.glow['intensity'] = .25
+
+            particles.append(cir)
+        
+        scene.add_sprites(particles)
 
     def update(self, scene, dt):
         if self.state != 'active':
@@ -252,8 +353,6 @@ class PrimaryAttack(Ability):
                                 radius=0, 
                                 width=0
                             )
-                    
-                    cir.set_easings(position='tooo')
 
                     cir.glow['active'] = True
                     cir.glow['size'] = 1.5
@@ -280,4 +379,57 @@ class PrimaryAttack(Ability):
 
         self.character.rect.x += round(self.velocity[0] * dt)
         self.character.rect.y += round(self.velocity[1] * dt)
+
+        for i in range(self.img_radius):
+            cir_pos = [
+                self.character.rect.centerx - (round(self.velocity[0] * dt) * (.1 * (i + 1))),
+                self.character.rect.centery - (round(self.velocity[1] * dt) * (.1 * (i + 1)))
+            ]
+
+            pygame.draw.circle(scene.entity_surface, PLAYER_COLOR, cir_pos, (self.img_radius - (i + 1)))
+
         self.character.apply_afterimages(scene, False)
+
+class RainOfArrows(Ability):
+    ABILITY_ID = 'rain_of_arrows'
+
+    DESCRIPTION = {
+		'name': 'Rain of Arrows',
+		'description': 'Call down a rain of arrows on your foes.'
+	}
+
+    @staticmethod
+    def fetch():
+        card_info = {
+			'type': 'ability',
+			
+			'icon': None,
+			'symbols': [
+                Card.SYMBOLS['type']['ability'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['ability']['physical']
+            ]
+		}
+
+        return card_info
+
+    @staticmethod
+    def check_draw_condition(player):
+        return False
+    
+    def __init__(self, character):
+        self.character = character
+        self.overrides = False
+
+        self.ability_info = {
+            'cooldown_timer': 0,
+            'cooldown': 0
+        }
+
+        self.keybind_info = {
+            'double_tap': False,
+            'keybinds': []
+        }
+
+    def call(self, scene, keybind=None):
+        super().call(scene, keybind)

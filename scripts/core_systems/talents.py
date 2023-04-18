@@ -1,7 +1,11 @@
+'''
+File that holds Talent baseclass as well as talent subclasses.
+'''
+
 from scripts.constants import HEAL_COLOR, PLAYER_COLOR
 from scripts.engine import get_distance
 
-from scripts.core_systems.combat_handler import register_heal
+from scripts.core_systems.combat_handler import register_heal, register_damage
 
 from scripts.entities.particle_fx import Image, Circle
 
@@ -44,6 +48,33 @@ def reset_talents(player):
 		talent.reset()
 
 class Talent:
+	'''
+    Talent baseclass that is meant to be inherited from.
+
+    Variables:
+        DRAW_TYPE: used to distinguish between card types.
+        DRAW_SPECIAL: used to determine how a card is created.
+        TALENT_ID: the id of the talent.
+		TALENT_CALLS: list of strings that is used to call specific talents.
+        DESCRIPTION: the description of the talent; used for card creation.
+
+        player: the player object.
+        overrides: if the player should be overriden by the talent.
+
+        talent_info: used for custom talent functions.
+
+    Methods:
+        fetch(): returns the card info.
+        check_draw_condition(): returns whether the talent is able to be drawn.
+
+        call(): calls the talent to activate depending on TALENT_CALLS. 
+        reset(): resets the talent to its pre-call() state.
+        update(): update the object every frame.
+    '''
+
+	DRAW_TYPE = 'TALENT'
+	DRAW_SPECIAL = None
+
 	TALENT_ID = None
 	TALENT_CALLS = []
 
@@ -60,6 +91,10 @@ class Talent:
             'cooldown_timer': 0,
             'cooldown': 0
 		}
+
+		if self.DRAW_SPECIAL:
+			if self.DRAW_SPECIAL[0] == 'tarot card':
+				self.player.talent_info['has_tarot_card'] = True
 		
 	@staticmethod
 	def fetch():
@@ -293,6 +328,8 @@ class Marksman(Talent):
 		info.ability_info['damage'] *= round(distance * self.talent_info['per_damage_distance_ratio'][0], 2) + 1
 
 class Temperance(Talent):
+	DRAW_SPECIAL = ['tarot card', PLAYER_COLOR]
+
 	TALENT_ID = 'temperance'
 
 	DESCRIPTION = {
@@ -323,7 +360,16 @@ class Temperance(Talent):
 
 		return card_info
 	
+	@staticmethod
+	def check_draw_condition(player):
+		if player.talent_info['has_tarot_card']:
+			return False
+		
+		return True
+
 class WheelOfFortune(Talent):
+	DRAW_SPECIAL = ['tarot card', PLAYER_COLOR]
+
 	TALENT_ID = 'wheel_of_fortune'
 
 	DESCRIPTION = {
@@ -346,6 +392,13 @@ class WheelOfFortune(Talent):
 
 		return card_info
 	
+	@staticmethod
+	def check_draw_condition(player):
+		if player.talent_info['has_tarot_card']:
+			return False
+		
+		return True
+
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
@@ -386,7 +439,10 @@ class WheelOfFortune(Talent):
 				self.player.movement_info['max_movespeed'] -= self.talent_info['stats']['max_movespeed']
 
 			elif self.talent_info['current_stat'] == 'health':
+				proportion = self.player.combat_info['health'] / self.player.combat_info['max_health']
+				
 				self.player.combat_info['max_health'] -= self.talent_info['stats']['health']
+				self.player.combat_info['health'] = round(self.player.combat_info['max_health'] * proportion)
 
 			else:
 				self.player.combat_info[self.talent_info['current_stat']] -= self.talent_info['stats'][self.talent_info['current_stat']]
@@ -417,7 +473,7 @@ class WheelOfFortune(Talent):
 	
 class Recuperation(Talent):
 	TALENT_ID = 'recuperation'
-	TALENT_CALLS = ['on_damaged']
+	TALENT_CALLS = ['on_player_damaged']
 
 	DESCRIPTION = {
 		'name': 'Recuperation',
@@ -540,7 +596,7 @@ class Recuperation(Talent):
 
 class Holdfast(Talent):
 	TALENT_ID = 'holdfast'
-	TALENT_CALLS = ['on_damaged']
+	TALENT_CALLS = ['on_player_damaged']
 
 	DESCRIPTION = {
 		'name': 'Holdfast',
@@ -569,11 +625,13 @@ class Holdfast(Talent):
 		self.talent_info['mitigation_time'] = 60
 	
 	def call(self, call, scene, info):
+		super().call(call, scene, info)
+
 		self.player.combat_info['mitigations'][info['type']][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]
 
 class GuardianAngel(Talent):
 	TALENT_ID = 'guardian_angel'
-	TALENT_CALLS = ['on_death']
+	TALENT_CALLS = ['on_player_death']
 
 	DESCRIPTION = {
 		'name': 'Guardian Angel',
@@ -603,12 +661,131 @@ class GuardianAngel(Talent):
 	def call(self, call, scene, info):
 		if self.talent_info['charges'] <= 0:
 			return
+		
+		super().call(call, scene, info)
 
 		heal_amount = self.player.combat_info['max_health'] * .25
-		register_heal(scene, self.player, {'type': 'status', 'amount': heal_amount, 'color': PLAYER_COLOR})
+		register_heal(scene, self.player, {'type': 'status', 'amount': heal_amount, 'color': PLAYER_COLOR, 'offset': [50, 0]})
 		
 		self.player.img_info['pulse_frames'] = 45
 		self.player.img_info['pulse_frames_max'] = 45
 		self.player.img_info['pulse_frame_color'] = PLAYER_COLOR
 
 		self.talent_info['charges'] -= 1
+
+class ChainReaction(Talent):
+	TALENT_ID = 'chain_reaction'
+	TALENT_CALLS = ['on_player_attack']
+
+	DESCRIPTION = {
+		'name': 'Chain Reaction',
+		'description': 'Your attacks now chain up to 3 times around your target.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'chain-reaction',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['attack/kill']
+			]
+		}
+
+		return card_info
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['charges'] = 3
+		self.talent_info['range'] = 150
+		self.talent_info['damage_percentage'] = .8
+	
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+	
+		amount = self.talent_info['charges']
+		target = info['target']
+		enemies = []
+
+		for sprite in [s for s in scene.sprites if s.sprite_id == 'enemy' and s != target]:
+			if amount <= 0:
+				return
+			
+			if get_distance(target, sprite) > self.talent_info['range']:
+				continue
+
+			if sprite in enemies:
+				continue
+
+			enemies.append(sprite)
+			amount -= 1
+
+		for enemy in enemies:
+			register_damage(
+				scene,
+				self.player,
+				enemy,
+				{'type': info['type'], 'amount': info['amount'] * self.talent_info['damage_percentage']}
+			)
+
+class Bloodlust(Talent):
+	TALENT_ID = 'bloodlust'
+	TALENT_CALLS = ['on_player_kill']
+
+	DESCRIPTION = {
+		'name': 'Bloodlust',
+		'description': 'Defeating an enemy grants a temporary speed and damage buff.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'bloodlust',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['other'],
+				Card.SYMBOLS['talent']['attack/kill']
+			]
+		}
+
+		return card_info
+
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+		
+		self.talent_info['buff_timer_max'] = 60
+		self.talent_info['buff_timer'] = 0
+
+		self.talent_info['damage_buff'] = .1
+		self.talent_info['speed_buff'] = 3
+
+		self.talent_info['buff_given'] = False
+
+	def call(self, call, scene, info):
+		if self.talent_info['buff_given']:
+			self.talent_info['buff_timer'] = self.talent_info['buff_timer_max']
+			return
+		
+		self.player.combat_info['damage_multiplier'] += self.talent_info['damage_buff']
+		self.player.movement_info['max_movespeed'] += self.talent_info['speed_buff']
+
+		self.talent_info['buff_timer'] = self.talent_info['buff_timer_max']
+		self.talent_info['buff_given'] = True
+
+	def update(self, scene, dt):
+		if not self.talent_info['buff_given']:
+			return
+		
+		self.talent_info['buff_timer'] -= 1 * dt
+		if self.talent_info['buff_timer'] <= 0:
+			self.player.combat_info['damage_multiplier'] -= self.talent_info['damage_buff']
+			self.player.movement_info['max_movespeed'] -= self.talent_info['speed_buff']
+
+			self.talent_info['buff_timer'] = 0
+			self.talent_info['buff_given'] = False

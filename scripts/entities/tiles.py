@@ -1,3 +1,7 @@
+'''
+Holds the general tiles of the game and different structures.
+'''
+
 from scripts.engine import Entity
 
 from scripts.services.spritesheet_loader import load_spritesheet
@@ -6,6 +10,10 @@ import pygame
 import os
 
 class Tile(Entity):
+    '''
+    The general tile class.
+    '''
+    
     def __init__(self, position, img, dimensions, strata=None, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'tile'

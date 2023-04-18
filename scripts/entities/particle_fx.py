@@ -1,12 +1,32 @@
+'''
+Holds the objects used to create simple particles.
+'''
+
 from scripts.engine import Easings, Entity
 
 import pygame
 
 class Particle(Entity):
+    '''
+    Baseclass for the particles.
+
+    Variables:
+        goal_info: information on the end result of the particle.
+        easing_styles: sets the easing styles of the particle attributes.
+
+        frame_count, frame_count_max: variables used to determine particle lifespan.
+
+        gravity: determines whether the particle is affected by gravity.
+
+    Methods:
+        set_goal(): sets the goal of the particle.
+        set_easing(): sets the easing styles of the particle.
+        set_gravity(): sets the gravity of the particle.
+    '''
+
     def __init__(self, position, img, dimensions, strata, alpha=None):
-        self.sprite_id = 'particle'
-        
         super().__init__(position, img, dimensions, strata, alpha)
+        self.sprite_id = 'particle'
 
         self.goal_info = {}
         self.easing_styles = {
@@ -42,7 +62,7 @@ class Particle(Entity):
         self.gravity = gravity
 
 class Circle(Particle):
-    def __init__(self, position, color, radius, width):
+    def __init__(self, position, color, radius, width, attach=None):
         super().__init__(position, (0, 0, 0), (radius * 2, radius * 2), None)
 
         self.position, self.base_position = position, position
@@ -53,6 +73,8 @@ class Circle(Particle):
 
         self.easing_styles['radius'] = getattr(Easings, 'ease_out_cubic')
         self.easing_styles['width'] = getattr(Easings, 'ease_in_sine')
+
+        self.attach = attach
 
     def display(self, scene, dt):
         if self.frame_count > self.frame_count_max:
@@ -70,10 +92,14 @@ class Circle(Particle):
         self.image.set_colorkey((0, 0, 0))
         self.image.fill((0, 0, 0))
 
-        self.rect = self.image.get_rect(center=(
-            self.base_position[0] + (self.goal_info['position'][0] - self.base_position[0]) * self.easing_styles['position'](abs_prog),
-            self.base_position[1] + (self.goal_info['position'][1] - self.base_position[1]) * self.easing_styles['position'](abs_prog))
-        )
+        if self.attach:
+            self.rect = self.image.get_rect(center=(self.attach.rect.center))
+            
+        else:
+            self.rect = self.image.get_rect(center=(
+                self.base_position[0] + (self.goal_info['position'][0] - self.base_position[0]) * self.easing_styles['position'](abs_prog),
+                self.base_position[1] + (self.goal_info['position'][1] - self.base_position[1]) * self.easing_styles['position'](abs_prog))
+            )
 
         if self.gravity:
             self.rect.y += self.gravity * self.frame_count

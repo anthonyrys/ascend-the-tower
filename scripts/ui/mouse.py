@@ -1,9 +1,23 @@
+'''
+Holds the mouse class.
+'''
+
 from scripts.engine import Frame, check_pixel_collision
 
 import pygame
 import os
 
 class Mouse(pygame.sprite.Sprite):
+    '''
+    The class that represents the mouse in the game space.
+
+    Variables:
+        entity_pos: the position of the mouse relative to the entity_surface.
+
+    Methods:
+        check_ui_hover(): checks if the mouse is hovering over any frame elements.
+    '''
+
     def __init__(self):
         self.image = pygame.image.load(os.path.join('imgs', 'ui', 'mouse.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (32, 32))
