@@ -240,9 +240,6 @@ class Entity(pygame.sprite.Sprite):
     General sprite class used for sprites rendered to the entity surface.
     '''
 
-    GRAVITY = 2
-    MAX_GRAVITY = 30
-
     def __init__(self, position, img, dimensions, strata, alpha=None):
         pygame.sprite.Sprite.__init__(self)
         self.sprite_id = None
@@ -292,12 +289,6 @@ class Entity(pygame.sprite.Sprite):
             'intensity': .25
         }
 
-        self.gravity_info = {
-            'frames': 0,
-            'gravity': Entity.GRAVITY,
-            'max_gravity': Entity.MAX_GRAVITY
-        }
-
         self.collisions = []
         self.collision_ignore = []
 
@@ -321,17 +312,6 @@ class Entity(pygame.sprite.Sprite):
         self.previous_true_position = [self.rect.x, self.rect.y]
         self.previous_center_position = [self.rect.centerx, self.rect.centery]
 
-        if self.gravity_info['frames'] > 0:
-            self.gravity_info['frames'] -= 1 * dt
-
-        elif self.gravity_info['frames'] <= 0:
-            if self.gravity_info['gravity'] != Entity.GRAVITY or self.gravity_info['max_gravity'] != Entity.MAX_GRAVITY:
-                self.gravity_info = {
-                    'frames': 0,
-                    'gravity': Entity.GRAVITY,
-                    'max_gravity': Entity.MAX_GRAVITY
-                }
-
         if self.glow['active']:
             image = pygame.transform.scale(self.image, (self.image.get_width() * self.glow['size'], self.image.get_height() * self.glow['size']))
             image.set_alpha(self.image.get_alpha() * self.glow['intensity'])
@@ -354,116 +334,6 @@ class Entity(pygame.sprite.Sprite):
                 self.image, 
                 (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
             )
-
-    def apply_collision_x_default(self, collidables):
-        callback_collision = []
-
-        for collidable in collidables:
-            if not self.rect.colliderect(collidable.rect):
-                if collidable in self.collision_ignore:
-                    self.collision_ignore.remove(collidable)
-                
-                if collidable in self.collisions:
-                    self.collisions.remove(collidable)
-
-                continue
-
-            if collidable in self.collision_ignore:
-                continue
-
-            if self.velocity[0] > 0:
-                self.rect.right = collidable.rect.left
-                self.collide_points['right'] = True
-
-                callback_collision.append('right')
-
-                if collidable not in self.collisions:
-                    self.collisions.append(collidable)
-       
-                self.velocity[0] = 0
-
-            if self.velocity[0] < 0:
-                self.rect.left = collidable.rect.right
-                self.collide_points['left'] = True
-
-                if collidable not in self.collisions:
-                    self.collisions.append(collidable)
-
-                callback_collision.append('left')
-                self.velocity[0] = 0
-
-        return callback_collision
-
-    def apply_collision_y_default(self, collidables):
-        callback_collision = []
-
-        for collidable in collidables:
-            if not self.rect.colliderect(collidable.rect):
-                if collidable in self.collision_ignore:
-                    self.collision_ignore.remove(collidable)
-
-                if collidable in self.collisions:
-                    self.collisions.remove(collidable)
-                    
-                continue
-
-            if collidable in self.collision_ignore:
-                continue
-
-            if abs(self.velocity[1]) < 0:
-                return
-
-            top = abs(self.rect.top - collidable.rect.centery)
-            bottom = abs(self.rect.bottom - collidable.rect.centery)
-            
-            if top < bottom and collidable.secondary_sprite_id != 'floor':
-                self.rect.top = collidable.rect.bottom
-                self.collide_points['top'] = True
-
-                callback_collision.append('top')
-
-                if collidable not in self.collisions:
-                    self.collisions.append(collidable)
-                    
-                self.velocity[1] = 0
-
-            else:
-                self.rect.bottom = collidable.rect.top
-                self.collide_points['bottom'] = True
-
-                callback_collision.append('bottom')
-
-                if collidable not in self.collisions:
-                    self.collisions.append(collidable)
-
-                self.velocity[1] = 0
-
-        return callback_collision  
-
-    def apply_gravity(self, dt, multiplier=1.0):
-        grav = self.gravity_info['gravity']
-        max_grav = self.gravity_info['max_gravity']
-
-        if not self.collide_points['bottom']:
-            self.velocity[1] += (grav * dt if self.velocity[1] < max_grav * dt else 0) * multiplier
-
-        else:
-            if dt == 0:
-                self.velocity[1] = 0
-
-            else:
-                self.velocity[1] = (grav / dt) * multiplier
-
-    def set_gravity(self, frames, grav=None, max_grav=None):
-        if grav is None:
-            grav = Entity.GRAVITY
-
-        if max_grav is None:
-            max_grav = Entity.MAX_GRAVITY
-
-        self.gravity_info['frames'] = frames
-        self.gravity_info['gravity'] = grav
-        self.gravity_info['max_gravity'] = max_grav
 
 class Frame(pygame.sprite.Sprite):
     '''

@@ -3,11 +3,13 @@ Holds the enemy baseclass as well as enemy subclasses.
 '''
 
 from scripts.constants import ENEMY_COLOR, CRIT_COLOR
-from scripts.engine import Entity, get_sprite_colors, check_pixel_collision, check_line_collision, create_outline_edge, get_distance
+from scripts.engine import get_sprite_colors, check_pixel_collision, check_line_collision, create_outline_edge, get_distance
 
 from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_damage
 from scripts.core_systems.enemy_ai import Flyer
+from scripts.core_systems.abilities import Ability
 
+from scripts.entities.game_entity import GameEntity
 from scripts.entities.particle_fx import Circle, Image
 from scripts.entities.projectile import ProjectileStandard
 
@@ -19,7 +21,7 @@ import random
 import math
 import os
 
-class Enemy(Entity):
+class Enemy(GameEntity):
     '''
     Enemy baseclass, intended to be inherited from.
 
@@ -28,17 +30,18 @@ class Enemy(Entity):
         health_ui: InfoBar object to display enemy information (health).
         variant: determines whether the enemy should use special features.
 
-        movement_info: information on the enemy movement.
-        combat_info: combat information used by the enemy.
         level_info: information used to determine the strength of the enemy.
         img_info: information on how the enemy images should be displayed.
+
+        abilities: a list of abilities that the entity can use.
         ability_info: information on how the enemy abilities should function.
 
     Methods:
         on_death(): called when the enemy has died.
         on_damaged(): called when the enemy has been damaged.
-        on_ability(): used when the ability should be fired.
         set_stats(): sets the enemy stats using the level_info.
+
+        variant_display(): addition to the regular display that calls for variant enemies.
     '''
 
     def __init__(self, position, img, dimensions, strata, alpha, variant):
@@ -49,38 +52,6 @@ class Enemy(Entity):
         self.ai = None
         self.health_ui = EnemyBar(self)
         self.variant = variant
-
-        self.movement_info = {
-            'direction': None,
-
-            'friction': None,
-            'base_friction': None,
-            'friction_frames': None,
-
-            'per_frame_movespeed': None,
-            'max_movespeed': None,
-
-            'jump_power': None,
-            'jumps': None,
-            'max_jumps': None
-        }
-
-        self.combat_info = {
-            'max_health': 100,
-            'health': 100,
-
-            'damage_multiplier': 1.0,
-            'healing_multiplier': 1.0,
-
-            'base_damage': 0,
-            'crit_strike_chance': 0,
-            'crit_strike_multiplier': 0,
-
-            'knockback_resistance': 1,
-            
-            'immunities': get_immunity_dict(),
-            'mitigations': {}
-        }
 
         self.level_info = {
             'level': 0,
@@ -96,6 +67,7 @@ class Enemy(Entity):
             'damage_frames_max': 0
         }
 
+        self.abilities = []
         self.ability_info = {}
 
     def on_death(self, scene, info):
@@ -134,6 +106,9 @@ class Enemy(Entity):
         self.combat_info['crit_strike_chance'] = round(math.pow(self.combat_info['crit_strike_chance'] * (self.level_info['level']), self.level_info['crit_chance_scaling']), 2)
         self.combat_info['crit_strike_multiplier'] = round(math.pow(self.combat_info['crit_strike_multiplier'] * (self.level_info['level']), self.level_info['crit_multiplier_scaling']), 2)
 
+    def variant_display(self, scene, dt):
+        ...
+
     def display(self, scene, dt):
         super().display(scene, dt)       
         if self.img_info['damage_frames'] > 0:
@@ -148,6 +123,91 @@ class Enemy(Entity):
             self.img_info['damage_frames'] -= 1 * dt
 
 class Stelemental(Enemy):
+    class Blast(Ability):
+        def __init__(self, character):
+            super().__init__(character)
+        
+            self.ability_info['damage'] = character.combat_info['base_damage'] * 2.5
+            self.ability_info['speed'] = 15
+
+        def call(self, scene, keybind=None):
+            player = scene.player
+            dist = get_distance(self.character, player)
+
+            def collision_default(projectile):
+                particles = []
+                pos = projectile.center_position
+
+                for _ in range(3):
+                    cir = Circle(pos, projectile.color, 5, 0)
+                    cir.set_goal(
+                                75, 
+                                position=(
+                                    pos[0] + random.randint(-75, 75) + (projectile.velocity[0] * 10), 
+                                    pos[1] + random.randint(-75, 75) + (projectile.velocity[1] * 10)
+                                ), 
+                                radius=0, 
+                                width=0
+                            )
+
+                    cir.glow['active'] = True
+                    cir.glow['size'] = 1.25
+                    cir.glow['intensity'] = .25
+
+                    particles.append(cir)
+                
+                scene.add_sprites(particles)
+
+            def collision_player(projectile):
+                collision_default(projectile)
+                register_damage(scene, self.character, player, {'type': 'magical', 'amount': self.ability_info['damage']})
+
+            proj_velocity = [
+                round((player.rect.x - self.character.rect.x) / (dist / self.ability_info['speed'])),
+                round((player.rect.y - self.character.rect.y) / (dist / self.ability_info['speed']))
+            ]
+
+            proj_info = {
+                'collision': 'pixel',
+                'collision_exclude': ['particle', 'projectile', 'enemy'],
+                'collision_function': {
+                    'player': collision_player,
+                    'default': collision_default
+                },
+
+                'duration': 90
+            }
+
+            proj = ProjectileStandard(
+                self.character.rect.center, ENEMY_COLOR, 10, self.character.strata + 1,
+                proj_info,
+                velocity=proj_velocity, 
+                trail=True, 
+                afterimages=True
+            )
+
+            particles = []
+            for _ in range(5):
+                cir = Circle(self.character.rect.center, ENEMY_COLOR, 6, 0)
+                cir.set_goal(
+                            50, 
+                            position=(
+                                self.character.rect.center[0] + random.randint(-50, 50) + (proj_velocity[0] * 15), 
+                                self.character.rect.center[1] + random.randint(-50, 50) + (proj_velocity[1] * 15)
+                            ), 
+                            radius=0, 
+                            width=0
+                        )
+
+                cir.glow['active'] = True
+                cir.glow['size'] = 1.25
+                cir.glow['intensity'] = .25
+
+                particles.append(cir)
+
+            scene.add_sprites(particles)
+            scene.add_sprites(proj)
+
     def __init__(self, position, strata, variant=False):
         enemy_name = 'stelemental'
 
@@ -166,14 +226,26 @@ class Stelemental(Enemy):
         self.secondary_sprite_id = enemy_name
         self.ai = Flyer(self)
 
-        self.movement_info['friction'] = 2
-        self.movement_info['base_friction'] = self.movement_info['friction'] 
-        self.movement_info['per_frame_movespeed'] = .2
-        self.movement_info['max_movespeed'] = 5
+        self.default_movement_info = {
+            'direction': 0,
 
-        self.combat_info = {
+            'friction': 2,
+            'friction_frames': 0,
+
+            'per_frame_movespeed': .2,
+            'max_movespeed': 5,
+
+            'jump_power': 24,
+            'jumps': 0,
+            'max_jumps': 2
+        }
+
+        self.movement_info = self.default_movement_info.copy()
+
+        self.default_combat_info = {
             'max_health': 75,
             'health': 75,
+            'regen_info': [0, [0, 60]],
 
             'damage_multiplier': 1.0,
             'healing_multiplier': 1.0,
@@ -188,6 +260,8 @@ class Stelemental(Enemy):
             'mitigations': get_mitigation_dict()
         }
 
+        self.combat_info = self.default_combat_info.copy()
+
         if self.variant:
             self.combat_info['max_health'] = 125
             self.combat_info['health'] = 125
@@ -197,8 +271,6 @@ class Stelemental(Enemy):
 
             self.ability_info['activation_charge_up_percentage'] = .66
             self.ability_info['activation_charge_up'] = False
-
-            self.ability_info['speed'] = 15
 
         self.level_info = {
             'level': 1,
@@ -210,6 +282,8 @@ class Stelemental(Enemy):
         }
 
         self.set_stats()
+
+        self.abilities.append(self.Blast(self))
         
     def on_death(self, scene, info):
         super().on_death(scene, info)
@@ -285,84 +359,36 @@ class Stelemental(Enemy):
             scene.player,
             {'type': 'contact', 'amount': self.combat_info['base_damage'], 'velocity': None}
         )
+    
+    def variant_display(self, scene, dt):
+        if check_line_collision(scene.player.rect.center, self.rect.center, scene.sprites, ['player', 'enemy', 'particle', 'projectile']):
+            self.ability_info['activation_frames'][0] = random.randint(0, 5)
+            self.ability_info['activation_charge_up'] = False
+            return
+        
+        self.ability_info['activation_frames'][0] += 1 * dt
 
-    def on_ability(self, scene, dt): 
-        player = scene.player
-        dist = get_distance(self, player)
+        charge_up_frames = round(self.ability_info['activation_frames'][1] * self.ability_info['activation_charge_up_percentage'])
+        if round(self.ability_info['activation_frames'][0]) == charge_up_frames and not self.ability_info['activation_charge_up']:
+            self.ability_info['activation_charge_up'] = True
 
-        def collision_default(projectile):
-            particles = []
-            pos = projectile.center_position
+            frames = round(self.ability_info['activation_frames'][1]) - round(self.ability_info['activation_frames'][1] * .66)
+            particle = Circle(
+                [0, 0],
+                ENEMY_COLOR,
+                50,
+                3,
+                self
+            )
 
-            for _ in range(3):
-                cir = Circle(pos, projectile.color, 5, 0)
-                cir.set_goal(
-                            75, 
-                            position=(
-                                pos[0] + random.randint(-75, 75) + (projectile.velocity[0] * 10), 
-                                pos[1] + random.randint(-75, 75) + (projectile.velocity[1] * 10)
-                            ), 
-                            radius=0, 
-                            width=0
-                        )
+            particle.set_goal(frames, position=[0, 0], radius=0, width=3)
+            scene.add_sprites(particle)
 
-                cir.glow['active'] = True
-                cir.glow['size'] = 1.25
-                cir.glow['intensity'] = .25
+        if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
+            self.ability_info['activation_frames'][0] = 0
+            self.ability_info['activation_charge_up'] = False
 
-                particles.append(cir)
-            
-            scene.add_sprites(particles)
-
-        def collision_player(projectile):
-            collision_default(projectile)
-            register_damage(scene, self, player, {'type': 'magical', 'amount': self.combat_info['base_damage'] * 2.5})
-
-        proj_velocity = [
-            round((player.rect.x - self.rect.x) / (dist / self.ability_info['speed'])),
-            round((player.rect.y - self.rect.y) / (dist / self.ability_info['speed']))
-        ]
-
-        proj_info = {
-            'collision': 'pixel',
-            'collision_exclude': ['particle', 'projectile', 'enemy'],
-            'collision_function': {
-                'player': collision_player,
-                'default': collision_default
-            },
-
-            'duration': 90
-        }
-
-        proj = ProjectileStandard(
-            self.rect.center, ENEMY_COLOR, 10, self.strata + 1,
-            proj_info,
-            velocity=proj_velocity, 
-            trail=True, 
-            afterimages=True
-        )
-
-        particles = []
-        for _ in range(5):
-            cir = Circle(self.rect.center, ENEMY_COLOR, 6, 0)
-            cir.set_goal(
-                        50, 
-                        position=(
-                            self.rect.center[0] + random.randint(-50, 50) + (proj_velocity[0] * 15), 
-                            self.rect.center[1] + random.randint(-50, 50) + (proj_velocity[1] * 15)
-                        ), 
-                        radius=0, 
-                        width=0
-                    )
-
-            cir.glow['active'] = True
-            cir.glow['size'] = 1.25
-            cir.glow['intensity'] = .25
-
-            particles.append(cir)
-
-        scene.add_sprites(particles)
-        scene.add_sprites(proj)
+            random.choice(self.abilities).call(scene)
 
     def display(self, scene, dt):
         self.ai.update(scene, dt, scene.player)
@@ -371,35 +397,7 @@ class Stelemental(Enemy):
             self.on_contact(scene, dt)
 
         if self.variant:
-            if check_line_collision(scene.player.rect.center, self.rect.center, scene.sprites, ['player', 'enemy', 'particle', 'projectile']):
-                self.ability_info['activation_frames'][0] = random.randint(0, 5)
-                self.ability_info['activation_charge_up'] = False
-
-            else:
-                self.ability_info['activation_frames'][0] += 1 * dt
-
-                charge_up_frames = round(self.ability_info['activation_frames'][1] * self.ability_info['activation_charge_up_percentage'])
-                if round(self.ability_info['activation_frames'][0]) == charge_up_frames and not self.ability_info['activation_charge_up']:
-                    self.ability_info['activation_charge_up'] = True
-
-                    frames = round(self.ability_info['activation_frames'][1]) - round(self.ability_info['activation_frames'][1] * .66)
-                    particle = Circle(
-                        [0, 0],
-                        ENEMY_COLOR,
-                        50,
-                        3,
-                        self
-                    )
-
-                    particle.set_goal(frames, position=[0, 0], radius=0, width=3)
-
-                    scene.add_sprites(particle)
-
-                if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
-                    self.ability_info['activation_frames'][0] = 0
-                    self.ability_info['activation_charge_up'] = False
-
-                    self.on_ability(scene, dt)
+            self.variant_display(scene, dt)
                     
         create_outline_edge(self, ENEMY_COLOR, scene.entity_surface, 3)
 

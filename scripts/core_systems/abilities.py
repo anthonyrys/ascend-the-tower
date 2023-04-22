@@ -37,8 +37,8 @@ class Ability:
         ABILITY_ID: the id of the ability.
         DESCRIPTION: the description of the ability; used for card creation.
 
-        character: the player object.
-        overrides: if the player should be overriden by the ability.
+        character: the entity object.
+        overrides: if the entity should be overriden by the ability.
 
         ability_info: used for custom ability functions.
         keybind_info: information on which keybind activates the ability.
@@ -48,7 +48,7 @@ class Ability:
         check_draw_condition(): returns whether the ability is able to be drawn.
 
         call(): calls the ability to activate. 
-        end(): terminate the ability and return to normal player state.
+        end(): terminate the ability and return to normal entity state.
         update(): update the object every frame.
     '''
 

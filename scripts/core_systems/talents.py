@@ -707,13 +707,13 @@ class ChainReaction(Talent):
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 	
-		amount = self.talent_info['charges']
+		charges = self.talent_info['charges']
 		target = info['target']
 		enemies = []
 
 		for sprite in [s for s in scene.sprites if s.sprite_id == 'enemy' and s != target]:
-			if amount <= 0:
-				return
+			if charges <= 0:
+				break
 			
 			if get_distance(target, sprite) > self.talent_info['range']:
 				continue
@@ -722,7 +722,7 @@ class ChainReaction(Talent):
 				continue
 
 			enemies.append(sprite)
-			amount -= 1
+			charges -= 1
 
 		for enemy in enemies:
 			register_damage(

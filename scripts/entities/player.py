@@ -3,12 +3,12 @@ Holds the player class.
 '''
 
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
-from scripts.engine import Entity, Inputs
+from scripts.engine import Inputs
 
-from scripts.core_systems.abilities import Dash, PrimaryAttack, RainOfArrows
+from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
-from scripts.core_systems.combat_handler import register_heal, get_immunity_dict, get_mitigation_dict
 
+from scripts.entities.game_entity import GameEntity
 from scripts.entities.particle_fx import Circle, Image
 
 from scripts.services.spritesheet_loader import load_spritesheet
@@ -19,7 +19,7 @@ import pygame
 import math
 import os
 
-class Player(Entity):
+class Player(GameEntity):
     '''
     The class that the player controls.
 
@@ -31,13 +31,6 @@ class Player(Entity):
         healthbar: Infobar object to display player health.
 
         overrides: dictonary of the different override scenarios.
-
-        state_info: information on the current state of the player.
-        default_movement_info: initial movement information of the player.
-        movement_info: ongoing movement information of the player.
-        default_combat_info: initial combat information of the player.
-        combat_info: ongoing combat information of the player.
-        img_info: information on how the player images should be displayed.
 
         cooldown_timers: base timers for player actions.
         cooldowns: ongoing cooldowns for player actions.
@@ -62,10 +55,9 @@ class Player(Entity):
 
         set_frame_state(): sets the frame state of the player depending on movement.
         set_images(): sets the player images.
-        set_friction(): sets the player friction temporarily.
     '''
 
-    class Halo(Entity):
+    class Halo(GameEntity):
         '''
         Cosmetic object for the player.
         '''
@@ -112,47 +104,6 @@ class Player(Entity):
             'death': False
         }
 
-        self.state_info = {
-            'dead': 0,
-            'movement': None
-        }
-
-        self.default_movement_info = {
-            'direction': 0,
-
-            'friction': .75,
-            'friction_frames': 0,
-
-            'per_frame_movespeed': 3,
-            'max_movespeed': 12,
-
-            'jump_power': 24,
-            'jumps': 0,
-            'max_jumps': 2
-        }
-
-        self.movement_info = self.default_movement_info.copy()
-
-        self.default_combat_info = {
-            'max_health': 100,
-            'health': 100,
-            'regen_info': [.01, [0, 60]],
-
-            'damage_multiplier': 1.0,
-            'healing_multiplier': 1.0,
-
-            'base_damage': 25,
-            'crit_strike_chance': .15,
-            'crit_strike_multiplier': 1.5,
-
-            'knockback_resistance': 1,
-
-            'immunities': get_immunity_dict(),
-            'mitigations': get_mitigation_dict()
-        }
-        
-        self.combat_info = self.default_combat_info.copy()
-
         self.img_info = {
             'imgs': {},
             'scale': 1.5,
@@ -192,7 +143,6 @@ class Player(Entity):
         }
 
         self.talents = []
-        
         self.talent_info = {
             'has_tarot_card': False
         }
@@ -521,10 +471,6 @@ class Player(Entity):
         self.image = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale'])).convert_alpha()
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
-    def set_friction(self, frames, friction):
-        self.movement_info['friction_frames'] = frames
-        self.movement_info['friction'] = friction
-
     def display(self, scene, dt):
         for event in self.cooldowns.keys():
             if self.cooldowns[event] < 1 * dt:
@@ -538,53 +484,6 @@ class Player(Entity):
 
             if self.timed_inputs[key] <= 0:
                 self.timed_inputs[key] = 0
-
-        if self.movement_info['friction_frames'] > 0:
-            self.movement_info['friction_frames'] -= 1 * dt
-
-        elif self.movement_info['friction_frames'] <= 0:
-            if self.movement_info['friction'] != self.default_movement_info['friction']:
-                self.movement_info['friction'] = self.default_movement_info['friction']
-                self.movement_info['friction_frames'] = 0
-
-        self.combat_info['regen_info'][1][0] += 1 * dt
-        if self.combat_info['regen_info'][1][0] >= self.combat_info['regen_info'][1][1]:
-            self.combat_info['regen_info'][1][0] = 0
-
-            if self.combat_info['health'] < self.combat_info['max_health']:
-                register_heal(
-                    scene,
-                    self, 
-                    {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
-                )
-
-        if self.combat_info['health'] > self.combat_info['max_health']:
-            self.combat_info['health'] = self.combat_info['max_health']
-
-        for immunity in self.combat_info['immunities'].keys():
-            if '&' in immunity or self.combat_info['immunities'][immunity] == 0:
-                continue
-
-            if self.combat_info['immunities'][immunity] < 0:
-                self.combat_info['immunities'][immunity] = 0
-                continue
-
-            self.combat_info['immunities'][immunity] -= 1 * dt
-
-        del_list = []
-        for mitigation in self.combat_info['mitigations']:
-            if '&' in mitigation:
-                continue
-        
-            for name, values in self.combat_info['mitigations'][mitigation].items():
-                if values[1] <= 0:
-                    del_list.append([mitigation, name])
-                    continue
-
-                self.combat_info['mitigations'][mitigation][name][1] -= 1 * dt
-
-        for item in del_list:
-            del self.combat_info['mitigations'][item[0]][item[1]]
 
         for ability in [s for s in self.abilities.values() if s is not None]:
             ability.update(scene, dt)  
