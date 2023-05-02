@@ -15,7 +15,7 @@ from scripts.entities.tiles import Block, Platform, Floor
 from scripts.scenes.scene import Scene
 
 from scripts.ui.info_bar import HealthBar
-from scripts.ui.card import Card
+from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
 
 import pygame
@@ -45,11 +45,18 @@ class Sandbox(Scene):
         super().__init__(surfaces, mouse, sprites)
 
         self.player = Player((2500, 1200), 4)
-        self.enemy_info = [[0, 60], [0, 5]]
+        self.enemy_info = [[0, 15], [0, 5]]
 
         self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
         
+        self.card_info = {
+            'overflow': [],
+
+            'stat_text': None,
+            'standard_text': None
+        }
+
         self.scene_fx = {
             'entity_dim': {
                 'type': None, 
@@ -60,7 +67,6 @@ class Sandbox(Scene):
 
             'entity_zoom': {}
         }
-
 
         self.ui = {
             'healthbar': HealthBar(self.player),
@@ -120,28 +126,41 @@ class Sandbox(Scene):
             return
         
         if event.key == pygame.key.key_code('3'):
-            self.generate_cards()
+            cards = self.generate_stat_cards()
+            self.card_info['overflow'].append(self.generate_standard_cards)
+
+            if cards:
+                self.in_menu = True
+                self.paused = True
+
+                self.scene_fx['entity_dim']['easing'] = 'ease_out_quint'
+                self.scene_fx['entity_dim']['type'] = 'in'
+                self.scene_fx['entity_dim']['frames'][1] = 30
+                
+                self.add_sprites(cards)
 
     def remove_cards(self, selected_card, cards):
         for card in cards:
             card.tween_info['base_position'] = [card.original_rect.x, card.original_rect.y]
-            card.tween_info['position'] = [card.rect.x, SCREEN_DIMENSIONS[1] * 1.1]
+            card.tween_info['position'] = [card.rect.x, 0 - card.rect.height * 1.1]
 
             if card == selected_card:
-                card.tween_info['position'] = [card.rect.x, 0 - card.rect.height * 1.1]
-                card.tween_info['on_finished'] = lambda: self.del_sprites(cards)
+                card.tween_info['position'] = [card.rect.x, SCREEN_DIMENSIONS[1] * 1.1]
 
             card.tween_info['frames'] = 0
             card.tween_info['frames_max'] = 20
                 
             card.tween_info['flag'] = 'del'
+            card.tween_info['on_finished'] = lambda: self.del_sprites(self)
 
-        if selected_card.draw.DRAW_TYPE == 'TALENT':
-            self.player.talents.append(selected_card.draw(self, self.player))
-            print(f'selected talent card: {selected_card.draw.TALENT_ID}')
+        if self.card_info['overflow']:
+            cards = self.card_info['overflow'][0]()
+
+            if cards:
+                del self.card_info['overflow'][0]
+                self.add_sprites(cards)
                 
-        elif selected_card.draw.DRAW_TYPE == 'ABILITY':
-            print(f'selected ability card: {selected_card.draw.ABILITY_ID}')
+                return
 
         self.in_menu = False
         self.paused = False
@@ -151,7 +170,17 @@ class Sandbox(Scene):
         self.scene_fx['entity_dim']['frames'][0] = 30
         self.scene_fx['entity_dim']['frames'][1] = 30
 
-    def generate_cards(self, count=3):
+    def generate_standard_cards(self, count=3):
+        def on_select(selected_card, cards):
+            if selected_card.draw.DRAW_TYPE == 'TALENT':
+                self.player.talents.append(selected_card.draw(self, self.player))
+                print(f'selected talent card: {selected_card.draw.DESCRIPTION["name"]}')
+                    
+            elif selected_card.draw.DRAW_TYPE == 'ABILITY':
+                print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
+
+            self.remove_cards(selected_card, cards)
+
         if count <= 0:
             return
         
@@ -191,13 +220,6 @@ class Sandbox(Scene):
                 continue
 
             drawables.append(ability)
-            
-        self.in_menu = True
-        self.paused = True
-
-        self.scene_fx['entity_dim']['easing'] = 'ease_out_quint'
-        self.scene_fx['entity_dim']['type'] = 'in'
-        self.scene_fx['entity_dim']['frames'][1] = 30
 
         draws = random.sample(drawables, k=draw_count)
         cards = []
@@ -212,15 +234,76 @@ class Sandbox(Scene):
             i = -math.floor(draw_count / 2)
 
         for draw in draws:
-            cards.append(Card((x + (i * 200), y), draw, spawn='y'))
+            cards.append(StandardCard((x + (i * 200), y), draw, spawn='y'))
 
             i += 1
 
         for card in cards:
-            card.drawed_cards = cards
-            card.on_select = self.remove_cards
+            card.cards = cards
+            card.on_select = on_select
 
-        self.add_sprites(cards)
+        return cards
+
+    def generate_stat_cards(self):
+        def on_select(selected_card, cards):
+            print(f'selected stat card: {selected_card.stat["name"]}')
+            
+            for i in range(len(selected_card.stat['stat'])):
+                self.player.set_stat(selected_card.stat['stat'][i], selected_card.stat['value'][i], True)
+
+            self.remove_cards(selected_card, cards)
+
+        stat_info = [
+            {
+                'name': 'Vitality', 
+                'description': '+ Max Health',
+                'stat': ['max_health', 'health'],
+                'value': [10, 10]
+            },
+
+            {
+                'name': 'Potency', 
+                'description': '+ Damage',
+                'stat': ['base_damage'],
+                'value': [5]
+            },
+
+            {
+                'name': 'Agility', 
+                'description': '+ Movespeed',
+                'stat': ['max_movespeed'],
+                'value': [1]
+            },
+
+            {
+                'name': 'Dexterity', 
+                'description': '+ Critical Strike',
+                'stat': ['crit_strike_chance', 'crit_strike_multiplier'],
+                'value': [.05, .1]
+            },
+        ]
+
+        cards = []
+        count = len(stat_info)
+
+        x = (SCREEN_DIMENSIONS[0] * .5) - 80
+        y = (SCREEN_DIMENSIONS[1] * .5) - 100
+
+        i = None
+        if count % 2 == 0:
+            i = -(math.floor(count / 2) - .5)
+        else:
+            i = -math.floor(count / 2)
+
+        for stat in stat_info:
+            cards.append(StatCard((x + (i * 200), y), stat, spawn='y'))
+            i += 1
+
+        for card in cards:
+            card.cards = cards
+            card.on_select = on_select
+
+        return cards
 
     def display(self, screen, clock, dt):
         if self.dt_info['frames'] > 0:

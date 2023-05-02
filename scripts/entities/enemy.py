@@ -130,37 +130,37 @@ class Stelemental(Enemy):
             self.ability_info['damage'] = character.combat_info['base_damage'] * 2.5
             self.ability_info['speed'] = 15
 
+        def collision_default(self, scene, projectile, sprite):
+            particles = []
+            pos = projectile.center_position
+
+            for _ in range(3):
+                cir = Circle(pos, projectile.color, 5, 0)
+                cir.set_goal(
+                            75, 
+                            position=(
+                                pos[0] + random.randint(-75, 75) + (projectile.velocity[0] * 10), 
+                                pos[1] + random.randint(-75, 75) + (projectile.velocity[1] * 10)
+                            ), 
+                            radius=0, 
+                            width=0
+                        )
+
+                cir.glow['active'] = True
+                cir.glow['size'] = 1.25
+                cir.glow['intensity'] = .25
+
+                particles.append(cir)
+                
+            scene.add_sprites(particles)
+
+        def collision_player(self, scene, projectile, sprite):
+            self.collision_default(scene, projectile, sprite)
+            register_damage(scene, self.character, sprite, {'type': 'magical', 'amount': self.ability_info['damage']})
+
         def call(self, scene, keybind=None):
             player = scene.player
             dist = get_distance(self.character, player)
-
-            def collision_default(projectile):
-                particles = []
-                pos = projectile.center_position
-
-                for _ in range(3):
-                    cir = Circle(pos, projectile.color, 5, 0)
-                    cir.set_goal(
-                                75, 
-                                position=(
-                                    pos[0] + random.randint(-75, 75) + (projectile.velocity[0] * 10), 
-                                    pos[1] + random.randint(-75, 75) + (projectile.velocity[1] * 10)
-                                ), 
-                                radius=0, 
-                                width=0
-                            )
-
-                    cir.glow['active'] = True
-                    cir.glow['size'] = 1.25
-                    cir.glow['intensity'] = .25
-
-                    particles.append(cir)
-                
-                scene.add_sprites(particles)
-
-            def collision_player(projectile):
-                collision_default(projectile)
-                register_damage(scene, self.character, player, {'type': 'magical', 'amount': self.ability_info['damage']})
 
             proj_velocity = [
                 round((player.rect.x - self.character.rect.x) / (dist / self.ability_info['speed'])),
@@ -171,8 +171,8 @@ class Stelemental(Enemy):
                 'collision': 'pixel',
                 'collision_exclude': ['particle', 'projectile', 'enemy'],
                 'collision_function': {
-                    'player': collision_player,
-                    'default': collision_default
+                    'player': self.collision_player,
+                    'default': self.collision_default
                 },
 
                 'duration': 90
@@ -245,7 +245,10 @@ class Stelemental(Enemy):
         self.default_combat_info = {
             'max_health': 75,
             'health': 75,
-            'regen_info': [0, [0, 60]],
+            
+            'health_regen_amount': 0,
+            'health_regen_tick': 0,
+            'health_regen_timer': 0,
 
             'damage_multiplier': 1.0,
             'healing_multiplier': 1.0,

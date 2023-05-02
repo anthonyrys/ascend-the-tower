@@ -2,7 +2,7 @@
 File that holds Ability baseclass as well as ability subclasses.
 '''
 
-from scripts.constants import PLAYER_COLOR
+from scripts.constants import PLAYER_COLOR, SCREEN_DIMENSIONS
 from scripts.engine import check_line_collision, check_pixel_collision, get_distance
 
 from scripts.entities.particle_fx import Circle
@@ -10,12 +10,15 @@ from scripts.entities.particle_fx import Circle
 from scripts.core_systems.talents import call_talents
 from scripts.core_systems.combat_handler import register_damage
 
+from scripts.entities.projectile import ProjectileStandard
+
 from scripts.ui.card import Card
 
 import pygame
 import random
 import inspect
 import sys
+import os
 
 def get_all_abilities():
     ability_list = []
@@ -395,7 +398,7 @@ class RainOfArrows(Ability):
 
     DESCRIPTION = {
 		'name': 'Rain of Arrows',
-		'description': 'Call down a rain of arrows on your foes.'
+		'description': 'Call down a rain of arrows upon your enemies.'
 	}
 
     @staticmethod
@@ -413,23 +416,188 @@ class RainOfArrows(Ability):
 
         return card_info
 
-    @staticmethod
-    def check_draw_condition(player):
-        return False
-    
     def __init__(self, character):
-        self.character = character
-        self.overrides = False
+        super().__init__(character)
 
-        self.ability_info = {
-            'cooldown_timer': 0,
-            'cooldown': 0
+        IMG_SCALE = 1.5
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'arrow.png'))
+        img.set_colorkey((0, 0, 0))
+
+        self.ability_info['active'] = False
+        self.ability_info['cooldown_timer'] = 300
+        self.ability_info['damage'] = self.character.combat_info['base_damage'] * .75
+
+        self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
+
+        self.ability_info['spawn_info'] = {
+            'position': [0, 0],
+            'variation': [250, 50],
+            'rate': [0, 3],
+            'duration': [0, 105],
+            'velocity': [0, 25]
         }
 
-        self.keybind_info = {
-            'double_tap': False,
-            'keybinds': []
+        self.ability_info['projectile_info'] = {
+            'collision': 'pixel',
+            'collision_exclude': ['particle', 'projectile'],
+            'collision_function': {
+                'enemy': self.collision_enemy
+            },
+
+            'duration': 45
         }
+
+    def collision_enemy(self, scene, projectile, sprite):
+        info = register_damage(scene, self.character, sprite, {'type': 'physical', 'amount': self.ability_info['damage']})
+        self.character.on_attack(scene, info)
 
     def call(self, scene, keybind=None):
+        if self.ability_info['active']:
+            return
+
+        if self.ability_info['cooldown'] > 0:
+            return
+
         super().call(scene, keybind)
+        
+        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        self.ability_info['active'] = True
+
+        particle = Circle(
+            [0, 0],
+            PLAYER_COLOR,
+            0,
+            5,
+            self.character
+        )
+
+        particle.set_goal(15, position=[0, 0], radius=60, width=1)
+        scene.add_sprites(particle)
+
+        pos = scene.mouse.entity_pos.copy()
+        pos[1] -= (self.ability_info['spawn_info']['velocity'][1] * (self.ability_info['projectile_info']['duration'] * .25))
+
+        self.ability_info['spawn_info']['position'] = pos
+        self.ability_info['spawn_info']['duration'][0] = 0
+    
+    def update(self, scene, dt):
+        super().update(scene, dt)
+
+        if not self.ability_info['active']:
+            return
+
+        self.ability_info['spawn_info']['duration'][0] += 1 * dt
+        if self.ability_info['spawn_info']['duration'][0] >= self.ability_info['spawn_info']['duration'][1]: 
+            self.ability_info['active'] = False
+            return
+
+        self.ability_info['spawn_info']['rate'][0] += 1 * dt
+        if self.ability_info['spawn_info']['rate'][0] >= self.ability_info['spawn_info']['rate'][1]:
+            self.ability_info['spawn_info']['rate'][0] = 0
+
+            pos = self.ability_info['spawn_info']['position'].copy()
+            pos[0] += random.randint(-self.ability_info['spawn_info']['variation'][0], self.ability_info['spawn_info']['variation'][0])
+            pos[1] += random.randint(-self.ability_info['spawn_info']['variation'][1], self.ability_info['spawn_info']['variation'][1])
+
+            projectile = ProjectileStandard(
+                pos,
+                self.ability_info['image'].copy(),
+                None,
+                self.character.strata + 1,
+                self.ability_info['projectile_info'],
+                velocity=self.ability_info['spawn_info']['velocity']
+            )
+
+            projectile.image.set_alpha(0)
+            projectile.set_alpha_tween(15, 255)
+
+            scene.add_sprites(projectile)
+    
+class EvasiveShroud(Ability):
+    ABILITY_ID = 'evasive_shroud'
+
+    DESCRIPTION = {
+		'name': 'Evasive Shroud',
+		'description': 'Become temporarily immune to all damage.'
+	}
+
+    @staticmethod
+    def fetch():
+        card_info = {
+			'type': 'ability',
+			
+			'icon': None,
+			'symbols': [
+                Card.SYMBOLS['type']['ability'],
+				Card.SYMBOLS['action']['resistance/immunity'],
+				Card.SYMBOLS['ability']['special']
+            ]
+		}
+
+        return card_info
+    
+    def __init__(self, character):
+        super().__init__(character)
+
+        self.ability_info['active'] = False
+        self.ability_info['cooldown_timer'] = 150
+
+        self.ability_info['frames'] = 0
+        self.ability_info['frames_max'] = 45
+
+    def call(self, scene, keybind=None):
+        if self.ability_info['cooldown'] > 0:
+            return
+        
+        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        self.ability_info['active'] = True
+        
+        self.character.combat_info['immunities']['all'] = self.ability_info['frames_max']
+        self.ability_info['frames'] = self.ability_info['frames_max']
+
+        particles = []
+        pos = self.character.center_position
+        for _ in range(6):
+            cir = Circle(pos, (255, 255, 255), 8, 0)
+            cir.set_goal(
+                        75, 
+                        position=(pos[0] + random.randint(-75, 75), pos[1] + random.randint(-75, 75)), 
+                        radius=0, 
+                        width=0
+                    )
+
+            particles.append(cir)
+
+        scene.add_sprites(particles)    
+
+    def update(self, scene, dt):
+        super().update(scene, dt)
+
+        if not self.ability_info['active']:
+            return
+        
+        self.character.image.set_alpha(55)
+        self.character.halo.image.set_alpha(55)
+
+        self.ability_info['frames'] -= 1 * dt
+
+        if self.ability_info['frames'] <= 0:
+            self.ability_info['active'] = False
+
+            self.character.halo.image.set_alpha(255)
+            self.character.combat_info['immunities']['all'] = False
+    
+            particles = []
+            pos = self.character.center_position
+            for _ in range(3):
+                cir = Circle(pos, (255, 255, 255), 6, 0)
+                cir.set_goal(
+                            60, 
+                            position=(pos[0] + random.randint(-50, 50), pos[1] + random.randint(-50, 50)), 
+                            radius=0, 
+                            width=0
+                        )
+
+                particles.append(cir)
+
+            scene.add_sprites(particles)    

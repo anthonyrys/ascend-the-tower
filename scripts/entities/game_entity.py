@@ -35,6 +35,9 @@ class GameEntity(Entity):
 
         set_gravity(): sets the current gravity of the entity for a set amount of frames.
         set_friction(): sets the entity friction temporarily.
+
+        get_stat(): returns a value of either the combat dictionary or the movement dictionary.
+        set_stat(): sets a value of either the combat dictionary or the movement dictionary.
     '''
 
     GRAVITY = 2
@@ -73,7 +76,10 @@ class GameEntity(Entity):
         self.default_combat_info = {
             'max_health': 100,
             'health': 100,
-            'regen_info': [.01, [0, 60]],
+
+            'health_regen_amount': .01,
+            'health_regen_tick': 60,
+            'health_regen_timer': 0,
 
             'damage_multiplier': 1.0,
             'healing_multiplier': 1.0,
@@ -192,6 +198,30 @@ class GameEntity(Entity):
             else:
                 self.velocity[1] = (grav / dt) * multiplier
 
+    def get_stat(self, stat):
+        if stat in self.combat_info:
+            return self.combat_info[stat]
+        
+        elif stat in self.movement_info:
+            return self.movement_info[stat]
+
+    def set_stat(self, stat, value, additive=False):
+        if stat in self.combat_info: 
+            if additive:
+                self.combat_info[stat] += value
+            else:
+                self.combat_info[stat] = value
+
+            return self.combat_info[stat]
+        
+        elif stat in self.movement_info:
+            if additive:
+                self.movement_info[stat] += value
+            else:
+                self.movement_info[stat] = value
+
+            return self.movement_info[stat]
+
     def set_gravity(self, frames, grav=None, max_grav=None):
         if grav is None:
             grav = Entity.GRAVITY
@@ -219,6 +249,12 @@ class GameEntity(Entity):
                     'max_gravity': self.MAX_GRAVITY
                 }
 
+        for buff in self.buffs:
+            buff.update(scene, dt)
+        
+        for debuff in self.debuffs:
+            debuff.update(scene, dt)
+
         if self.movement_info['friction_frames'] > 0:
             self.movement_info['friction_frames'] -= 1 * dt
 
@@ -227,21 +263,23 @@ class GameEntity(Entity):
                 self.movement_info['friction'] = self.default_movement_info['friction']
                 self.movement_info['friction_frames'] = 0
 
-        if self.combat_info['regen_info'][0] > 0:
-            self.combat_info['regen_info'][1][0] += 1 * dt
-            if self.combat_info['regen_info'][1][0] >= self.combat_info['regen_info'][1][1]:
-                self.combat_info['regen_info'][1][0] = 0
+        if self.combat_info['health_regen_amount'] > 0:
+            self.combat_info['health_regen_timer'] += 1 * dt
+            if self.combat_info['health_regen_timer'] >= self.combat_info['health_regen_tick']:
+                self.combat_info['health_regen_timer'] = 0
 
                 if self.combat_info['health'] < self.combat_info['max_health']:
                     register_heal(
                         scene,
                         self, 
-                        {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['regen_info'][0]}
+                        {'type': 'passive', 'amount': self.combat_info['max_health'] * self.combat_info['health_regen_amount']}
                     )
 
         if self.combat_info['health'] > self.combat_info['max_health']:
             self.combat_info['health'] = self.combat_info['max_health']
 
+        self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
+        
         for immunity in self.combat_info['immunities'].keys():
             if '&' in immunity or self.combat_info['immunities'][immunity] == 0:
                 continue

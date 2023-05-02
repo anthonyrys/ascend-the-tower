@@ -5,7 +5,7 @@ Holds the player class.
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
 from scripts.engine import Inputs
 
-from scripts.core_systems.abilities import Dash, PrimaryAttack
+from scripts.core_systems.abilities import Dash, PrimaryAttack, RainOfArrows, EvasiveShroud
 from scripts.core_systems.talents import call_talents
 
 from scripts.entities.game_entity import GameEntity
@@ -138,14 +138,12 @@ class Player(GameEntity):
         self.abilities = {
             'dash': Dash(self), 
             'primary': PrimaryAttack(self),
-            'ability_1': None,
-            'ability_2': None
+            'ability_1': RainOfArrows(self),
+            'ability_2': EvasiveShroud(self)
         }
 
         self.talents = []
-        self.talent_info = {
-            'has_tarot_card': False
-        }
+        self.talent_info = {}
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -396,7 +394,7 @@ class Player(GameEntity):
                 self.velocity[1] = 0
 
     def apply_afterimages(self, scene, halo=True):
-        if abs(self.velocity[0]) <= self.movement_info['max_movespeed']:
+        if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:
             return
         
         afterimage_plr = Image(
@@ -485,9 +483,6 @@ class Player(GameEntity):
             if self.timed_inputs[key] <= 0:
                 self.timed_inputs[key] = 0
 
-        for ability in [s for s in self.abilities.values() if s is not None]:
-            ability.update(scene, dt)  
-
         self.overrides['ability'] = None
         for ability in [s for s in self.abilities.values() if s is not None]:
             if ability is None:
@@ -500,7 +495,8 @@ class Player(GameEntity):
             for talent in self.talents:
                 talent.update(scene, dt)  
 
-            self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
+            for ability in [s for s in self.abilities.values() if s is not None]:
+                ability.update(scene, dt)  
 
             super().display(scene, dt)
             return     
@@ -527,6 +523,9 @@ class Player(GameEntity):
             
         for talent in self.talents:
             talent.update(scene, dt)  
+
+        for ability in [s for s in self.abilities.values() if s is not None]:
+            ability.update(scene, dt)  
 
         self.combat_info['crit_strike_chance'] = round(self.combat_info['crit_strike_chance'], 2)
 

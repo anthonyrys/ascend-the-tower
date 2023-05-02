@@ -1,0 +1,65 @@
+v0.1.0
+    - Added general documentation
+    - Optimized some parts of code
+
+    - Removed some talent icons (for now)
+    - Added 2 new talents
+    - Added special cards
+    - Added enemy variants
+    - Added projectiles
+
+v0.1.1
+    - Added GameEntity class
+        ^ Partially replaces the Entity class
+        ^ Gets rid of redundant code from the Player and Enemy class
+
+    - Added Enemy variant_display function for easier readability
+    - Changed Enemy class to now utilize the Ability class
+
+    - Fixed an issue where the Chain Reaction talent would not properly damage enemies
+
+v0.2.0
+- Added changelog file
+
+- Added StatusEffect, Buff, and Debuff classes
+    ^ Provides a more secure way to change entity values
+    ^ Allows tracking of the changes to entity values
+
+- Added Stat Upgrade system
+    ^ Allows player to select a stat to upgrade
+    ^ max_health, base_damage, max_movespeed, or crit_strike_chance/crit_strike_multiplier
+- Added Default stat icon
+
+- Added 2 abilities: Rain of Arrows and Evasive Shroud
+
+- Added Wheel Of Fortune display_text function for easier readability
+
+- Reworked Recuperation talent to now give health regeneration instead of direct health
+- Changed Combo Star, Sting Like A Bee, Temperance, Wheel Of Fortune, and Bloodlust talents to now utilize status effects
+
+- Removed tarot card system
+    ^ Wheel of Fortune and Temperance talents now function as regular talents
+- Removed Recuperation talent icon
+
+- Changed Stelemental projectile collision functions to be class-scoped instead of function-scoped
+
+- Added get_stat and set_stat functions to GameEntity class
+- Added health_regen_amount/tick/timer values to the GameEntity combat_info
+    ^ Replaces the regen_info dictionary
+    ^ Changed the Stelemental class to reflect the addition
+
+- Changed Player apply_afterimages function to be more strict
+
+- Added alpha_info variable and set_alpha_tween function to Projectile class
+- Added a distance check to Projectile collision detection to reduce lag
+
+- Changed projectile functions to give the collision sprite and the scene as arguments
+
+- Added card_info to Sandbox class
+- Added card overflow mechanic to Sandbox class
+    ^ Allows the scene to give the player multiple sets of cards at once
+
+- Changed Sandbox generate_cards function to generate_standard_cards and generate_stat_cards
+
+- Reworked Card class into StandardCard and StatCard subclasses
+- Changed Card base images to only one image
