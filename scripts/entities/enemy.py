@@ -329,22 +329,24 @@ class Stelemental(Enemy):
         self.img_info['damage_frames'] = 10
         self.img_info['damage_frames_max'] = 10
 
-        pos = self.center_position
-        particles = []
-        for color in get_sprite_colors(self):
-            cir = Circle(pos, color, 10, 0)
-            cir.set_goal(
-                        100, 
-                        position=(pos[0] + random.randint(-350, 350), pos[1] + random.randint(-350, 350)), 
-                        radius=0, 
-                        width=0
-                    )
-            cir.set_gravity(5)
-            cir.set_easings(radius='ease_out_sine')
+        if not 'minor' in info:
+            pos = self.center_position
+            particles = []
 
-            particles.append(cir)
+            for color in get_sprite_colors(self):
+                cir = Circle(pos, color, 10, 0)
+                cir.set_goal(
+                            100, 
+                            position=(pos[0] + random.randint(-350, 350), pos[1] + random.randint(-350, 350)), 
+                            radius=0, 
+                            width=0
+                        )
+                cir.set_gravity(5)
+                cir.set_easings(radius='ease_out_sine')
+
+                particles.append(cir)
             
-        scene.add_sprites(particles)
+            scene.add_sprites(particles)
 
         if not info['crit']:
             self.health_ui.set_pulse(10, (225, 225, 225))

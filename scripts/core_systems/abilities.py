@@ -162,7 +162,7 @@ class PrimaryAttack(Ability):
         self.ability_info['speed'] = 60
         self.ability_info['gravity_frames'] = 20
 
-        self.ability_info['hit_immunity'] = 10
+        self.ability_info['hit_immunity'] = 15
         self.ability_info['damage'] = character.combat_info['base_damage']
         self.ability_info['damage_type'] = 'physical'
 
@@ -425,14 +425,14 @@ class RainOfArrows(Ability):
 
         self.ability_info['active'] = False
         self.ability_info['cooldown_timer'] = 300
-        self.ability_info['damage'] = self.character.combat_info['base_damage'] * .75
+        self.ability_info['damage_percentage'] = .5
 
         self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
         self.ability_info['spawn_info'] = {
             'position': [0, 0],
             'variation': [250, 50],
-            'rate': [0, 3],
+            'rate': [0, 2],
             'duration': [0, 105],
             'velocity': [0, 25]
         }
@@ -448,7 +448,9 @@ class RainOfArrows(Ability):
         }
 
     def collision_enemy(self, scene, projectile, sprite):
-        info = register_damage(scene, self.character, sprite, {'type': 'physical', 'amount': self.ability_info['damage']})
+        damage = self.character.combat_info['base_damage'] * self.ability_info['damage_percentage']
+        info = register_damage(scene, self.character, sprite, {'type': 'physical', 'amount': damage})
+    
         self.character.on_attack(scene, info)
 
     def call(self, scene, keybind=None):

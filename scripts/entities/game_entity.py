@@ -171,7 +171,7 @@ class GameEntity(Entity):
                     
                 self.velocity[1] = 0
 
-            else:
+            elif collidable.secondary_sprite_id != 'ceiling':
                 self.rect.bottom = collidable.rect.top
                 self.collide_points['bottom'] = True
 

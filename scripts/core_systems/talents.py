@@ -6,7 +6,7 @@ from scripts.constants import HEAL_COLOR, PLAYER_COLOR
 from scripts.engine import get_distance
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
-from scripts.core_systems.status_effects import get_buff, Buff, Debuff
+from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
 
 from scripts.entities.particle_fx import Image
 
@@ -611,7 +611,7 @@ class ChainReaction(Talent):
 
 		self.talent_info['charges'] = 3
 		self.talent_info['range'] = 150
-		self.talent_info['damage_percentage'] = .8
+		self.talent_info['damage_percentage'] = .5
 	
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
@@ -687,33 +687,6 @@ class Bloodlust(Talent):
 
 		self.player.buffs.extend([damage_buff, speed_buff])
 
-class Reprisal(Talent):
-	TALENT_ID = 'reprisal'
-	TALENT_CALLS = ['on_player_damaged']
-
-	DESCRIPTION = {
-		'name': 'Reprisal',
-		'description': 'Taking damage summons a familiar that will temporarily attack nearby enemies.'
-	}
-
-	@staticmethod
-	def fetch():
-		card_info = {
-			'type': 'talent',
-			
-			'icon': 'reprisal',
-			'symbols': [				
-				Card.SYMBOLS['type']['talent'],
-				Card.SYMBOLS['action']['damage'],
-				Card.SYMBOLS['talent']['hurt/death']
-			]
-		}
-
-		return card_info
-	
-	def __init__(self, scene, player):
-		super().__init__(scene, player)
-
 class Ignition(Talent):
 	TALENT_ID = 'ignition'
 	TALENT_CALLS = ['on_player_attack']
@@ -741,29 +714,19 @@ class Ignition(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-class ChaosTheory(Talent):
-	TALENT_ID = 'chaos_theory'
-	TALENT_CALLS = []
+		self.talent_info['signature'] = 'ignition'
 
-	DESCRIPTION = {
-		'name': 'Chaos Theory',
-		'description': '???'
-	}
+		self.talent_info['duration'] = 30
+		self.talent_info['damage_percentage'] = .5
 
-	@staticmethod
-	def fetch():
-		card_info = {
-			'type': 'talent',
-			
-			'icon': 'chaos-theory',
-			'symbols': [				
-				Card.SYMBOLS['type']['talent'],
-				Card.SYMBOLS['action']['other'],
-				Card.SYMBOLS['talent']['other']
-			]
-		}
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+		has_debuff = get_debuff(info['target'], self.talent_info['signature'])
 
-		return card_info
-	
-	def __init__(self, scene, player):
-		super().__init__(scene, player)
+		if has_debuff:
+			has_debuff.duration = self.talent_info['duration']
+			return
+		
+		damage = self.player.combat_info['base_damage'] * self.talent_info['damage_percentage']
+		debuff = OnFire(self.player, info['target'], self.talent_info['signature'], damage, self.talent_info['duration'])
+		info['target'].debuffs.append(debuff)

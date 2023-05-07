@@ -5,7 +5,7 @@ Holds the player class.
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
 from scripts.engine import Inputs
 
-from scripts.core_systems.abilities import Dash, PrimaryAttack, RainOfArrows, EvasiveShroud
+from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
 from scripts.entities.game_entity import GameEntity
@@ -138,8 +138,8 @@ class Player(GameEntity):
         self.abilities = {
             'dash': Dash(self), 
             'primary': PrimaryAttack(self),
-            'ability_1': RainOfArrows(self),
-            'ability_2': EvasiveShroud(self)
+            'ability_1': None,
+            'ability_2': None
         }
 
         self.talents = []
@@ -187,7 +187,7 @@ class Player(GameEntity):
             self.movement_info['jumps'] -= 1
             self.cooldowns['jump'] = self.cooldown_timers['jump']
 
-            pos =(
+            pos = (
                 self.rect.centerx,
                 self.rect.centery + 20
             )
@@ -331,7 +331,7 @@ class Player(GameEntity):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id == 'floor']):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['ceiling', 'floor']]):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
      

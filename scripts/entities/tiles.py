@@ -37,6 +37,14 @@ class Floor(Tile):
     def display(self, scene, dt):
         super().display(scene, dt)
 
+class Ceiling(Tile):
+    def __init__(self, position, img, dimensions, strata=None):
+        super().__init__(position, img, dimensions, strata)
+        self.secondary_sprite_id = 'ceiling'
+
+    def display(self, scene, dt):
+        super().display(scene, dt)
+
 class Ramp(Tile):
     def __init__(self, position, ramp_type, direction, color, strata=None):
         imgs = load_spritesheet(os.path.join('imgs', 'entities', 'tiles', 'ramps.png'))

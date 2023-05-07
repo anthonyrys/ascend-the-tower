@@ -194,9 +194,9 @@ class Card(Frame):
             self.tween_info['frames'] = 0
             self.tween_info['frames_max'] = 0
 
-            if self.tween_info['on_finished'] is not None:
-                self.tween_info['on_finished']()
-                self.tween_info['on_finished'] = None
+            if self.tween_info['on_finished'] == 'del':
+                scene.del_sprites(self)
+                return
 
         if self.hovering:
             create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)

@@ -19,47 +19,77 @@ v0.1.1
     - Fixed an issue where the Chain Reaction talent would not properly damage enemies
 
 v0.2.0
-- Added changelog file
+    - Added changelog file
 
-- Added StatusEffect, Buff, and Debuff classes
-    ^ Provides a more secure way to change entity values
-    ^ Allows tracking of the changes to entity values
+    - Added StatusEffect, Buff, and Debuff classes
+        ^ Provides a more secure way to change entity values
+        ^ Allows tracking of the changes to entity values
 
-- Added Stat Upgrade system
-    ^ Allows player to select a stat to upgrade
-    ^ max_health, base_damage, max_movespeed, or crit_strike_chance/crit_strike_multiplier
-- Added Default stat icon
+    - Added Stat Upgrade system
+        ^ Allows player to select a stat to upgrade
+        ^ max_health, base_damage, max_movespeed, or crit_strike_chance/crit_strike_multiplier
+    - Added Default stat icon
 
-- Added 2 abilities: Rain of Arrows and Evasive Shroud
+    - Added 2 abilities: Rain of Arrows and Evasive Shroud
 
-- Added Wheel Of Fortune display_text function for easier readability
+    - Added Wheel Of Fortune display_text function for easier readability
 
-- Reworked Recuperation talent to now give health regeneration instead of direct health
-- Changed Combo Star, Sting Like A Bee, Temperance, Wheel Of Fortune, and Bloodlust talents to now utilize status effects
+    - Reworked Recuperation talent to now give health regeneration instead of direct health
+    - Changed Combo Star, Sting Like A Bee, Temperance, Wheel Of Fortune, and Bloodlust talents to now utilize status effects
 
-- Removed tarot card system
-    ^ Wheel of Fortune and Temperance talents now function as regular talents
-- Removed Recuperation talent icon
+    - Removed tarot card system
+        ^ Wheel of Fortune and Temperance talents now function as regular talents
+    - Removed Recuperation talent icon
 
-- Changed Stelemental projectile collision functions to be class-scoped instead of function-scoped
+    - Changed Stelemental projectile collision functions to be class-scoped instead of function-scoped
 
-- Added get_stat and set_stat functions to GameEntity class
-- Added health_regen_amount/tick/timer values to the GameEntity combat_info
-    ^ Replaces the regen_info dictionary
-    ^ Changed the Stelemental class to reflect the addition
+    - Added get_stat and set_stat functions to GameEntity class
+    - Added health_regen_amount/tick/timer values to the GameEntity combat_info
+        ^ Replaces the regen_info dictionary
+        ^ Changed the Stelemental class to reflect the addition
 
-- Changed Player apply_afterimages function to be more strict
+    - Changed Player apply_afterimages function to be more strict
 
-- Added alpha_info variable and set_alpha_tween function to Projectile class
-- Added a distance check to Projectile collision detection to reduce lag
+    - Added alpha_info variable and set_alpha_tween function to Projectile class
+    - Added a distance check to Projectile collision detection to reduce lag
 
-- Changed projectile functions to give the collision sprite and the scene as arguments
+    - Changed projectile functions to give the collision sprite and the scene as arguments
 
-- Added card_info to Sandbox class
-- Added card overflow mechanic to Sandbox class
-    ^ Allows the scene to give the player multiple sets of cards at once
+    - Added card_info to Sandbox class
+    - Added card overflow mechanic to Sandbox class
+        ^ Allows the scene to give the player multiple sets of cards at once
 
-- Changed Sandbox generate_cards function to generate_standard_cards and generate_stat_cards
+    - Changed Sandbox generate_cards function to generate_standard_cards and generate_stat_cards
 
-- Reworked Card class into StandardCard and StatCard subclasses
-- Changed Card base images to only one image
+    - Reworked Card class into StandardCard and StatCard subclasses
+    - Changed Card base images to only one image
+
+v0.2.1
+- Added OnFire debuff
+- Added dot variable to StatusEffect class
+
+- Added Rain of Arrows and Evasive Shroud to the card pool
+    ^ Player no longer has both abilities by default
+
+- Increased Rain of Arrows' fire rate to 2 frames from 3 frames
+- Decreased Rain of Arrows' damage to 50% of base damage from 75%
+
+- Added talent: Ignition
+
+- Increased Chain Reaction talent's damage dropoff to 50% from 20%
+
+- Fixed an issue where talents and abilities would not scale dynamically with player base_damage
+
+- Added Ceiling class to Tiles
+    ^ GameEntity and Player classes now consider ceilings for collision
+
+- Added Ceiling object to Sandbox barriers
+
+- Fixed an issue where Sandbox ui elements would not dim when selecting cards
+
+- Added ability hotbar
+    ^ Displays the keybinding and cooldown timer for abilities
+
+- Changed Vampirism talent's card icon
+
+- Fixed an issue where cards would not properly delete once offscreen

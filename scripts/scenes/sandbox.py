@@ -10,17 +10,19 @@ from scripts.core_systems.abilities import get_all_abilities
 
 from scripts.entities.enemy import Stelemental
 from scripts.entities.player import Player
-from scripts.entities.tiles import Block, Platform, Floor
+from scripts.entities.tiles import Block, Platform, Floor, Ceiling
 
 from scripts.scenes.scene import Scene
 
 from scripts.ui.info_bar import HealthBar
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
+from scripts.ui.hotbar import Hotbar
 
 import pygame
 import random
 import math
+import os
 
 class Sandbox(Scene):
     '''
@@ -37,8 +39,9 @@ class Sandbox(Scene):
         tiles: a collection of tile sprites.
 
     Methods:
-        remove_cards: the function given to the card object when a card is selected.
-        generate_cards: generates a list of cards for the player to choose from.
+        remove_cards(): the function given to the card object when a card is selected.
+        generate_standard_cards(): generates a list of talent/ability cards for the player to choose from.
+        generate_stat_cards(): generates a list of stat cards for the player to choose from.
     '''
     
     def __init__(self, surfaces, mouse, sprites=None):
@@ -73,13 +76,18 @@ class Sandbox(Scene):
             'temp_guide': [
                 TextBox((40, SCREEN_DIMENSIONS[1] - 100), '3: draw cards', size=.5),
                 TextBox((40, SCREEN_DIMENSIONS[1] - 50), '0: fullscreen', size=.5)
-            ]
+            ],
+            'hotbar': Hotbar(self.player, (SCREEN_DIMENSIONS[0] * .5, SCREEN_DIMENSIONS[1] - 70), 3)
         }
 
         self.player.healthbar = self.ui['healthbar']
         
         self.tiles = {
-            'barrier_y': [Floor((0, 1500), (255, 255, 255, 0), (250, 250), 1)],
+            'barrier_y': [
+                Floor((0, 1500), (255, 255, 255, 0), (250, 250), 1),
+                Ceiling((0, 0), (255, 255, 255, 0), (250, 250), 1)
+            ],
+
             'barrier_x': [
                 Block((250, 0), (255, 255, 255, 0), (250, 250), 1),        
                 Block((4500, 0), (255, 255, 255, 0), (250, 250), 1)
@@ -136,6 +144,15 @@ class Sandbox(Scene):
                 self.scene_fx['entity_dim']['easing'] = 'ease_out_quint'
                 self.scene_fx['entity_dim']['type'] = 'in'
                 self.scene_fx['entity_dim']['frames'][1] = 30
+
+                for frame in self.ui.values():
+                    if isinstance(frame, list):
+                        for subframe in frame:
+                            subframe.image.set_alpha(100)
+                        
+                        continue
+
+                    frame.image.set_alpha(100)
                 
                 self.add_sprites(cards)
 
@@ -151,7 +168,7 @@ class Sandbox(Scene):
             card.tween_info['frames_max'] = 20
                 
             card.tween_info['flag'] = 'del'
-            card.tween_info['on_finished'] = lambda: self.del_sprites(self)
+            card.tween_info['on_finished'] = 'del'
 
         if self.card_info['overflow']:
             cards = self.card_info['overflow'][0]()
@@ -170,6 +187,15 @@ class Sandbox(Scene):
         self.scene_fx['entity_dim']['frames'][0] = 30
         self.scene_fx['entity_dim']['frames'][1] = 30
 
+        for frame in self.ui.values():
+            if isinstance(frame, list):
+                for subframe in frame:
+                    subframe.image.set_alpha(255)
+                
+                continue
+                    
+            frame.image.set_alpha(255)
+
     def generate_standard_cards(self, count=3):
         def on_select(selected_card, cards):
             if selected_card.draw.DRAW_TYPE == 'TALENT':
@@ -177,6 +203,11 @@ class Sandbox(Scene):
                 print(f'selected talent card: {selected_card.draw.DESCRIPTION["name"]}')
                     
             elif selected_card.draw.DRAW_TYPE == 'ABILITY':
+                for slot in self.player.abilities.keys():
+                    if self.player.abilities[slot] is None:
+                        self.player.abilities[slot] = selected_card.draw(self.player)
+                        break
+
                 print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
 
             self.remove_cards(selected_card, cards)
@@ -361,7 +392,7 @@ class Sandbox(Scene):
 
         entity_display = pygame.Surface(SCREEN_DIMENSIONS).convert_alpha()
         entity_display.blit(self.entity_surface, (-self.camera_offset[0], -self.camera_offset[1]))
-        
+
         if self.scene_fx['entity_dim']['type']:
             abs_prog = self.scene_fx['entity_dim']['frames'][0] / self.scene_fx['entity_dim']['frames'][1]
             img = pygame.Surface(SCREEN_DIMENSIONS)
