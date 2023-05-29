@@ -147,4 +147,4 @@ class OnFire(Debuff):
         self.tick_rate[0] += 1 * dt
         if self.tick_rate[0] >= self.tick_rate[1]:
             self.tick_rate[0] = 0
-            register_damage(scene, self.primary_entity, self.entity, {'type': 'magical', 'amount': self.per_damage, 'minor': True})
+            register_damage(scene, self.primary_entity, self.entity, {'type': 'magical', 'amount': self.per_damage, 'minor': True, 'velocity': None})

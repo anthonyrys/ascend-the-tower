@@ -65,31 +65,92 @@ v0.2.0
     - Changed Card base images to only one image
 
 v0.2.1
-- Added OnFire debuff
-- Added dot variable to StatusEffect class
+    - Added OnFire debuff
+    - Added dot variable to StatusEffect class
 
-- Added Rain of Arrows and Evasive Shroud to the card pool
-    ^ Player no longer has both abilities by default
+    - Added Rain of Arrows and Evasive Shroud to the card pool
+        ^ Player no longer has both abilities by default
 
-- Increased Rain of Arrows' fire rate to 2 frames from 3 frames
-- Decreased Rain of Arrows' damage to 50% of base damage from 75%
+    - Increased Rain of Arrows' fire rate to 2 frames from 3 frames
+    - Decreased Rain of Arrows' damage to 50% of base damage from 75%
 
-- Added talent: Ignition
+    - Added talent: Ignition
 
-- Increased Chain Reaction talent's damage dropoff to 50% from 20%
+    - Increased Chain Reaction talent's damage dropoff to 50% from 20%
 
-- Fixed an issue where talents and abilities would not scale dynamically with player base_damage
+    - Fixed an issue where talents and abilities would not scale dynamically with player base_damage
 
-- Added Ceiling class to Tiles
-    ^ GameEntity and Player classes now consider ceilings for collision
+    - Added Ceiling class to Tiles
+        ^ GameEntity and Player classes now consider ceilings for collision
 
-- Added Ceiling object to Sandbox barriers
+    - Added Ceiling object to Sandbox barriers
 
-- Fixed an issue where Sandbox ui elements would not dim when selecting cards
+    - Fixed an issue where Sandbox ui elements would not dim when selecting cards
 
-- Added ability hotbar
-    ^ Displays the keybinding and cooldown timer for abilities
+    - Added ability hotbar
+        ^ Displays the keybinding and cooldown timer for abilities
 
-- Changed Vampirism talent's card icon
+    - Changed Vampirism talent's card icon
 
-- Fixed an issue where cards would not properly delete once offscreen
+    - Fixed an issue where cards would not properly delete once offscreen
+
+v0.3.0
+- Updated .gitattributes and .gitignore files
+
+- Added fullscreen key to settings.json
+
+- Added WaveHandler class
+    ^ Handles enemy spawning calculations via waves and levels
+    ^ Cards are now awarded once a wave is completed
+
+- Added an override check for the Ability call function
+    ^ Prevents entities to call abilities when they are being overridden
+
+- Changed Rain of Arrows ability projectile collision_ignore to now ignore tiles
+- Changed Rain of Arrows ability projectile collision type to rect from pixel
+    ^ Both changes are intended to make the arrows more consistent
+
+- Changed Chain Reaction and Vampirism talents to on_@primary_attack from on_player_attack call
+- Changed Chain Reaction talent to now call on_player_attack talents
+
+- Added HumanoidAi, FlyerAi and FloaterAi classes
+
+- Removed AiTemplate ai_config variable
+
+- Reworked Enemy set_stats function to scale stats differently
+- Renamed Enemy health_ui variable to healthbar
+
+- Added HumanoidEnemy, FlyerEnemy, and FloaterEnemy classes
+- Added Humanoid, Flyer and Floater enemy classes
+
+- Removed Enemy variants
+- Removed Stelemental enemy class
+    ^ Added methods used in the Stelemental class to the base Enemy class
+
+- Added overrides, cooldown_timers, and cooldowns variable to GameEntity class
+- Added set_frame_state function to GameEntity class
+
+- Added Player death and respawning
+    ^ Currently, dying restarts the GameLoop class
+- Added get_ui_elements function to Player class
+
+- Fixed an issue where player knockback would scale with max_movespeed and jump_power
+- Fixed an issue where player afterimages were not affected by delta time
+
+- Fixed an issue where ProjectileStandard class would not properly collide with Floor tiles
+
+- Added Barrier class
+    ^ Replaces Block class for GameLoop barrier_x
+    ^ GameEntity, Player, and Enemy classes now consider Barrier class for collisions
+
+- Added GameLoop Scene class
+    ^ SceneHandler class now initializes the GameLoop scene instead of Sandbox scene
+
+- Added on_enemy_spawn, on_enemy_death, and on_player_death to Sandbox class
+
+- Added scene_handler argument to Scene __init__ function
+
+- Changed Mouse class to blit on base screen instead of Scene ui_surface
+
+- Added Humanoid, Flyer, and Floater Enemy image files
+- Removed Stelemental Enemy image files

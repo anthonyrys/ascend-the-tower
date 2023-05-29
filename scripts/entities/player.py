@@ -2,7 +2,7 @@
 Holds the player class.
 '''
 
-from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR
+from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
 from scripts.engine import Inputs
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
@@ -14,6 +14,8 @@ from scripts.entities.particle_fx import Circle, Image
 from scripts.services.spritesheet_loader import load_spritesheet
 
 from scripts.ui.text_box import TextBox
+from scripts.ui.info_bar import HealthBar
+from scripts.ui.hotbar import Hotbar
 
 import pygame
 import math
@@ -30,17 +32,14 @@ class Player(GameEntity):
 
         healthbar: Infobar object to display player health.
 
-        overrides: dictonary of the different override scenarios.
-
-        cooldown_timers: base timers for player actions.
-        cooldowns: ongoing cooldowns for player actions.
-
         abilities: dictonary of the current abilities the player has.
 
         talents: list of the current talents the player has.
         talent_info: dictonary of the information about the talents the player has.
 
     Methods:
+        get_ui_elements(): returns ui objects for the scene to display.
+        
         on_jump(): called when the player presses the up key.
         on_respawn(): called when the player respawns after death.
         on_death(): called when the player dies.
@@ -53,7 +52,6 @@ class Player(GameEntity):
         apply_collision_y(): applies base collision for the y axis.
         apply_afterimages(): applies afterimages of the player if they have a speed boost.
 
-        set_frame_state(): sets the frame state of the player depending on movement.
         set_images(): sets the player images.
     '''
 
@@ -97,9 +95,9 @@ class Player(GameEntity):
         self.timed_inputs = {}
         self.timed_input_buffer = 7
 
-        self.healthbar = None
-
         self.overrides = {
+            'inactive': False,
+            
             'ability': None,
             'death': False
         }
@@ -119,21 +117,15 @@ class Player(GameEntity):
 
             'pulse_frames': 0,
             'pulse_frames_max': 0,
-            'pulse_frame_color': ()
+            'pulse_frame_color': (),
+
+            'afterimage_frames': [0, 1]
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
             self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
             self.img_info['frames'][name] = 0
             self.img_info['frames_raw'][name] = 0
-
-        self.cooldown_timers = {
-            'jump': 8
-        }
-
-        self.cooldowns = {}
-        for cd in self.cooldown_timers.keys():
-            self.cooldowns[cd] = 0
 
         self.abilities = {
             'dash': Dash(self), 
@@ -144,6 +136,14 @@ class Player(GameEntity):
 
         self.talents = []
         self.talent_info = {}
+
+    def get_ui_elements(self):
+        ui_elements = []
+
+        ui_elements.append(HealthBar(self))
+        ui_elements.append(Hotbar(self, (SCREEN_DIMENSIONS[0] * .5, SCREEN_DIMENSIONS[1] - 70), 3))
+
+        return ui_elements
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -181,30 +181,48 @@ class Player(GameEntity):
         if self.cooldowns['jump'] != 0:
             return
 
-        if self.movement_info['jumps'] > 0:
-            self.velocity[1] = -(self.movement_info['jump_power'])
+        if self.movement_info['jumps'] <= 0:
+            return
+        
+        self.velocity[1] = -(self.movement_info['jump_power'])
 
-            self.movement_info['jumps'] -= 1
-            self.cooldowns['jump'] = self.cooldown_timers['jump']
+        self.movement_info['jumps'] -= 1
+        self.cooldowns['jump'] = self.cooldown_timers['jump']
 
-            pos = (
-                self.rect.centerx,
-                self.rect.centery + 20
-            )
+        pos = (
+            self.rect.centerx,
+            self.rect.centery + 20
+        )
 
-            circle_left = Circle(pos, (255, 255, 255), 6, 0)
-            circle_left.set_goal(15, position=(pos[0] - 40, pos[1] + 10), radius=0, width=0)
+        circle_left = Circle(pos, (255, 255, 255), 6, 0)
+        circle_left.set_goal(15, position=(pos[0] - 40, pos[1] + 10), radius=0, width=0)
 
-            circle_right = Circle(pos, (255, 255, 255), 6, 0)
-            circle_right.set_goal(15, position=(pos[0] + 40, pos[1] + 10), radius=0, width=0)
+        circle_right = Circle(pos, (255, 255, 255), 6, 0)
+        circle_right.set_goal(15, position=(pos[0] + 40, pos[1] + 10), radius=0, width=0)
 
-            scene.add_sprites(circle_left, circle_right)    
+        scene.add_sprites(circle_left, circle_right)    
 
-    def on_respawn(self, scene):
+    def on_respawn(self):
         ...
 
     def on_death(self, scene, info):
         call_talents(scene, self, {'on_player_death': info})
+        
+        if self.get_stat('health') != 0:
+            return
+        
+        self.combat_info['immunities']['all'] = 45
+        self.overrides['inactive'] = True
+
+        scene.set_dt_multiplier(.05, 30)
+        scene.camera.set_camera_shake(0, 0)
+        
+        scene.scene_fx['entity_zoom']['easing'] = 'ease_out_quint'
+        scene.scene_fx['entity_zoom']['type'] = 'in'
+        scene.scene_fx['entity_zoom']['frames'][1] = 30
+        scene.scene_fx['entity_zoom']['amount'] = 1.0
+
+        scene.delay_timers.append([30, scene.on_player_death, []])
 
     def on_attack(self, scene, info):
         if info:
@@ -247,15 +265,12 @@ class Player(GameEntity):
         scene.set_dt_multiplier(.2, 5)
         self.combat_info['immunities'][info['type']] = 30
 
-        if sprite.rect.centerx > self.rect.centerx:
-            self.velocity[0] = -self.movement_info['max_movespeed'] * 2
-        elif sprite.rect.centerx < self.rect.centerx:
-            self.velocity[0] = self.movement_info['max_movespeed'] * 2
+        self.velocity[0] = info['velocity'][0]
 
         if sprite.rect.centery < self.rect.centery:
-            self.velocity[1] = self.movement_info['jump_power'] * .5
+            self.velocity[1] = -info['velocity'][1]
         elif sprite.rect.centery > self.rect.centery:
-            self.velocity[1] = -self.movement_info['jump_power'] * .75
+            self.velocity[1] = info['velocity'][1]
 
         self.velocity[0] *= self.combat_info['knockback_resistance']
         self.velocity[1] *= self.combat_info['knockback_resistance']
@@ -282,6 +297,9 @@ class Player(GameEntity):
         scene.add_sprites(particle)
 
     def apply_movement(self, scene):
+        if self.overrides['inactive']:
+            return
+        
         pressed = Inputs.pressed
 
         if self.velocity[0] > self.movement_info['max_movespeed']:
@@ -319,7 +337,7 @@ class Player(GameEntity):
         self.collide_points['left'] = False
 
         if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
-            self.apply_collision_x_default([s for s in scene.sprites if s.secondary_sprite_id == 'block'])
+            self.apply_collision_x_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']])
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -327,7 +345,7 @@ class Player(GameEntity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id == 'block']):
+        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']]):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
@@ -393,9 +411,15 @@ class Player(GameEntity):
                             
                 self.velocity[1] = 0
 
-    def apply_afterimages(self, scene, halo=True):
+    def apply_afterimages(self, scene, dt, halo=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:
             return
+        
+        self.img_info['afterimage_frames'][0] += 1 * dt
+        if self.img_info['afterimage_frames'][0] < self.img_info['afterimage_frames'][1]:
+            return
+        
+        self.img_info['afterimage_frames'][0] = 0
         
         afterimage_plr = Image(
             self.center_position,
@@ -414,22 +438,6 @@ class Player(GameEntity):
             afterimage_halo.set_goal(5, alpha=0, dimensions=self.halo.image.get_size())
 
         scene.add_sprites(afterimage_plr, afterimage_halo)
-
-    def set_frame_state(self):
-        if not self.collide_points['bottom']:
-            if self.velocity[1] < 0:
-                self.state_info['movement'] = 'jump'
-                return
-
-            else:
-                self.state_info['movement'] = 'fall'
-                return
-
-        if self.velocity[0] > 0 or self.velocity[0] < 0:
-            self.state_info['movement'] = 'run'
-            return
-
-        self.state_info['movement'] = 'idle'
 
     def set_images(self, scene, dt): 
         img = None
@@ -470,13 +478,9 @@ class Player(GameEntity):
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def display(self, scene, dt):
-        for event in self.cooldowns.keys():
-            if self.cooldowns[event] < 1 * dt:
-                self.cooldowns[event] = 0
-                continue
-
-            self.cooldowns[event] -= 1 * dt
-
+        if self.overrides['death']:
+            return
+    
         for key in self.timed_inputs:
             self.timed_inputs[key] -= 1 * dt
 
@@ -514,7 +518,7 @@ class Player(GameEntity):
             self.rect.y += round(self.velocity[1] * dt)
             self.apply_collision_y(scene, dt)
 
-            self.apply_afterimages(scene)
+            self.apply_afterimages(scene, dt)
 
             self.set_frame_state()
             

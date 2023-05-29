@@ -41,7 +41,7 @@ class Mouse(pygame.sprite.Sprite):
             if not sprite.hovering:
                 sprite.on_hover_start(scene)
 
-    def display(self, scene):
+    def display(self, scene, screen):
         self.rect.center = pygame.mouse.get_pos()
 
         self.entity_pos[0] = self.rect.centerx + scene.camera_offset[0]
@@ -49,4 +49,4 @@ class Mouse(pygame.sprite.Sprite):
 
         self.check_ui_hover(scene)
 
-        scene.ui_surface.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect)

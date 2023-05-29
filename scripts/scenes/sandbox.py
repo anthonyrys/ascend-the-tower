@@ -39,13 +39,16 @@ class Sandbox(Scene):
         tiles: a collection of tile sprites.
 
     Methods:
+        on_enemy_spawn(): called with an enemy within the scene spawns.
+        on_enemy_death(): called with an enemy within the scene dies.
+        
         remove_cards(): the function given to the card object when a card is selected.
         generate_standard_cards(): generates a list of talent/ability cards for the player to choose from.
         generate_stat_cards(): generates a list of stat cards for the player to choose from.
     '''
     
-    def __init__(self, surfaces, mouse, sprites=None):
-        super().__init__(surfaces, mouse, sprites)
+    def __init__(self, scene_handler, surfaces, mouse, sprites=None):
+        super().__init__(scene_handler, surfaces, mouse, sprites)
 
         self.player = Player((2500, 1200), 4)
         self.enemy_info = [[0, 15], [0, 5]]
@@ -155,6 +158,15 @@ class Sandbox(Scene):
                     frame.image.set_alpha(100)
                 
                 self.add_sprites(cards)
+                
+    def on_enemy_spawn(self):
+        ...
+
+    def on_enemy_death(self, enemy):
+        ...
+
+    def on_player_death(self):
+        ...
 
     def remove_cards(self, selected_card, cards):
         for card in cards:

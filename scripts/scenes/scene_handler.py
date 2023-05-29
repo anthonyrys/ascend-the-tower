@@ -9,7 +9,7 @@ from scripts.constants import (
     FRAME_RATE
 )
 
-from scripts.scenes.sandbox import Sandbox
+from scripts.scenes.game_loop import GameLoop
 
 from scripts.ui.card import Card
 from scripts.ui.mouse import Mouse
@@ -50,15 +50,15 @@ class SceneHandler:
         self.entity_surface = pygame.Surface((5000, 5000), pygame.SRCALPHA).convert_alpha()
         self.ui_surface = pygame.Surface((2000, 2000), pygame.SRCALPHA).convert_alpha()
 
-        self.current_scene = Sandbox([self.background_surface, self.entity_surface, self.ui_surface], self.mouse)
+        self.current_scene = GameLoop(self, [self.background_surface, self.entity_surface, self.ui_surface], self.mouse)
         self.stored_scenes = []
 
         self.last_time = time.time()
 
         Card.init()
 
-    def set_new_scene(self):
-        ...
+    def set_new_scene(self, scene, info):
+        self.current_scene = scene(self, [self.background_surface, self.entity_surface, self.ui_surface], self.mouse)
 
     def update(self):
         delta_time = (time.time() - self.last_time) * FRAME_RATE

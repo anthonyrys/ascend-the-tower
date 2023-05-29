@@ -161,6 +161,6 @@ class EnemyBar(InfoBar):
         self.image.blit(self.frame, (0, 0))
 
         self.rect.x = self.enemy.rect.centerx - self.image.get_width() * .5
-        self.rect.y = self.enemy.rect.centery - self.image.get_height() * 3
+        self.rect.y = self.enemy.rect.top - self.image.get_height() * 1.5
 
         super().display(scene, dt)

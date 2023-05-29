@@ -125,11 +125,11 @@ class Talent:
 
 class Vampirism(Talent):
 	TALENT_ID = 'vampirism'
-	TALENT_CALLS = ['on_player_attack']
+	TALENT_CALLS = ['on_@primary_attack']
 
 	DESCRIPTION = {
 		'name': 'Vampirism',
-		'description': 'Heal a portion of the damage you deal.'
+		'description': 'Heal a portion of the damage your primary attack deals.'
 	}
 
 	@staticmethod
@@ -584,11 +584,11 @@ class GuardianAngel(Talent):
 
 class ChainReaction(Talent):
 	TALENT_ID = 'chain_reaction'
-	TALENT_CALLS = ['on_player_attack']
+	TALENT_CALLS = ['on_@primary_attack']
 
 	DESCRIPTION = {
 		'name': 'Chain Reaction',
-		'description': 'Your attacks now chain up to 3 times around your target.'
+		'description': 'Your primary attack now chain up to 3 times around your target.'
 	}
 
 	@staticmethod
@@ -634,12 +634,14 @@ class ChainReaction(Talent):
 			charges -= 1
 
 		for enemy in enemies:
-			register_damage(
+			info = register_damage(
 				scene,
 				self.player,
 				enemy,
 				{'type': info['type'], 'amount': info['amount'] * self.talent_info['damage_percentage']}
 			)
+
+			self.player.on_attack(scene, info)
 
 class Bloodlust(Talent):
 	TALENT_ID = 'bloodlust'

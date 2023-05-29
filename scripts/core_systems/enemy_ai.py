@@ -2,7 +2,7 @@
 Holds the Ai classes that is used by the enemy classes.
 '''
 
-from scripts.engine import get_distance
+from scripts.engine import get_distance, check_line_collision
 
 import pygame
 
@@ -13,67 +13,44 @@ class AiTemplate:
     Variables:
         sprite: The enemy object.
         ai_type: The type of AI (changed by subclasses).
-        ai_config: Information values about the AI behaivor.
 
     Methods:
         update(): update the enemy object every frame.
     '''
     
     def __init__(self, ai_type, sprite):
-        self.sprite = sprite
-
         self.ai_type = ai_type
-        self.ai_config = {
-            'aggro_distance': None,
-            'is_aggro': None,
-            'can_collide': None
-        }
+        self.sprite = sprite
 
     def update(self, scene, dt, target):
         ...
 
-class Flyer(AiTemplate):
+class HumanoidAi(AiTemplate):
+    def __init__(self, sprite):
+        super().__init__('humanoid', sprite)
+
+    def update(self, scene, dt, target):
+        if self.sprite.rect.x < target.rect.x:
+            self.sprite.velocity[0] += (self.sprite.movement_info['per_frame_movespeed']) if self.sprite.velocity[0] < self.sprite.movement_info['max_movespeed'] else 0
+        
+        if self.sprite.rect.x > target.rect.x:
+           self.sprite.velocity[0] -= (self.sprite.movement_info['per_frame_movespeed']) if self.sprite.velocity[0] > -(self.sprite.movement_info['max_movespeed']) else 0
+
+        if get_distance(self.sprite, target) < 200:
+            if self.sprite.rect.y - target.rect.y > self.sprite.movement_info['jump_power'] * 3:
+                if self.sprite.movement_info['jumps'] > 0 and self.sprite.cooldowns['jump'] <= 0:
+                    self.sprite.cooldowns['jump'] = self.sprite.cooldown_timers['jump']
+                    self.sprite.movement_info['jumps'] -= 1
+                    self.sprite.velocity[1] = -(self.sprite.movement_info['jump_power'])
+
+class FlyerAi(AiTemplate):
     def __init__(self, sprite):
         super().__init__('flyer', sprite)
 
-        self.ai_config['aggro_distance'] =  2000
-        self.ai_config['is_aggro'] = False
-        self.ai_config['can_collide'] = False
-
     def update(self, scene, dt, target):
-        distance = get_distance(self.sprite, target)
-        if distance <= self.ai_config['aggro_distance'] and not self.ai_config['is_aggro']:
-            self.ai_config['is_aggro'] = True
-            
-        elif distance > self.ai_config['aggro_distance'] and self.ai_config['is_aggro']:
-            self.ai_config['is_aggro'] = False
-
         destination = target.center_position
         max_ms = self.sprite.movement_info['max_movespeed']
         ms = self.sprite.movement_info['per_frame_movespeed']
-
-        if not self.ai_config['is_aggro']:
-            if self.sprite.velocity[0] != 0:
-                if self.sprite.velocity[0] > 0:
-                    self.sprite.velocity[0] -= ms
-
-                elif self.sprite.velocity[0] < 0:
-                    self.sprite.velocity[0] += ms
-                
-                if abs(self.sprite.velocity[0]) <= max_ms:
-                    self.sprite.velocity[0] = 0
-
-            if self.sprite.velocity[1] != 0:
-                if self.sprite.velocity[1] > 0:
-                    self.sprite.velocity[1] -= ms
-
-                elif self.sprite.velocity[1] < 0:
-                    self.sprite.velocity[1] += ms
-
-                if abs(self.sprite.velocity[1]) <= max_ms:
-                    self.sprite.velocity[1] = 0
-
-            return
 
         if self.sprite.rect.x < destination[0]:
             self.sprite.velocity[0] += ms if self.sprite.velocity[0] < max_ms else 0
@@ -101,5 +78,49 @@ class Flyer(AiTemplate):
             else:
                 self.sprite.velocity[0] += (self.sprite.movement_info['friction'])
 
-        self.sprite.rect.x += round(self.sprite.velocity[0] * dt)
-        self.sprite.rect.y += round(self.sprite.velocity[1] * dt)
+class FloaterAi(AiTemplate):
+    def __init__(self, sprite):
+        super().__init__('floater', sprite)
+
+    def update(self, scene, dt, target):
+        destination = target.center_position
+
+        max_ms = self.sprite.movement_info['max_movespeed']
+        ms = self.sprite.movement_info['per_frame_movespeed']
+
+        jp = self.sprite.movement_info['jump_power']
+
+        if self.sprite.rect.x < destination[0]:
+            self.sprite.velocity[0] += ms if self.sprite.velocity[0] < max_ms else 0
+        elif self.sprite.rect.x > destination[0]:
+            self.sprite.velocity[0] -= ms if self.sprite.velocity[0] > -max_ms else 0
+
+        self.sprite.velocity[0] = round(self.sprite.velocity[0], 1)
+        
+        pos_a = [
+            self.sprite.rect.centerx,
+            self.sprite.rect.bottom + self.sprite.image.get_height()
+        ]
+
+        pos_b = [
+            self.sprite.rect.centerx,
+            self.sprite.rect.top - self.sprite.image.get_height()
+        ]
+
+        tiles = [s for s in scene.sprites if s.sprite_id == 'tile']
+
+        if check_line_collision(self.sprite.rect.center, pos_a, tiles) or check_line_collision(self.sprite.rect.center, pos_b, tiles):
+            self.sprite.velocity[1] -= jp if self.sprite.velocity[1] > -max_ms else 0
+
+        if self.sprite.velocity[0] > self.sprite.movement_info['max_movespeed']:
+            if (abs(self.sprite.velocity[0]) - self.sprite.movement_info['max_movespeed']) < self.sprite.movement_info['friction']:
+                self.sprite.velocity[0] -= (abs(self.sprite.velocity[0]) - self.sprite.movement_info['max_movespeed'])
+            else:
+                self.sprite.velocity[0] -= (self.sprite.movement_info['friction'])
+
+        elif self.sprite.velocity[0] < -(self.sprite.movement_info['max_movespeed']):
+            if (abs(self.sprite.velocity[0]) - self.sprite.movement_info['max_movespeed']) < self.sprite.movement_info['friction']:
+                self.sprite.velocity[0] += (abs(self.sprite.velocity[0]) - self.sprite.movement_info['max_movespeed'])
+
+            else:
+                self.sprite.velocity[0] += (self.sprite.movement_info['friction'])

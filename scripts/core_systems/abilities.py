@@ -2,7 +2,7 @@
 File that holds Ability baseclass as well as ability subclasses.
 '''
 
-from scripts.constants import PLAYER_COLOR, SCREEN_DIMENSIONS
+from scripts.constants import PLAYER_COLOR
 from scripts.engine import check_line_collision, check_pixel_collision, get_distance
 
 from scripts.entities.particle_fx import Circle
@@ -128,6 +128,9 @@ class Dash(Ability):
     def call(self, scene, keybind=None):
         if self.ability_info['cooldown'] > 0:
             return
+        
+        if any(list(self.character.overrides.values())):
+            return
 
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         super().call(scene, keybind)
@@ -187,6 +190,7 @@ class PrimaryAttack(Ability):
         )
         
         self.character.on_attack(scene, info)
+        call_talents(scene, self.character, {f'on_{self.ABILITY_ID}_attack': info})
 
         pos = enemy.center_position
         for _ in range(8):
@@ -212,6 +216,9 @@ class PrimaryAttack(Ability):
 
     def call(self, scene, keybind=None): 
         if self.ability_info['cooldown'] > 0:
+            return
+        
+        if any(list(self.character.overrides.values())):
             return
         
         self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
@@ -438,8 +445,8 @@ class RainOfArrows(Ability):
         }
 
         self.ability_info['projectile_info'] = {
-            'collision': 'pixel',
-            'collision_exclude': ['particle', 'projectile'],
+            'collision': 'rect',
+            'collision_exclude': ['particle', 'projectile', 'tile'],
             'collision_function': {
                 'enemy': self.collision_enemy
             },
@@ -449,7 +456,7 @@ class RainOfArrows(Ability):
 
     def collision_enemy(self, scene, projectile, sprite):
         damage = self.character.combat_info['base_damage'] * self.ability_info['damage_percentage']
-        info = register_damage(scene, self.character, sprite, {'type': 'physical', 'amount': damage})
+        info = register_damage(scene, self.character, sprite, {'type': 'physical', 'amount': damage, 'velocity': None})
     
         self.character.on_attack(scene, info)
 
@@ -458,6 +465,9 @@ class RainOfArrows(Ability):
             return
 
         if self.ability_info['cooldown'] > 0:
+            return
+
+        if any(list(self.character.overrides.values())):
             return
 
         super().call(scene, keybind)
@@ -551,6 +561,9 @@ class EvasiveShroud(Ability):
         if self.ability_info['cooldown'] > 0:
             return
         
+        if any(list(self.character.overrides.values())):
+            return
+
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['active'] = True
         

@@ -16,6 +16,11 @@ class GameEntity(Entity):
     Variables:
         GRAVITY: the amount applied to the current gravity each frame.
         MAX_GRAVITY: the maximum gravity that can be applied.
+        
+        overrides: dictonary of the different override scenarios.
+
+        cooldown_timers: base timers for player actions.
+        cooldowns: ongoing cooldowns for player actions.
 
         gravity_info: information on the current values of the entity.
         state_info: information on the current state of the entity.
@@ -38,6 +43,8 @@ class GameEntity(Entity):
 
         get_stat(): returns a value of either the combat dictionary or the movement dictionary.
         set_stat(): sets a value of either the combat dictionary or the movement dictionary.
+
+        set_frame_state(): sets the frame state of the player depending on movement.
     '''
 
     GRAVITY = 2
@@ -46,6 +53,8 @@ class GameEntity(Entity):
     def __init__(self, position, img, dimensions, strata, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
         
+        self.overrides = {}
+
         self.gravity_info = {
             'frames': 0,
             'gravity': self.GRAVITY,
@@ -56,6 +65,14 @@ class GameEntity(Entity):
             'dead': 0,
             'movement': None
         }
+
+        self.cooldown_timers = {
+            'jump': 8
+        }
+
+        self.cooldowns = {}
+        for cd in self.cooldown_timers.keys():
+            self.cooldowns[cd] = 0
 
         self.default_movement_info = {
             'direction': 0,
@@ -103,6 +120,10 @@ class GameEntity(Entity):
         callback_collision = []
 
         for collidable in collidables:
+            if collidable.secondary_sprite_id == 'barrier':
+                if self.sprite_id not in collidable.sprite_ids:
+                    continue
+
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
                     self.collision_ignore.remove(collidable)
@@ -142,6 +163,10 @@ class GameEntity(Entity):
         callback_collision = []
 
         for collidable in collidables:
+            if collidable.secondary_sprite_id == 'barrier':
+                if self.sprite_id not in collidable.sprite_ids:
+                    continue
+
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
                     self.collision_ignore.remove(collidable)
@@ -237,7 +262,30 @@ class GameEntity(Entity):
         self.movement_info['friction_frames'] = frames
         self.movement_info['friction'] = friction
 
+    def set_frame_state(self):
+        if not self.collide_points['bottom']:
+            if self.velocity[1] < 0:
+                self.state_info['movement'] = 'jump'
+                return
+
+            else:
+                self.state_info['movement'] = 'fall'
+                return
+
+        if self.velocity[0] > 0 or self.velocity[0] < 0:
+            self.state_info['movement'] = 'run'
+            return
+
+        self.state_info['movement'] = 'idle'
+
     def display(self, scene, dt):
+        for event in self.cooldowns.keys():
+            if self.cooldowns[event] < 1 * dt:
+                self.cooldowns[event] = 0
+                continue
+
+            self.cooldowns[event] -= 1 * dt
+
         if self.gravity_info['frames'] > 0:
             self.gravity_info['frames'] -= 1 * dt
 

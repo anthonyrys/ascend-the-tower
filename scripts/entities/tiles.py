@@ -118,3 +118,12 @@ class Platform(Tile):
 
     def display(self, scene, dt):
         super().display(scene, dt)
+
+class Barrier(Tile):
+    def __init__(self, position, img, dimensions, sprite_ids, strata=None):
+        super().__init__(position, img, dimensions, strata)
+        self.secondary_sprite_id = 'barrier'
+        self.sprite_ids = sprite_ids
+
+    def display(self, scene, dt):
+        super().display(scene, dt)

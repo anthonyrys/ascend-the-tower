@@ -40,7 +40,9 @@ class Scene:
         del_sorites: deletes sprites from the scene.
     '''
 
-    def __init__(self, surfaces, mouse, sprites=None):
+    def __init__(self, scene_handler, surfaces, mouse, sprites=None):
+        self.scene_handler = scene_handler
+        
         self.surfaces = surfaces
         self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
         self.mouse = mouse

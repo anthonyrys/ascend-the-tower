@@ -82,6 +82,9 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     info['amount'] = info['amount'] * (1 - mitigated_amount)
     info['amount'] = round(info['amount'])
 
+    if 'velocity' not in info:
+        info['velocity'] = primary_sprite.velocity
+
     info['dead'] = False
     if secondary_sprite.combat_info['health'] <= info['amount']:
         secondary_sprite.combat_info['health'] = 0
