@@ -99,6 +99,8 @@ class Player(GameEntity):
             'inactive': False,
             
             'ability': None,
+            'ability-passive': None,
+
             'death': False
         }
 

@@ -18,12 +18,17 @@ class AbilityFrame(Frame):
         player: the initialized player class.
         key: the player's input key for the ability.
 
+        pulse_info: information on how the image should be pulsed.
+
         cooldown_alpha: alpha value for when the ability is on cooldown.
 
         background: background surface for the ability frame.
         cooldown: cooldown surface for the ability frame.
         original_cooldown: an original copy of the cooldown surface.
         frame: the decorative frame for the ability.
+
+    Methods:
+        set_pulse(): sets the values of pulse_info.
     '''
 
     def __init__(self, player, key):
@@ -38,6 +43,12 @@ class AbilityFrame(Frame):
         self.player = player
         self.key = key
 
+        self.pulse_info = {
+            'surface': None,
+            'frames': 0,
+            'frames_max': 0 
+        }
+
         self.cooldown_alpha = 125
 
         self.background = pygame.Surface(self.image.get_size()).convert_alpha()
@@ -50,7 +61,14 @@ class AbilityFrame(Frame):
 
         self.frame = img
 
-    def display(self, position, surface):
+    def set_pulse(self, frames, color):
+        self.pulse_info['surface'] = self.image.copy()
+        self.pulse_info['surface'] = pygame.mask.from_surface(self.pulse_info['surface']).to_surface(setcolor=color, unsetcolor=(0, 0, 0))
+
+        self.pulse_info['frames'] = frames
+        self.pulse_info['frames_max'] = frames
+
+    def display(self, position, surface, dt):
         self.image.fill((0, 0, 0))
         self.rect.x, self.rect.y = position
 
@@ -67,7 +85,7 @@ class AbilityFrame(Frame):
             info['icon'] = 'default'
 
         icon = Card.ICONS['ability'][info['icon']].copy()
-        icon = pygame.transform.scale(icon, (icon.get_width() * .6, icon.get_height() * .6))
+        icon = pygame.transform.scale(icon, (icon.get_width() * .55, icon.get_height() * .55))
 
         cooldown_percentage = ability.ability_info['cooldown'] / ability.ability_info['cooldown_timer']
         self.cooldown = pygame.transform.scale(self.original_cooldown, (self.original_cooldown.get_width(), self.original_cooldown.get_height() * cooldown_percentage))
@@ -77,13 +95,21 @@ class AbilityFrame(Frame):
         self.image.blit(self.cooldown, self.cooldown.get_rect(bottom=self.image.get_rect().bottom))
         self.image.blit(self.frame, (0, 0))
 
-        if cooldown_percentage > 0 and self.image.get_alpha != self.cooldown_alpha:
+        if cooldown_percentage > 0 and self.image.get_alpha() != self.cooldown_alpha:
             self.image.set_alpha(self.cooldown_alpha)
             text.set_alpha(self.cooldown_alpha)
 
-        elif cooldown_percentage <= 0 and self.image.get_alpha != 255:
+        elif cooldown_percentage <= 0 and self.image.get_alpha() != 255:
             self.image.set_alpha(255)
             text.set_alpha(255)
+
+            self.set_pulse(20, (255, 255, 255))
+
+        if self.pulse_info['frames'] > 0:
+            self.pulse_info['surface'].set_alpha((self.pulse_info['frames'] / self.pulse_info['frames_max']) * 255)
+            
+            self.image.blit(self.pulse_info['surface'], (0, 0))
+            self.pulse_info['frames'] -= 1 * dt
 
         surface.blit(self.image, position)
         surface.blit(text, text.get_rect(center=text_pos))
@@ -127,7 +153,7 @@ class Hotbar(Frame):
 
         x = 0
         for frame in frames:
-            frame.display((x, 0), surface)
+            frame.display((x, 0), surface, dt)
             x += frame.image.get_width() + self.frame_padding
 
         self.image.blit(surface, surface.get_rect(center=self.image.get_rect().center))

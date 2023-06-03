@@ -316,6 +316,7 @@ class StatCard(Card):
         icon = None
         icon_name = None
 
+        icon_name = self.stat['name'].lower()
         if self.stat['name'].lower() not in Card.ICONS['stats']:
             icon_name = 'default'
 

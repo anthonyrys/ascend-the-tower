@@ -16,6 +16,7 @@ class Projectile(Entity):
         info: general information about the projectile.
         trail: whether or not the projectile leaves a trail.
         afterimages: whether or not the projectile will leave afterimages.
+        afterimages_frames: afterimage timer for the apply_afterimages function.
 
         duration: duration of the projectile.
         prev_positions: list of the previous positions the projectile had.
@@ -26,6 +27,7 @@ class Projectile(Entity):
     Methods:
         on_collision(): called when the projectile collides with its given sprites.
         set_alpha_tween(): sets the alpha_info values.
+        apply_afterimages(): applies afterimages of the projectile if enabled.
     '''
 
     def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], trail=False, afterimages=False):
@@ -48,6 +50,7 @@ class Projectile(Entity):
         self.info = info
         self.trail = trail
         self.afterimages = afterimages
+        self.afterimage_frames = [0, 1]
 
         self.duration = 0
         self.prev_positions = []
@@ -80,6 +83,22 @@ class Projectile(Entity):
         self.alpha_info['alpha'] = alpha
         self.alpha_info['base_alpha'] = self.image.get_alpha()
 
+    def apply_afterimages(self, scene, dt):
+        self.afterimage_frames[0] += 1 * dt
+        if self.afterimage_frames[0] < self.afterimage_frames[1]:
+            return
+        
+        self.afterimage_frames[0] = 0
+        
+        img = Image(
+            self.center_position,
+            self.image.copy(), self.strata - 1, 50
+        )
+        
+        img.set_goal(5, alpha=0, dimensions=self.image.get_size())
+
+        scene.add_sprites(img)
+
     def display(self, scene, dt):
         if self.alpha_info['frames'] < self.alpha_info['max_frames']:
             abs_prog = self.alpha_info['frames'] / self.alpha_info['max_frames']
@@ -87,6 +106,9 @@ class Projectile(Entity):
 
             self.image.set_alpha(alpha)
             self.alpha_info['frames'] += 1 * dt
+
+        if self.afterimages:
+            self.apply_afterimages(scene, dt)
 
         super().display(scene, dt)
 

@@ -80,7 +80,7 @@ class Enemy(GameEntity):
 
         pos = self.center_position
         particles = []
-        for color in get_sprite_colors(self):
+        for color in get_sprite_colors(self, .5):
             radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .125)
 
             cir = Circle(pos, color, radius, 0)
@@ -120,7 +120,7 @@ class Enemy(GameEntity):
             pos = self.center_position
             particles = []
 
-            for color in get_sprite_colors(self):
+            for color in get_sprite_colors(self, .75):
                 radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .15)
 
                 cir = Circle(pos, color, radius, 0)
@@ -544,8 +544,7 @@ class Floater(FloaterEnemy):
                 self.character.rect.center, ENEMY_COLOR, 10, self.character.strata + 1,
                 proj_info,
                 velocity=proj_velocity, 
-                trail=True, 
-                afterimages=True
+                trail=True
             )
 
             particles = []

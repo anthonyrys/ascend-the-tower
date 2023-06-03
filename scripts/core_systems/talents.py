@@ -8,7 +8,7 @@ from scripts.engine import get_distance
 from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
 
-from scripts.entities.particle_fx import Image
+from scripts.entities.particle_fx import Image, Circle
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
@@ -16,7 +16,6 @@ from scripts.ui.text_box import TextBox
 import pygame
 import inspect
 import random
-import math
 import sys
 
 def get_all_talents():
@@ -216,11 +215,10 @@ class ComboStar(Talent):
 
 class FloatLikeAButterfly(Talent):
 	TALENT_ID = 'float_like_a_butterfly'
-	TALENT_CALLS = ['on_@dash']
 
 	DESCRIPTION = {
 		'name': 'Float Like A Butterfly',
-		'description': 'Gain an empowered dash.'
+		'description': 'Gain an additional jump.'
 	}
 
 	@staticmethod
@@ -231,23 +229,26 @@ class FloatLikeAButterfly(Talent):
 			'icon': 'float-like-a-butterfly',
 			'symbols': [
 				Card.SYMBOLS['type']['talent'],
-				Card.SYMBOLS['action']['speed'],
-				Card.SYMBOLS['talent']['ability']
+				Card.SYMBOLS['action']['other'],
+				Card.SYMBOLS['talent']['passive']
 			]
 		}
 
 		return card_info
 	
-	def call(self, call, scene, info):
-		super().call(call, scene, info)
-		self.player.set_friction(30, .5)
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		jump_buff = Buff(self.player, self.TALENT_ID, 'max_jumps', 1, None)
+		self.player.buffs.append(jump_buff)
 
 class StingLikeABee(Talent):
 	TALENT_ID = 'sting_like_a_bee'
+	TALENT_CALLS = ['on_player_kill']
 
 	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Gain additional critical strike chance when you have a speed boost.'
+		'description': 'Defeating an enemy resets your jumps.'
 	}
 
 	@staticmethod
@@ -258,8 +259,8 @@ class StingLikeABee(Talent):
 			'icon': 'sting-like-a-bee',
 			'symbols': [
 				Card.SYMBOLS['type']['talent'],
-				Card.SYMBOLS['action']['damage'],
-				Card.SYMBOLS['talent']['other']
+				Card.SYMBOLS['action']['cooldown'],
+				Card.SYMBOLS['talent']['attack/kill']
 			]
 		}
 
@@ -267,9 +268,6 @@ class StingLikeABee(Talent):
 
 	@staticmethod
 	def check_draw_condition(player):
-		if get_talent(player, 'temperance'):
-			return False
-		
 		if get_talent(player, 'float_like_a_butterfly'):
 			return True
 		
@@ -278,23 +276,14 @@ class StingLikeABee(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['crit_chance_increase'] = .35
-		self.talent_info['buff_signature'] = 'sting_like_a_bee'
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
 
-	def update(self, scene, dt):
-		current_buff = get_buff(self.player, self.talent_info['buff_signature'])
-		speed_boost = abs(self.player.velocity[0]) > self.player.movement_info['max_movespeed']
-		
-		if not speed_boost and current_buff:
-			current_buff.end()
-
-		if speed_boost and not current_buff:
-			buff = Buff(self.player, self.talent_info['buff_signature'], 'crit_strike_chance', self.talent_info['crit_chance_increase'], None)
-			self.player.buffs.append(buff)
+		self.player.set_stat('jumps', self.player.get_stat('max_jumps'), False)
 
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
-	TALENT_CALLS = ['on_@primary']
+	TALENT_CALLS = ['on_@primary_collide']
 
 	DESCRIPTION = {
 		'name': 'Marksman',
@@ -319,12 +308,12 @@ class Marksman(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['min_distance'] = 500
-		self.talent_info['per_damage_distance_ratio'] = [.05, 100]
+		self.talent_info['min_distance'] = 300
+		self.talent_info['per_damage_distance_ratio'] = [.1, 75]
 		self.talent_info['max_distance'] = False
 
 	def call(self, call, scene, info):
-		distance = get_distance(self.player.center_position, info.destination)
+		distance = get_distance(info.start, self.player.center_position)
 		if distance < self.talent_info['min_distance']:
 			return
 		
@@ -366,10 +355,6 @@ class Temperance(Talent):
 		}
 
 		return card_info
-	
-	@staticmethod
-	def check_draw_condition(player):
-		return True
 
 class WheelOfFortune(Talent):
 	TALENT_ID = 'wheel_of_fortune'
@@ -393,10 +378,6 @@ class WheelOfFortune(Talent):
 		}
 
 		return card_info
-	
-	@staticmethod
-	def check_draw_condition(player):
-		return True
 
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
@@ -509,7 +490,7 @@ class Holdfast(Talent):
 
 	DESCRIPTION = {
 		'name': 'Holdfast',
-		'description': 'Taking damage will apply a resistance towards that type of damage for a short time.'
+		'description': 'Taking damage will temporarily apply a resistance towards that type of damage.'
 	}
 
 	@staticmethod
@@ -530,7 +511,7 @@ class Holdfast(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['mitigation_amount'] = .2
+		self.talent_info['mitigation_amount'] = .5
 		self.talent_info['mitigation_time'] = 60
 	
 	def call(self, call, scene, info):
@@ -588,7 +569,7 @@ class ChainReaction(Talent):
 
 	DESCRIPTION = {
 		'name': 'Chain Reaction',
-		'description': 'Your primary attack now chain up to 3 times around your target.'
+		'description': 'Your primary attack will chain up to 3 times around your target.'
 	}
 
 	@staticmethod
@@ -732,3 +713,124 @@ class Ignition(Talent):
 		damage = self.player.combat_info['base_damage'] * self.talent_info['damage_percentage']
 		debuff = OnFire(self.player, info['target'], self.talent_info['signature'], damage, self.talent_info['duration'])
 		info['target'].debuffs.append(debuff)
+
+class RunItBack(Talent):
+	TALENT_ID = 'run_it_back'
+	TALENT_CALLS = ['on_ability']
+
+	DESCRIPTION = {
+		'name': 'Run It Back',
+		'description': 'Using an ability has a chance equal to your critcal strike to reset its cooldown.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'run-it-back',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['cooldown'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'temperance'):
+			return False
+
+		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID[0] != '@']:
+			return True
+
+		return False
+
+	def call(self, call, scene, info):
+		if info.ABILITY_ID[0] == '@':
+			return
+
+		if self.player.combat_info['crit_strike_chance'] <= 0 or round(random.uniform(0, 1), 2) > self.player.combat_info['crit_strike_chance']:
+			return
+
+		super().call(call, scene, info)
+		
+		info.ability_info['cooldown'] = 1
+
+class EvasiveManeuvers(Talent):
+	TALENT_ID = 'evasive_maneuvers'
+	TALENT_CALLS = ['on_evasive_shroud_end']
+
+	DESCRIPTION = {
+		'name': 'Evasive Maneuvers',
+		'description': 'Gain a temporary damage resistance after evasive shroud has ended.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'evasive-maneuvers',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['resistance/immunity'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+	
+	@staticmethod
+	def check_draw_condition(player):
+		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID == 'evasive_shroud']:
+			return True
+		
+		return False
+		
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['mitigation_time'] = 60
+		self.talent_info['mitigation_amount'] = .25
+
+		self.talent_info['particle_timer'] = [0, 15]
+
+	def update(self, scene, dt):
+		super().update(scene, dt)
+
+		if self.TALENT_ID not in self.player.combat_info['mitigations']['all']:
+			return
+		
+		self.talent_info['particle_timer'][0] += 1 * dt
+
+		if self.talent_info['particle_timer'][0] < self.talent_info['particle_timer'][1]:
+			return
+		
+		self.talent_info['particle_timer'][0] = 0
+
+		pos = self.player.center_position
+
+		particles = []
+		for _ in range(2):
+			cir = Circle(pos, (255, 255, 255), 6, 0)
+			cir.set_goal(
+						60, 
+						position=(pos[0] + random.randint(-25, 25), pos[1] + random.randint(-100, -25)), 
+						radius=0, 
+						width=0
+					)
+
+			particles.append(cir)
+
+		scene.add_sprites(particles)
+
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+		
+		self.player.combat_info['mitigations']['all'][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]

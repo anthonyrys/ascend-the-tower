@@ -95,62 +95,97 @@ v0.2.1
     - Fixed an issue where cards would not properly delete once offscreen
 
 v0.3.0
-- Updated .gitattributes and .gitignore files
+    - Updated .gitattributes and .gitignore files
 
-- Added fullscreen key to settings.json
+    - Added fullscreen key to settings.json
 
-- Added WaveHandler class
-    ^ Handles enemy spawning calculations via waves and levels
-    ^ Cards are now awarded once a wave is completed
+    - Added WaveHandler class
+        ^ Handles enemy spawning calculations via waves and levels
+        ^ Cards are now awarded once a wave is completed
 
-- Added an override check for the Ability call function
-    ^ Prevents entities to call abilities when they are being overridden
+    - Added an override check for the Ability call function
+        ^ Prevents entities to call abilities when they are being overridden
 
-- Changed Rain of Arrows ability projectile collision_ignore to now ignore tiles
-- Changed Rain of Arrows ability projectile collision type to rect from pixel
-    ^ Both changes are intended to make the arrows more consistent
+    - Changed Rain of Arrows ability projectile collision_ignore to now ignore tiles
+    - Changed Rain of Arrows ability projectile collision type to rect from pixel
+        ^ Both changes are intended to make the arrows more consistent
 
-- Changed Chain Reaction and Vampirism talents to on_@primary_attack from on_player_attack call
-- Changed Chain Reaction talent to now call on_player_attack talents
+    - Changed Chain Reaction and Vampirism talents to on_@primary_attack from on_player_attack call
+    - Changed Chain Reaction talent to now call on_player_attack talents
 
-- Added HumanoidAi, FlyerAi and FloaterAi classes
+    - Added HumanoidAi, FlyerAi and FloaterAi classes
 
-- Removed AiTemplate ai_config variable
+    - Removed AiTemplate ai_config variable
 
-- Reworked Enemy set_stats function to scale stats differently
-- Renamed Enemy health_ui variable to healthbar
+    - Reworked Enemy set_stats function to scale stats differently
+    - Renamed Enemy health_ui variable to healthbar
 
-- Added HumanoidEnemy, FlyerEnemy, and FloaterEnemy classes
-- Added Humanoid, Flyer and Floater enemy classes
+    - Added HumanoidEnemy, FlyerEnemy, and FloaterEnemy classes
+    - Added Humanoid, Flyer and Floater enemy classes
 
-- Removed Enemy variants
-- Removed Stelemental enemy class
-    ^ Added methods used in the Stelemental class to the base Enemy class
+    - Removed Enemy variants
+    - Removed Stelemental enemy class
+        ^ Added methods used in the Stelemental class to the base Enemy class
 
-- Added overrides, cooldown_timers, and cooldowns variable to GameEntity class
-- Added set_frame_state function to GameEntity class
+    - Added overrides, cooldown_timers, and cooldowns variable to GameEntity class
+    - Added set_frame_state function to GameEntity class
 
-- Added Player death and respawning
-    ^ Currently, dying restarts the GameLoop class
-- Added get_ui_elements function to Player class
+    - Added Player death and respawning
+        ^ Currently, dying restarts the GameLoop class
+    - Added get_ui_elements function to Player class
 
-- Fixed an issue where player knockback would scale with max_movespeed and jump_power
-- Fixed an issue where player afterimages were not affected by delta time
+    - Fixed an issue where player knockback would scale with max_movespeed and jump_power
+    - Fixed an issue where player afterimages were not affected by delta time
 
-- Fixed an issue where ProjectileStandard class would not properly collide with Floor tiles
+    - Fixed an issue where ProjectileStandard class would not properly collide with Floor tiles
 
-- Added Barrier class
-    ^ Replaces Block class for GameLoop barrier_x
-    ^ GameEntity, Player, and Enemy classes now consider Barrier class for collisions
+    - Added Barrier class
+        ^ Replaces Block class for GameLoop barrier_x
+        ^ GameEntity, Player, and Enemy classes now consider Barrier class for collisions
 
-- Added GameLoop Scene class
-    ^ SceneHandler class now initializes the GameLoop scene instead of Sandbox scene
+    - Added GameLoop Scene class
+        ^ SceneHandler class now initializes the GameLoop scene instead of Sandbox scene
 
-- Added on_enemy_spawn, on_enemy_death, and on_player_death to Sandbox class
+    - Added on_enemy_spawn, on_enemy_death, and on_player_death to Sandbox class
 
-- Added scene_handler argument to Scene __init__ function
+    - Added scene_handler argument to Scene __init__ function
 
-- Changed Mouse class to blit on base screen instead of Scene ui_surface
+    - Changed Mouse class to blit on base screen instead of Scene ui_surface
 
-- Added Humanoid, Flyer, and Floater Enemy image files
-- Removed Stelemental Enemy image files
+    - Added Humanoid, Flyer, and Floater Enemy image files
+    - Removed Stelemental Enemy image files
+
+v0.3.1
+- Added Vitality, Potency, Agility, and Dexterity stat card icons
+- Added Chain Reaction, Combo Star, Recuperation, Temperance, and Wheel of Fortune talent card icons
+
+- Changed Vampirism talent card icon
+
+- Added ability: Holy Javelin
+
+- Fixed an issue where Rain of Arrows would collide with the player
+
+- Added 2 talents: Run It Back and Evasive Maneuvers
+
+- Reworked Float Like A Butterfly to now grant an additional jump
+- Reworked Sting Like A Bee to now reset player jumps upon defeating an enemy
+
+- Increased Holdfast mitigation_amount to .5 from .2
+- Increased Marksman per_damage_distance_ratio to .1 every 75 pixels from .05 every 100 pixels
+- Reduced Marksman min_distance to 300 from 500 pixels
+
+- Fixed an issue where Marksman talent would incorrectly calculate damage multipliers
+
+- Added ability-passive key to player overrides
+    ^ Ensures ability animations are able to be played without being overlapped
+
+- Added apply_afterimages function to base Projectile class
+
+- Fixed an issue where GameEntity apply_gravity would not apply the correct velocity at or below .5 dt
+
+- Reworked Sandbox scene class to function similarly to the GameLoop scene class
+
+- Fixed an issue where stat cards would not properly retrieve the correct icons
+
+- Added AbilityFrame image pulse
+    ^ Triggers once the cooldown of the ability is up

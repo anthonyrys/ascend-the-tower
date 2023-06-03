@@ -212,16 +212,15 @@ class GameEntity(Entity):
     def apply_gravity(self, dt, multiplier=1.0):
         grav = self.gravity_info['gravity']
         max_grav = self.gravity_info['max_gravity']
+        
+        if dt == 0:
+            self.velocity[1] = 0
 
-        if not self.collide_points['bottom']:
+        elif dt <= .5 and self.collide_points['bottom']:
+            self.velocity[1] += (grav / dt) * multiplier
+
+        else: 
             self.velocity[1] += (grav * dt if self.velocity[1] < max_grav * dt else 0) * multiplier
-
-        else:
-            if dt == 0:
-                self.velocity[1] = 0
-
-            else:
-                self.velocity[1] = (grav / dt) * multiplier
 
     def get_stat(self, stat):
         if stat in self.combat_info:
