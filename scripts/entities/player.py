@@ -3,7 +3,7 @@ Holds the player class.
 '''
 
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
-from scripts.engine import Inputs
+from scripts.engine import Inputs, Entity
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
@@ -55,16 +55,17 @@ class Player(GameEntity):
         set_images(): sets the player images.
     '''
 
-    class Halo(GameEntity):
+    class Halo(Entity):
         '''
         Cosmetic object for the player.
         '''
-        def __init__(self, position, img, strata):
+        def __init__(self, strata):
+            img = pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha()
             img_scale = 1.5
             img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
-            img.set_colorkey((0, 0, 0, 0))
+            img.set_colorkey((0, 0, 0))
 
-            super().__init__(position, img, None, strata)
+            super().__init__((0, 0), img, None, strata)
 
             self.glow['active'] = True
             self.glow['size'] = 1.2
@@ -76,10 +77,9 @@ class Player(GameEntity):
             self.sin_count = 0
 
         def display(self, player, scene, dt):
-            self.rect.x = player.rect.x
-            self.rect.y = player.rect.y
+            self.rect.centerx = player.rect.centerx
+            self.rect.centery = player.rect.top - 5 - round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
             
-            self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count)))) + (self.image.get_height() * .65)
             self.sin_count += 1 * dt
 
             super().display(scene, dt)
@@ -88,7 +88,7 @@ class Player(GameEntity):
         super().__init__(position, pygame.Surface((24, 48)).convert_alpha(), None, strata)
         self.sprite_id = 'player'
 
-        self.halo = self.Halo(position, pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha(), self.strata)
+        self.visuals.append(self.Halo(self.strata))
 
         self.rect_offset = [self.rect.width / 2, 0]
 
@@ -413,7 +413,7 @@ class Player(GameEntity):
                             
                 self.velocity[1] = 0
 
-    def apply_afterimages(self, scene, dt, halo=True):
+    def apply_afterimages(self, scene, dt, visuals=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:
             return
         
@@ -430,16 +430,23 @@ class Player(GameEntity):
         
         afterimage_plr.set_goal(5, alpha=0, dimensions=self.image.get_size())
 
-        afterimage_halo = None
-        if halo:
-            afterimage_halo = Image(
-                (self.rect.centerx - self.halo.rect_offset[0], self.rect.centery - self.halo.rect_offset[1] * 1.8),
-                self.halo.image.copy(), self.strata - 1, 50
-            )
+        afterimage_visuals = []
+        if visuals:
+            for visual in self.visuals:
+                afterimage = Image(
+                    (
+                        visual.center_position[0] + self.velocity[0], 
+                        visual.center_position[1] + self.velocity[1]
+                    ),
+                    visual.image.copy(), visual.strata - 1, 50
+                )
+                
+                afterimage.set_goal(5, alpha=0, dimensions=visual.image.get_size())
 
-            afterimage_halo.set_goal(5, alpha=0, dimensions=self.halo.image.get_size())
+                afterimage_visuals.append(afterimage)
 
-        scene.add_sprites(afterimage_plr, afterimage_halo)
+        scene.add_sprites(afterimage_plr)
+        scene.add_sprites(afterimage_visuals)
 
     def set_images(self, scene, dt): 
         img = None
@@ -520,11 +527,12 @@ class Player(GameEntity):
             self.rect.y += round(self.velocity[1] * dt)
             self.apply_collision_y(scene, dt)
 
-            self.apply_afterimages(scene, dt)
-
             self.set_frame_state()
-            
-        self.halo.display(self, scene, dt)
+        
+        for visual in self.visuals:
+            visual.display(self, scene, dt)
+
+        self.apply_afterimages(scene, dt)
         self.set_images(scene, dt)
             
         for talent in self.talents:

@@ -315,24 +315,28 @@ class Entity(pygame.sprite.Sprite):
         if self.glow['active']:
             image = pygame.transform.scale(self.image, (self.image.get_width() * self.glow['size'], self.image.get_height() * self.glow['size']))
             image.set_alpha(self.image.get_alpha() * self.glow['intensity'])
-            
-            offset = [(image.get_width() - self.image.get_width()) / 2, (image.get_height() - self.image.get_height()) / 2]
+
+            rect = image.get_bounding_rect()
+            rect.center = [
+                self.rect.centerx - self.rect_offset[0],
+                self.rect.centery - self.rect_offset[1]
+            ]
 
             scene.entity_surface.blit(
                 image, 
-                (self.rect.x - self.rect_offset[0] - offset[0], self.rect.y - self.rect_offset[1] - offset[0], 0, 0),
+                rect
             )
 
         if self.uses_ui_surface:
             scene.ui_surface.blit(
                 self.image, 
-                (self.rect.x + self.rect_offset[0], self.rect.y + self.rect_offset[1], 0, 0),
+                (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]),
             )
             
         else:
             scene.entity_surface.blit(
                 self.image, 
-                (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1], 0, 0),
+                (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]),
             )
 
 class Frame(pygame.sprite.Sprite):
@@ -392,13 +396,13 @@ class Frame(pygame.sprite.Sprite):
         if self.uses_entity_surface:
             scene.entity_surface.blit(
                 self.image, 
-                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
+                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1]),
             )
             
         else:
             scene.ui_surface.blit(
                 self.image, 
-                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1], 0, 0),
+                (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1]),
             )
 
     def on_hover_start(self, scene):

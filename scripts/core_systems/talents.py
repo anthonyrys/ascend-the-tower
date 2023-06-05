@@ -3,7 +3,7 @@ File that holds Talent baseclass as well as talent subclasses.
 '''
 
 from scripts.constants import HEAL_COLOR, PLAYER_COLOR
-from scripts.engine import get_distance
+from scripts.engine import get_distance, Entity
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
@@ -17,6 +17,8 @@ import pygame
 import inspect
 import random
 import sys
+import math
+import os
 
 def get_all_talents():
 	talent_list = []
@@ -91,10 +93,6 @@ class Talent:
             'cooldown_timer': 0,
             'cooldown': 0
 		}
-
-		if self.DRAW_SPECIAL:
-			if self.DRAW_SPECIAL[0] == 'tarot card':
-				self.player.talent_info['has_tarot_card'] = True
 		
 	@staticmethod
 	def fetch():
@@ -150,6 +148,9 @@ class Vampirism(Talent):
 		super().__init__(scene, player)
 
 		self.talent_info['heal_amount'] = 0.1
+
+		if self.player.abilities['primary']:
+			self.player.abilities['primary'].ability_info['color'] = (255, 125, 125)
 
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
@@ -323,6 +324,33 @@ class Marksman(Talent):
 		info.ability_info['damage'] *= round(distance * self.talent_info['per_damage_distance_ratio'][0], 2) + 1
 
 class Temperance(Talent):
+	class TemperanceHalo(Entity):
+		def __init__(self, strata):
+			img = pygame.image.load(os.path.join('imgs', 'entities', 'visuals', 'temperance.png')).convert_alpha()
+			img_scale = 1.5
+
+			img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
+			img.set_colorkey((0, 0, 0))
+
+			super().__init__((0, 0), img, None, strata)
+
+			self.glow['active'] = True
+			self.glow['size'] = 1.2
+			self.glow['intensity'] = .4
+
+			self.sin_amplifier = 1
+			self.sin_frequency = .05
+
+			self.sin_count = 0
+
+		def display(self, player, scene, dt):
+			self.rect.centerx = player.rect.centerx
+			self.rect.centery = player.rect.top - 17 - round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
+			
+			self.sin_count += 1 * dt
+
+			super().display(scene, dt)
+
 	TALENT_ID = 'temperance'
 
 	DESCRIPTION = {
@@ -333,13 +361,15 @@ class Temperance(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['damage_multiplier'] = 0.25
+		self.talent_info['damage_multiplier'] = 0.75
 
 		damage_buff = Buff(self.player, 'temperance', 'damage_multiplier', self.talent_info['damage_multiplier'], None)
 		crit_chance_debuff = Debuff(self.player, 'temperance', 'crit_strike_chance', -100, None)
 
 		self.player.buffs.append(damage_buff)
 		self.player.debuffs.append(crit_chance_debuff)
+
+		self.player.visuals.append(self.TemperanceHalo(self.player.strata))
 		
 	@staticmethod
 	def fetch():
@@ -383,11 +413,11 @@ class WheelOfFortune(Talent):
 		super().__init__(scene, player)
 
 		self.talent_info['stats'] = {
-			'max_health': 20,
-			'base_damage': 5,
-			'crit_strike_chance': .15,
+			'max_health': .2,
+			'base_damage': .2,
+			'crit_strike_chance': .5,
 			'crit_strike_multiplier': .5,
-			'max_movespeed': 3
+			'max_movespeed': .25
 		}
 
 		self.talent_info['names'] = {
@@ -424,9 +454,16 @@ class WheelOfFortune(Talent):
 		
 		self.talent_info['cooldown'] = self.talent_info['cooldown_timer']
 
+		has_temperance = get_talent(self.player, 'temperance')
+
 		stat = random.choice(list(self.talent_info['stats'].keys()))
+
 		while stat == self.talent_info['current_stat']:
 			stat = random.choice(list(self.talent_info['stats'].keys()))
+
+		if has_temperance:
+			while stat in ['crit_strike_chance', 'crit_strike_multiplier']:
+				stat = random.choice(list(self.talent_info['stats'].keys()))
 
 		health_proportion = self.player.get_stat('health') / self.player.get_stat('max_health')
 
@@ -434,7 +471,11 @@ class WheelOfFortune(Talent):
 		if current_buff:
 			current_buff.end()
 
-		buff = Buff(self.player, self.talent_info['buff_signature'], stat, self.talent_info['stats'][stat], None)
+		val = self.player.get_stat(stat) * self.talent_info['stats'][stat]
+		val = round(val) if stat not in ['crit_strike_multiplier', 'crit_strike_chance'] else round(val, 2)
+
+		buff = Buff(self.player, self.talent_info['buff_signature'], stat, val, None)
+
 		self.player.buffs.append(buff)
 		self.player.set_stat('health', round(self.player.get_stat('max_health') * health_proportion))
 
@@ -525,7 +566,7 @@ class GuardianAngel(Talent):
 
 	DESCRIPTION = {
 		'name': 'Guardian Angel',
-		'description': 'Upon taking fatal damage you heal a portion of your max health. Can only occur 3 times.'
+		'description': 'Upon taking fatal damage you heal a portion of your max health. Can only occur once.'
 	}
 
 	@staticmethod
@@ -546,7 +587,7 @@ class GuardianAngel(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['charges'] = 3
+		self.talent_info['charges'] = 1
 	
 	def call(self, call, scene, info):
 		if self.talent_info['charges'] <= 0:

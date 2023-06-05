@@ -116,6 +116,8 @@ class GameEntity(Entity):
         self.buffs = []
         self.debuffs = []
 
+        self.visuals = []
+
     def apply_collision_x_default(self, collidables):
         callback_collision = []
 

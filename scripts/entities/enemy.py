@@ -303,7 +303,7 @@ class Humanoid(HumanoidEnemy):
             'level': level,
 
             'max_health_scaling': .45,
-            'base_damage_scaling': .2,
+            'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }
@@ -421,7 +421,7 @@ class Flyer(FlyerEnemy):
             'damage_multiplier': 1.0,
             'healing_multiplier': 1.0,
 
-            'base_damage': 25,
+            'base_damage': 20,
             'crit_strike_chance': 0,
             'crit_strike_multiplier': 0,
 
@@ -437,7 +437,7 @@ class Flyer(FlyerEnemy):
             'level': level,
 
             'max_health_scaling': .35,
-            'base_damage_scaling': .25,
+            'base_damage_scaling': .15,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }
@@ -487,7 +487,7 @@ class Floater(FloaterEnemy):
         def __init__(self, character):
             super().__init__(character)
         
-            self.ability_info['damage_multiplier'] = 1.25
+            self.ability_info['damage_multiplier'] = 1.2
             self.ability_info['speed'] = 15
 
         def collision_default(self, scene, projectile, sprite):
@@ -616,7 +616,7 @@ class Floater(FloaterEnemy):
             'level': level,
 
             'max_health_scaling': .35,
-            'base_damage_scaling': .25,
+            'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }

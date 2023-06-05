@@ -103,7 +103,7 @@ class Ability:
 
         call_talents(scene, self.character, {'on_ability': self})
     
-    def end(self, scene):
+    def end(self):
         ...
 
     def update(self, scene, dt):
@@ -151,9 +151,6 @@ class PrimaryAttack(Ability):
         self.img_radius = 9
         self.image = pygame.Surface((self.img_radius * 2, self.img_radius * 2)).convert_alpha()
         self.image.set_colorkey((0, 0, 0))
-        pygame.draw.circle(self.image, PLAYER_COLOR, self.image.get_rect().center, self.img_radius)
-        
-        self.image = pygame.transform.scale(self.image, (self.image.get_width() * self.img_scale, self.image.get_height() * self.img_scale)).convert_alpha()
 
         self.state = 'inactive'
         self.collision_state = None
@@ -161,6 +158,8 @@ class PrimaryAttack(Ability):
         self.velocity = []
         self.start = []
         self.destination = []
+
+        self.ability_info['color'] = PLAYER_COLOR
 
         self.ability_info['cooldown_timer'] = 30
 
@@ -198,7 +197,7 @@ class PrimaryAttack(Ability):
 
         pos = enemy.center_position
         for _ in range(8):
-            cir = Circle(pos, PLAYER_COLOR, 8, 0)
+            cir = Circle(pos, self.ability_info['color'], 8, 0)
             cir.set_goal(
                         75, 
                         position=(pos[0] + random.randint(-250, 250), pos[1] + random.randint(-250, 250)), 
@@ -249,6 +248,8 @@ class PrimaryAttack(Ability):
 
         self.ability_info['duration'] = 0
         
+        self.image.fill((0, 0, 0))
+
         self.velocity = [
             (self.destination[0] - self.character.rect.centerx) / (distance / self.ability_info['speed']),
             (self.destination[1] - self.character.rect.centery) / (distance / self.ability_info['speed'])
@@ -257,6 +258,9 @@ class PrimaryAttack(Ability):
 
         self.destination[0] += self.velocity[0] * 2
         self.destination[1] += self.velocity[1] * 2
+
+        pygame.draw.circle(self.image, self.ability_info['color'], self.image.get_rect().center, self.img_radius)
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() * self.img_scale, self.image.get_height() * self.img_scale)).convert_alpha()
 
         img = pygame.Surface(self.character.image.get_size()).convert_alpha()
         img.set_colorkey((0, 0, 0))
@@ -269,7 +273,7 @@ class PrimaryAttack(Ability):
         particles = []
         pos = self.character.center_position
         for _ in range(5):
-            cir = Circle(pos, PLAYER_COLOR, 6, 0)
+            cir = Circle(pos, self.ability_info['color'], 6, 0)
             cir.set_goal(
                         50, 
                         position=(pos[0] + random.randint(-100, 100), pos[1] + random.randint(-100, 100)), 
@@ -298,7 +302,7 @@ class PrimaryAttack(Ability):
         particles = []
 
         for _ in range(8):
-            cir = Circle(pos, PLAYER_COLOR, 8, 0)
+            cir = Circle(pos, self.ability_info['color'], 8, 0)
             cir.set_goal(
                         125, 
                         position=(
@@ -358,7 +362,7 @@ class PrimaryAttack(Ability):
                 particles = []
 
                 for _ in range(8):
-                    cir = Circle(pos, PLAYER_COLOR, 8, 0)
+                    cir = Circle(pos, self.ability_info['color'], 8, 0)
                     cir.set_goal(
                                 125, 
                                 position=(
@@ -401,9 +405,7 @@ class PrimaryAttack(Ability):
                 self.character.rect.centery - (round(self.velocity[1] * dt) * (.1 * (i + 1)))
             ]
 
-            pygame.draw.circle(scene.entity_surface, PLAYER_COLOR, cir_pos, (self.img_radius - (i + 1)))
-
-        self.character.apply_afterimages(scene, False)
+            pygame.draw.circle(scene.entity_surface, self.ability_info['color'], cir_pos, (self.img_radius - (i + 1)))
 
 class RainOfArrows(Ability):
     ABILITY_ID = 'rain_of_arrows'
@@ -418,7 +420,7 @@ class RainOfArrows(Ability):
         card_info = {
 			'type': 'ability',
 			
-			'icon': None,
+			'icon': 'rain-of-arrows',
 			'symbols': [
                 Card.SYMBOLS['type']['ability'],
 				Card.SYMBOLS['action']['damage'],
@@ -432,7 +434,7 @@ class RainOfArrows(Ability):
         super().__init__(character)
 
         IMG_SCALE = 1.5
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'arrow.png'))
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'rain-of-arrows.png'))
         img.set_colorkey((0, 0, 0))
 
         self.ability_info['active'] = False
@@ -543,7 +545,7 @@ class EvasiveShroud(Ability):
         card_info = {
 			'type': 'ability',
 			
-			'icon': None,
+			'icon': 'evasive-shroud',
 			'symbols': [
                 Card.SYMBOLS['type']['ability'],
 				Card.SYMBOLS['action']['resistance/immunity'],
@@ -562,6 +564,16 @@ class EvasiveShroud(Ability):
         self.ability_info['frames'] = 0
         self.ability_info['frames_max'] = 45
 
+    def end(self):
+        super().end()
+
+        self.ability_info['active'] = False
+
+        for visual in self.character.visuals:
+            visual.image.set_alpha(255)
+
+        self.character.combat_info['immunities']['all'] = False
+
     def call(self, scene, keybind=None):
         if self.ability_info['active']:
             return
@@ -576,7 +588,7 @@ class EvasiveShroud(Ability):
         super().call(scene, keybind)
 
         self.ability_info['active'] = True
-        
+
         self.character.combat_info['immunities']['all'] = self.ability_info['frames_max']
         self.ability_info['frames'] = self.ability_info['frames_max']
 
@@ -602,14 +614,18 @@ class EvasiveShroud(Ability):
             return
         
         self.character.image.set_alpha(55)
-        self.character.halo.image.set_alpha(55)
+
+        for visual in self.character.visuals:
+            visual.image.set_alpha(55)
 
         self.ability_info['frames'] -= 1 * dt
 
         if self.ability_info['frames'] <= 0:
             self.ability_info['active'] = False
 
-            self.character.halo.image.set_alpha(255)
+            for visual in self.character.visuals:
+                visual.image.set_alpha(255)
+
             self.character.combat_info['immunities']['all'] = False
     
             particles = []
@@ -642,7 +658,7 @@ class HolyJavelin(Ability):
         card_info = {
 			'type': 'ability',
 			
-			'icon': None,
+			'icon': 'holy-javelin',
 			'symbols': [
                 Card.SYMBOLS['type']['ability'],
 				Card.SYMBOLS['action']['damage'],
@@ -734,7 +750,7 @@ class HolyJavelin(Ability):
 
         scene.add_sprites(particles)
 
-        scene.camera.set_camera_shake(round(self.ability_info['explosion_intensity'] * 2))
+        scene.camera.set_camera_shake(round(self.ability_info['explosion_intensity'] * 1.5))
         
     def update(self, scene, dt):
         super().update(scene, dt)
@@ -776,8 +792,33 @@ class HolyJavelin(Ability):
 
         projectile.afterimage_frames = [0, 1]
 
-        scene.add_sprites(projectile)
+        particles = []
+        for _ in range(5):
+            cir = Circle(pos, PLAYER_COLOR, 6, 0)
+            cir.set_goal(
+                        100, 
+                        position=(
+                            pos[0] + random.randint(-150, 150) + (vel[0] * 10), 
+                            pos[1] + random.randint(-150, 150) + (vel[1] * 10)
+                        ), 
+                        radius=0, 
+                        width=0
+                    )
 
+            cir.glow['active'] = True
+            cir.glow['size'] = 1.5
+            cir.glow['intensity'] = .25
+
+            particles.append(cir)
+
+        scene.add_sprites(projectile)
+        scene.add_sprites(particles)
+
+        self.character.overrides['ability-passive'] = None
+
+    def end(self):
+        super().end()
+        
         self.character.overrides['ability-passive'] = None
 
     def call(self, scene, keybind=None):
