@@ -68,11 +68,6 @@ class Ramp(Tile):
         if direction == 'left':
             img = pygame.transform.flip(img, True, False).convert_alpha()
 
-        img = pygame.mask.from_surface(img).to_surface(
-            setcolor=color, 
-            unsetcolor=(0, 0, 0, 0)
-        )
-
         super().__init__(position, img, None, strata)
         self.secondary_sprite_id = 'ramp'
 

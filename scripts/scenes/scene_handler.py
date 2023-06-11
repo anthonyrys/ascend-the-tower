@@ -46,8 +46,8 @@ class SceneHandler:
 
         self.mouse = Mouse()
 
-        self.background_surface = pygame.Surface((2500, 2500), pygame.SRCALPHA).convert_alpha()
-        self.entity_surface = pygame.Surface((5000, 5000), pygame.SRCALPHA).convert_alpha()
+        self.background_surface = pygame.Surface((10000, 10000), pygame.SRCALPHA).convert_alpha()
+        self.entity_surface = pygame.Surface((10000, 10000), pygame.SRCALPHA).convert_alpha()
         self.ui_surface = pygame.Surface((2000, 2000), pygame.SRCALPHA).convert_alpha()
 
         self.current_scene = GameLoop(self, [self.background_surface, self.entity_surface, self.ui_surface], self.mouse)

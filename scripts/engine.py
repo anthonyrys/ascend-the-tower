@@ -106,7 +106,9 @@ class Inputs:
         'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
 
         'ability_1': [pygame.K_1],
-        'ability_2': [pygame.K_2]
+        'ability_2': [pygame.K_2],
+
+        'interact': [pygame.K_f]
     }
 
     MOVEMENT = ['left', 'right', 'down', 'jump']
@@ -296,6 +298,26 @@ class Entity(pygame.sprite.Sprite):
         self.previous_true_position = [0, 0]
         self.previous_center_position = [0, 0]
 
+        self.delay_timers = []
+
+        self.tween_information = {
+            'inherited': True,
+
+            'position': {
+                'old_position': [0, 0],
+                'new_position': [0, 0],
+                'frames': [0, 0],
+                'easing_style': None
+            },
+
+            'alpha': {
+                'old_alpha': 0,
+                'new_alpha': 0,
+                'frames': [0, 0],
+                'easing_style': None
+            }
+        }
+
     @property
     def mask(self):
         return pygame.mask.from_surface(self.image)
@@ -308,15 +330,53 @@ class Entity(pygame.sprite.Sprite):
     def center_position(self):
         return [self.rect.centerx, self.rect.centery]
 
+    def set_position_tween(self, position, frames, easing_style):
+        self.tween_information['position']['old_position'] = self.true_position
+        self.tween_information['position']['new_position'] = position
+        self.tween_information['position']['frames'] = [0, frames]
+
+        if not hasattr(Easings, easing_style):
+            self.tween_information['position']['easing_style'] = getattr(Easings, 'ease_out_sine')
+            return
+
+        self.tween_information['position']['easing_style'] = getattr(Easings, easing_style)
+
+    def set_alpha_tween(self, alpha, frames, easing_style):
+        self.tween_information['alpha']['old_alpha'] = self.image.get_alpha()
+        self.tween_information['alpha']['new_alpha'] = alpha
+        self.tween_information['alpha']['frames'] = [0, frames]
+
+        if not hasattr(Easings, easing_style):
+            self.tween_information['alpha']['easing_style'] = getattr(Easings, 'ease_out_sine')
+            return
+
+        self.tween_information['alpha']['easing_style'] = getattr(Easings, easing_style)
+        
     def display(self, scene, dt):
         self.previous_true_position = [self.rect.x, self.rect.y]
         self.previous_center_position = [self.rect.centerx, self.rect.centery]
+
+        if self.tween_information['inherited']:
+            if self.tween_information['position']['frames'][0] < self.tween_information['position']['frames'][1]:
+                abs_prog = self.tween_information['position']['frames'][0] / self.tween_information['position']['frames'][1]
+            
+                self.rect.x = self.tween_information['position']['old_position'][0] + (self.tween_information['position']['new_position'][0] - self.tween_information['position']['old_position'][0]) * self.tween_information['position']['easing_style'](abs_prog)
+                self.rect.y = self.tween_information['position']['old_position'][1] + (self.tween_information['position']['new_position'][1] - self.tween_information['position']['old_position'][1]) * self.tween_information['position']['easing_style'](abs_prog)
+
+                self.tween_information['position']['frames'][0] += 1 * dt
+
+            if self.tween_information['alpha']['frames'][0] < self.tween_information['alpha']['frames'][1]:
+                abs_prog = self.tween_information['alpha']['frames'][0] / self.tween_information['alpha']['frames'][1]
+            
+                self.image.set_alpha(self.tween_information['alpha']['old_alpha'] + (self.tween_information['alpha']['new_alpha'] - self.tween_information['alpha']['old_alpha']) * self.tween_information['alpha']['easing_style'](abs_prog))
+                
+                self.tween_information['alpha']['frames'][0] += 1 * dt
 
         if self.glow['active']:
             image = pygame.transform.scale(self.image, (self.image.get_width() * self.glow['size'], self.image.get_height() * self.glow['size']))
             image.set_alpha(self.image.get_alpha() * self.glow['intensity'])
 
-            rect = image.get_bounding_rect()
+            rect = image.get_rect()
             rect.center = [
                 self.rect.centerx - self.rect_offset[0],
                 self.rect.centery - self.rect_offset[1]
@@ -377,7 +437,8 @@ class Frame(pygame.sprite.Sprite):
 
         self.rect = self.image.get_bounding_rect()
         self.rect.x, self.rect.y = position
-
+        self.rect_offset = [0, 0]
+        
         self.hover_rect = pygame.Rect(self.rect.x, self.rect.y, 0, 0)
         
         self.original_rect = self.image.get_bounding_rect()
@@ -385,13 +446,93 @@ class Frame(pygame.sprite.Sprite):
 
         self.global_offset = (0, 0)
 
+        self.delay_timers = []
+
+        self.tween_information = {
+            'inherited': True,
+
+            'position': {
+                'old_position': [0, 0],
+                'new_position': [0, 0],
+                'frames': [0, 0],
+                'easing_style': None
+            },
+
+            'alpha': {
+                'old_alpha': 0,
+                'new_alpha': 0,
+                'frames': [0, 0],
+                'easing_style': None
+            }
+        }
+
     @property
     def mask(self):
         return pygame.mask.from_surface(self.image)
 
-    def display(self, scene, dt):
+    @property
+    def true_position(self):
+        return [self.rect.x, self.rect.y]
+
+    @property
+    def center_position(self):
+        return [self.rect.centerx, self.rect.centery]
+
+    def set_position_tween(self, position, frames, easing_style):
+        self.tween_information['position']['old_position'] = self.true_position
+        self.tween_information['position']['new_position'] = position
+        self.tween_information['position']['frames'] = [0, frames]
+
+        if not hasattr(Easings, easing_style):
+            self.tween_information['position']['easing_style'] = getattr(Easings, 'ease_out_sine')
+            return
+
+        self.tween_information['position']['easing_style'] = getattr(Easings, easing_style)
+
+    def set_alpha_tween(self, alpha, frames, easing_style):
+        self.tween_information['alpha']['old_alpha'] = self.image.get_alpha()
+        self.tween_information['alpha']['new_alpha'] = alpha
+        self.tween_information['alpha']['frames'] = [0, frames]
+
+        if not hasattr(Easings, easing_style):
+            self.tween_information['alpha']['easing_style'] = getattr(Easings, 'ease_out_sine')
+            return
+
+        self.tween_information['alpha']['easing_style'] = getattr(Easings, easing_style)
+
+    def display(self, scene, dt):    
+        if self.tween_information['inherited']:
+            if self.tween_information['position']['frames'][0] < self.tween_information['position']['frames'][1]:
+                abs_prog = self.tween_information['position']['frames'][0] / self.tween_information['position']['frames'][1]
+            
+                self.rect.x = self.tween_information['position']['old_position'][0] + (self.tween_information['position']['new_position'][0] - self.tween_information['position']['old_position'][0]) * self.tween_information['position']['easing_style'](abs_prog)
+                self.rect.y = self.tween_information['position']['old_position'][1] + (self.tween_information['position']['new_position'][1] - self.tween_information['position']['old_position'][1]) * self.tween_information['position']['easing_style'](abs_prog)
+
+                self.tween_information['position']['frames'][0] += 1 * dt
+
+            if self.tween_information['alpha']['frames'][0] < self.tween_information['alpha']['frames'][1]:
+                abs_prog = self.tween_information['alpha']['frames'][0] / self.tween_information['alpha']['frames'][1]
+            
+                self.image.set_alpha(self.tween_information['alpha']['old_alpha'] + (self.tween_information['alpha']['new_alpha'] - self.tween_information['alpha']['old_alpha']) * self.tween_information['alpha']['easing_style'](abs_prog))
+                
+                self.tween_information['alpha']['frames'][0] += 1 * dt
+
         self.hover_rect.x = self.rect.x
         self.hover_rect.y = self.rect.y
+
+        remove_list = []
+        for i in range(len(self.delay_timers)):
+            if self.delay_timers[i][0] <= 0:
+                continue
+            
+            self.delay_timers[i][0] -= 1
+
+            if self.delay_timers[i][0] <= 0 and self.delay_timers[i][1]:
+                self.delay_timers[i][1](*self.delay_timers[i][2])
+                remove_list.append(self.delay_timers[i])
+
+        for element in remove_list:
+            self.delay_timers.remove(element)
 
         if self.uses_entity_surface:
             scene.entity_surface.blit(
@@ -405,6 +546,9 @@ class Frame(pygame.sprite.Sprite):
                 (self.rect.x + self.global_offset[0], self.rect.y + self.global_offset[1]),
             )
 
+    def on_del_sprite(self, scene, time):
+        self.delay_timers.append([time, lambda: scene.del_sprites(self), []])
+        
     def on_hover_start(self, scene):
         ...
 
@@ -492,17 +636,17 @@ def create_outline_edge(sprite, color, display, size=1):
         surface.set_at(point, color)
 
     for i in range(size):
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] - i, sprite.rect.y + sprite.rect_offset[1]))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] + i, sprite.rect.y + sprite.rect_offset[1]))
 
-        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0], sprite.rect.y + sprite.rect_offset[1] - i))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0], sprite.rect.y + sprite.rect_offset[1] + i))
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] - i, sprite.rect.y + sprite.rect_offset[1] - i))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] + i, sprite.rect.y + sprite.rect_offset[1] + i))
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] - i, sprite.rect.y + sprite.rect_offset[1] + i))
+        display.blit(surface, (sprite.rect.x + sprite.rect_offset[0] + i, sprite.rect.y + sprite.rect_offset[1] - i))  
 
 def create_outline_full(sprite, color, display, size=1):
     surface = sprite.mask.to_surface(
@@ -512,14 +656,14 @@ def create_outline_full(sprite, color, display, size=1):
     surface.set_colorkey((0, 0, 0))
 
     for i in range(size):
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] - i, sprite.rect.y - sprite.rect_offset[1]))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] + i, sprite.rect.y - sprite.rect_offset[1]))
 
-        display.blit(surface, (sprite.rect.x, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0], sprite.rect.y - sprite.rect_offset[1] - i))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0], sprite.rect.y - sprite.rect_offset[1] + i))
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y - i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y + i))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] - i, sprite.rect.y - sprite.rect_offset[1] - i))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] + i, sprite.rect.y - sprite.rect_offset[1] + i))
 
-        display.blit(surface, (sprite.rect.x - i, sprite.rect.y + i))
-        display.blit(surface, (sprite.rect.x + i, sprite.rect.y - i))  
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] - i, sprite.rect.y - sprite.rect_offset[1] + i))
+        display.blit(surface, (sprite.rect.x - sprite.rect_offset[0] + i, sprite.rect.y - sprite.rect_offset[1] - i))  

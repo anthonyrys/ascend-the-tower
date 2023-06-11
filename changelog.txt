@@ -191,55 +191,136 @@ v0.3.1
         ^ Triggers once the cooldown of the ability is up
 
 v0.3.2
-- Added Temperance visual image
+    - Added Temperance visual image
 
-- Updated Player halo image
-- Updated holy-javelin projectile image
+    - Updated Player halo image
+    - Updated holy-javelin projectile image
 
-- Renamed arrow projectile image to rain-of-arrows
+    - Renamed arrow projectile image to rain-of-arrows
 
-- Added Evasive Shroud, Holy Javelin, and Rain of Arrows ability card icons
-- Added Bloodlust, Evasive Maneuvers, Guardian Angel, Ignition, and Run It Back talent card icons
+    - Added Evasive Shroud, Holy Javelin, and Rain of Arrows ability card icons
+    - Added Bloodlust, Evasive Maneuvers, Guardian Angel, Ignition, and Run It Back talent card icons
 
-- Changed how Entity class applies glow effects
-    ^ Fixes an issue where Holy Javelin's glow was offset
+    - Changed how Entity class applies glow effects
+        ^ Fixes an issue where Holy Javelin's glow was offset
 
-- Added end function to EvasiveShroud and GrandJavelin abilities
+    - Added end function to EvasiveShroud and GrandJavelin abilities
 
-- Added color value to PrimaryAttack ability_info
-    ^ Allows talents to change the color of the primary attack
+    - Added color value to PrimaryAttack ability_info
+        ^ Allows talents to change the color of the primary attack
 
-- Added additional particles to HolyJavelin ability
+    - Added additional particles to HolyJavelin ability
 
-- Fixed an issue where FloaterAi would indefinitely fall through the floor
+    - Fixed an issue where FloaterAi would indefinitely fall through the floor
 
-- Changed Vampirism talent to now change the color value of PrimaryAttack ability
-- Changed Temperance talent to now give the player an extra halo
+    - Changed Vampirism talent to now change the color value of PrimaryAttack ability
+    - Changed Temperance talent to now give the player an extra halo
 
-- Changed Wheel of Fortune talent to now scale with player stats
-- Changed Wheel of Fortune talent to no longer give crit_strike chance or multiplier if the player has Temperance talent
+    - Changed Wheel of Fortune talent to now scale with player stats
+    - Changed Wheel of Fortune talent to no longer give crit_strike chance or multiplier if the player has Temperance talent
 
-- Increased Temperance damage_multiplier buff to .75 from .2
+    - Increased Temperance damage_multiplier buff to .75 from .2
 
-- Reduced number of times Guardian Angel can activate to 1 from 3
+    - Reduced number of times Guardian Angel can activate to 1 from 3
 
-- Reduced Humanoid enemy base_damage_scaling to .1 from .2
-- Reduced Flyer enemy base_damage to 20 from 25
-- Reduced Flyer enemy base_damage_scaling to .15 from .25
-- Reduced Floater enemy base_damage_scaling to .1 from .25
-- Reduced Floater Blast damage_multipler to 1.2 from 1.25
+    - Reduced Humanoid enemy base_damage_scaling to .1 from .2
+    - Reduced Flyer enemy base_damage to 20 from 25
+    - Reduced Flyer enemy base_damage_scaling to .15 from .25
+    - Reduced Floater enemy base_damage_scaling to .1 from .25
+    - Reduced Floater Blast damage_multipler to 1.2 from 1.25
 
-- Added visuals variable to GameEntity class
+    - Added visuals variable to GameEntity class
 
-- Changed Player halo variable to inherit from Entity class instead of GameEntity class
-- Changed Player halo variable to now be inside visuals variable
-- Changed Player apply_afterimages function to now use visuals variable
+    - Changed Player halo variable to inherit from Entity class instead of GameEntity class
+    - Changed Player halo variable to now be inside visuals variable
+    - Changed Player apply_afterimages function to now use visuals variable
 
-- Added GameScene class
-    ^ Gets rid of redundant code from the GameLoop and Sandbox scene classes
+    - Added GameScene class
+        ^ Gets rid of redundant code from the GameLoop and Sandbox scene classes
 
-- Added Ability Swap system
-    ^ Allows player to replace their existing abilities upon selecting a new one
+    - Added Ability Swap system
+        ^ Allows player to replace their existing abilities upon selecting a new one
 
-- Changed GameLoop scene class to award max_health and base_damage once a wave is completed
-    ^ Intended to help the player keep up with enemy stat scaling
+    - Changed GameLoop scene class to award max_health and base_damage once a wave is completed
+        ^ Intended to help the player keep up with enemy stat scaling
+
+v0.4.0
+- Added Background parallax image
+
+- Added Rock Golem enemy images
+- Added Stone Sentry enemy images
+- Added Granite Elemental enemy images
+
+- Added ArenaCrystal interactable image
+
+- Removed Humanoid enemy images
+- Removed Flyer enemy images
+- Removed Floater enemy images
+
+- Renamed evasive_shroud ability card icon to intangible_shroud
+
+- Added Lingering Shroud talent card icon
+
+- Changed SCREEN_COLOR to (0, 0, 0) from (44, 44, 44)
+
+- Added interact keybind to Input class
+
+- Added delay_timers and tween_information variables to Frame and Entity classes
+- Added set_position_tween and set_alpha_tween functions to Frame and Entity classes
+- Added true_position and center_position properties to Frame class
+- Added rect_offset variable to Frame class
+- Added on_del_sprite function to Frame class
+
+- Fixed an issue where create_outline_full and create_outline_edge functions would not consider rect_offset
+
+- Renamed EvasiveShroud ability to IntangibleShroud
+- Renamed EvasiveManeuvers talent to LingeringShroud
+
+- Reduced HolyJavelin damage_multiplier to 1.5 from 2.25
+
+- Fixed an issue where Bloodlust talent would sometimes crash the game
+
+- Renamed WaveHandler MAX_LEVEL, level, level_info variables to MAX_AREAS, area, and area_info
+- Renamed WaveHandler on_level_completed and new_level functions to on_area_complete and new_area
+- Renamed WaveHandler floor variable to level
+
+- Reworked Humanoid enemy class into RockGolem
+- Reworked Flyer enemy class into StoneSentry
+- Reworked Floater enemy class into GraniteElemental
+
+- Added floor, floor_info, and spawn_rect variables to WaveHandler class 
+
+- Added apply_collision_y_ramp function to GameEntity class
+    ^ Both Player and HumanoidEnemy classes now use apply_collision_y_ramp function
+
+- Added images, image_count_raw and image_count variables to Image particle class
+
+- Added apply_afterimages function to StoneSentry enemy class
+
+- Added Interactable base class
+- Added ArenaCrystal interactable class
+    ^ Allows player to now control wave progression
+
+- Added get_interactable function to Player class
+
+- Increased RockGolem max_health_scaling to .65 from .45
+- Increased StoneSentry max_health_scaling to .55 from .35
+- Increased GraniteElemental max_health to 100 from 75
+- Increased GraniteElemental max_health_scaling to .55 from .35
+
+- Changed Image particle class to now set positions relative to the center of the image
+
+- Fixed an issue where GameEntity apply_collision_x_default function would sometimes override apply_collision_y_default in collisions
+
+- Added Background parallax effect to GameScene class
+
+- Increased SceneHandler background_surface size to (10000, 10000) from (2500, 2500)
+- Increased SceneHandler entity_surface size to (10000, 10000) from (5000, 5000)
+
+- Changed GameScene class to now use set_position_tween and set_alpha_tween functions
+
+- Added Card selection flavor text
+- Added set_flag function to Card class
+
+- Changed Card class to now use delay_timers variable
+- Changed Card class to now use set_position_tween and set_alpha_tween functions

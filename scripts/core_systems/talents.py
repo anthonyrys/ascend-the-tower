@@ -700,7 +700,7 @@ class Bloodlust(Talent):
 
 	def call(self, call, scene, info):
 		current_buffs = get_buff(self.player, self.talent_info['buff_signature'])
-		if current_buffs:
+		if isinstance(current_buffs, list):
 			for current_buff in current_buffs:
 				current_buff.duration = self.talent_info['buff_duration']
 
@@ -803,13 +803,13 @@ class RunItBack(Talent):
 		
 		info.ability_info['cooldown'] = 1
 
-class EvasiveManeuvers(Talent):
-	TALENT_ID = 'evasive_maneuvers'
-	TALENT_CALLS = ['on_evasive_shroud_end']
+class LingeringShroud(Talent):
+	TALENT_ID = 'lingering_shroud'
+	TALENT_CALLS = ['on_intangible_shroud_end']
 
 	DESCRIPTION = {
-		'name': 'Evasive Maneuvers',
-		'description': 'Gain a temporary damage resistance after evasive shroud has ended.'
+		'name': 'Lingering Shroud',
+		'description': 'Gain a temporary damage resistance after intangible shroud has ended.'
 	}
 
 	@staticmethod
@@ -817,7 +817,7 @@ class EvasiveManeuvers(Talent):
 		card_info = {
 			'type': 'talent',
 			
-			'icon': 'evasive-maneuvers',
+			'icon': 'lingering-shroud',
 			'symbols': [				
 				Card.SYMBOLS['type']['talent'],
 				Card.SYMBOLS['action']['resistance/immunity'],
@@ -829,7 +829,7 @@ class EvasiveManeuvers(Talent):
 	
 	@staticmethod
 	def check_draw_condition(player):
-		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID == 'evasive_shroud']:
+		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID == 'intangible_shroud']:
 			return True
 		
 		return False

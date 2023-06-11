@@ -35,7 +35,9 @@ class GameEntity(Entity):
 
     Methods:
         apply_collision_x_default(): applies the default collision to the entity's x axis.
-        apply_collision_x_default(): applies the default collision to the entity's y axis.
+        apply_collision_y_default(): applies the default collision to the entity's y axis.
+        apply_collision_y_ramp(): applies the ramp collision to the entity's y axis.
+
         apply_gravity(): applies gravity to the entity.
 
         set_gravity(): sets the current gravity of the entity for a set amount of frames.
@@ -138,7 +140,13 @@ class GameEntity(Entity):
             if collidable in self.collision_ignore:
                 continue
 
-            if self.velocity[0] > 0:
+            left = abs(self.rect.left - collidable.rect.right)
+            right = abs(self.rect.right - collidable.rect.left)
+
+            top = abs(self.rect.top - collidable.rect.bottom)
+            bottom = abs(self.rect.bottom - collidable.rect.top)
+
+            if self.velocity[0] > 0 and right < top and right < bottom:
                 self.rect.right = collidable.rect.left
                 self.collide_points['right'] = True
 
@@ -149,7 +157,7 @@ class GameEntity(Entity):
        
                 self.velocity[0] = 0
 
-            if self.velocity[0] < 0:
+            if self.velocity[0] < 0 and left < top and left < bottom:
                 self.rect.left = collidable.rect.right
                 self.collide_points['left'] = True
 
@@ -184,8 +192,8 @@ class GameEntity(Entity):
             if abs(self.velocity[1]) < 0:
                 return
 
-            top = abs(self.rect.top - collidable.rect.centery)
-            bottom = abs(self.rect.bottom - collidable.rect.centery)
+            top = abs(self.rect.top - collidable.rect.bottom)
+            bottom = abs(self.rect.bottom - collidable.rect.top)
             
             if top < bottom and collidable.secondary_sprite_id != 'floor':
                 self.rect.top = collidable.rect.bottom
@@ -210,6 +218,37 @@ class GameEntity(Entity):
                 self.velocity[1] = 0
 
         return callback_collision  
+
+    def apply_collision_y_ramp(self, ramps):
+        for ramp in ramps:
+            if not self.rect.colliderect(ramp.rect):
+                if ramp in self.collision_ignore:
+                    self.collision_ignore.remove(ramp)
+                    
+                if ramp in self.collisions:
+                    self.collisions.remove(ramp)
+                
+                continue
+
+            if ramp in self.collision_ignore:
+                continue
+
+            if self.velocity[1] < -4 and ramp not in self.collision_ignore:
+               self.collision_ignore.append(ramp) 
+               continue
+
+            pos = ramp.get_y_value(self)
+            if pos - self.rect.bottom < 4:
+                self.rect.bottom = pos
+                self.collide_points['bottom'] = True
+
+                if ramp not in self.collisions:
+                    self.collisions.append(ramp)
+
+                if self.movement_info['jumps'] != self.movement_info['max_jumps']:
+                    self.movement_info['jumps'] = self.movement_info['max_jumps']
+                            
+                self.velocity[1] = 0
 
     def apply_gravity(self, dt, multiplier=1.0):
         grav = self.gravity_info['gravity']

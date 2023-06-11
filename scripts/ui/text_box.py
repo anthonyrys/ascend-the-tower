@@ -103,3 +103,4 @@ class TextBox(Frame):
             y += line.get_height()
 
         super().__init__(position, img, None, 3)
+        self.sprite_id = 'text_box'

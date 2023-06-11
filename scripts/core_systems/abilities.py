@@ -532,12 +532,12 @@ class RainOfArrows(Ability):
 
             scene.add_sprites(projectile)
     
-class EvasiveShroud(Ability):
-    ABILITY_ID = 'evasive_shroud'
+class IntangibleShroud(Ability):
+    ABILITY_ID = 'intangible_shroud'
 
     DESCRIPTION = {
-		'name': 'Evasive Shroud',
-		'description': 'Become temporarily immune to all damage.'
+		'name': 'Intangible Shroud',
+		'description': 'Shroud yourself in intangibility, temporarily becoming immune to all damage.'
 	}
 
     @staticmethod
@@ -545,7 +545,7 @@ class EvasiveShroud(Ability):
         card_info = {
 			'type': 'ability',
 			
-			'icon': 'evasive-shroud',
+			'icon': 'intangible-shroud',
 			'symbols': [
                 Card.SYMBOLS['type']['ability'],
 				Card.SYMBOLS['action']['resistance/immunity'],
@@ -689,7 +689,7 @@ class HolyJavelin(Ability):
         }
 
         self.ability_info['speed'] = 30
-        self.ability_info['damage_multiplier'] = 2.25
+        self.ability_info['damage_multiplier'] = 1.5
 
         self.ability_info['explosion_range'] = 275
         self.ability_info['explosion_intensity'] = 30

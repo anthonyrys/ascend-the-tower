@@ -81,7 +81,7 @@ class Enemy(GameEntity):
         pos = self.center_position
         particles = []
         for color in get_sprite_colors(self, .5):
-            radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .125)
+            radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .11)
 
             cir = Circle(pos, color, radius, 0)
             cir.set_goal(
@@ -121,7 +121,7 @@ class Enemy(GameEntity):
             particles = []
 
             for color in get_sprite_colors(self, .75):
-                radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .15)
+                radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .1)
 
                 cir = Circle(pos, color, radius, 0)
                 cir.set_goal(
@@ -240,6 +240,8 @@ class HumanoidEnemy(Enemy):
                         
                 self.velocity[1] = 0
 
+        self.apply_collision_y_ramp([s for s in scene.sprites if s.secondary_sprite_id == 'ramp'])
+
 class FlyerEnemy(Enemy):
     def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
@@ -251,10 +253,10 @@ class FloaterEnemy(Enemy):
         self.ai = FloaterAi(self)
 
 
-class Humanoid(HumanoidEnemy):
+class RockGolem(HumanoidEnemy):
     def __init__(self, position, strata, level=1):
-        super().__init__(position, pygame.Surface((24, 48)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'humanoid'
+        super().__init__(position, pygame.Surface((40, 80)).convert_alpha(), None, strata, None)
+        self.secondary_sprite_id = 'rgolem'
 
         self.rect_offset = [self.rect.width / 2, 0]
 
@@ -267,7 +269,7 @@ class Humanoid(HumanoidEnemy):
             'friction_frames': 0,
 
             'per_frame_movespeed': 1,
-            'max_movespeed': 9,
+            'max_movespeed': 7,
 
             'jump_power': 24,
             'jumps': 0,
@@ -302,7 +304,7 @@ class Humanoid(HumanoidEnemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .45,
+            'max_health_scaling': .65,
             'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
@@ -315,13 +317,13 @@ class Humanoid(HumanoidEnemy):
             'damage_frames_max': 0,
 
             'imgs': {},
-            'scale': 1.5,
+            'scale': 2.5,
 
             'frames': {},
             'frames_raw': {},
             'frame_info': {
                 'idle': [50, 50],
-                'run': [2, 2, 2, 2, 2],
+                'run': [3, 3, 3, 3, 3],
                 'jump': [1],
                 'fall': [1]
             }
@@ -389,10 +391,10 @@ class Humanoid(HumanoidEnemy):
         self.set_images(scene, dt)
         super().display(scene, dt)
 
-class Flyer(FlyerEnemy):
+class StoneSentry(FlyerEnemy):
     def __init__(self, position, strata, level=1):
-        super().__init__(position, pygame.Surface((64, 64)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'flyer'
+        super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
+        self.secondary_sprite_id = 'stentry'
 
         self.default_movement_info = {
             'direction': 0,
@@ -436,7 +438,7 @@ class Flyer(FlyerEnemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .35,
+            'max_health_scaling': .55,
             'base_damage_scaling': .15,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
@@ -445,16 +447,16 @@ class Flyer(FlyerEnemy):
         self.set_stats()
 
         self.img_info = {
+            'scale': 2.5,
+
             'damage_frames': 0,
             'damage_frames_max': 0,
 
-            'img': None
+            'afterimage_frames': [0, 1],
+            'imgs': []
         }
 
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
-        img = pygame.transform.scale(img, (img.get_width() * 2, img.get_height() * 2))
-
-        self.img_info['img'] = img
+        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
     
     def set_images(self, scene, dt):
         self.image.fill((0, 0, 0, 0))
@@ -464,10 +466,43 @@ class Flyer(FlyerEnemy):
 
         angle = (180 / math.pi) * math.atan2(pos_x - self.center_position[0], pos_y - self.center_position[1])
 
-        img = self.img_info['img'].copy()
+        average_vel = (abs(self.velocity[0]) + abs(self.velocity[1])) *.5
+        average_vel = 1 if average_vel == 0 else average_vel
+
+        index = round(((average_vel / (self.movement_info['max_movespeed']  * .75))) * len(self.img_info['imgs'])) - 1
+        index = len(self.img_info['imgs']) - 1 if index > len(self.img_info['imgs']) - 1 else index
+
+        img = self.img_info['imgs'][index].copy()
         img = pygame.transform.rotate(img, angle)
 
+        img = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale']))
+
         self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+
+    def apply_afterimages(self, scene, dt, visuals=True):
+        average_vel = (abs(self.velocity[0]) + abs(self.velocity[1])) *.5
+        average_vel = 1 if average_vel == 0 else average_vel
+
+        index = round(((average_vel / (self.movement_info['max_movespeed']  * .75))) * len(self.img_info['imgs'])) - 1
+        index = len(self.img_info['imgs']) - 1 if index > len(self.img_info['imgs']) - 1 else index
+
+        if index < len(self.img_info['imgs']) - 2:
+            return
+        
+        self.img_info['afterimage_frames'][0] += 1 * dt
+        if self.img_info['afterimage_frames'][0] < self.img_info['afterimage_frames'][1]:
+            return
+        
+        self.img_info['afterimage_frames'][0] = 0
+        
+        afterimage = Image(
+            self.center_position,
+            self.image.copy(), self.strata - 1, 50
+        )
+        
+        afterimage.set_goal(5, alpha=0, dimensions=self.image.get_size())
+
+        scene.add_sprites(afterimage)
 
     def display(self, scene, dt):
         if not scene.paused:
@@ -480,9 +515,10 @@ class Flyer(FlyerEnemy):
             self.rect.y += round(self.velocity[1] * dt)
 
         self.set_images(scene, dt)
+        self.apply_afterimages(scene, dt)
         super().display(scene, dt)
 
-class Floater(FloaterEnemy):
+class GraniteElemental(FloaterEnemy):
     class Blast(Ability):
         def __init__(self, character):
             super().__init__(character)
@@ -541,7 +577,7 @@ class Floater(FloaterEnemy):
             }
 
             proj = ProjectileStandard(
-                self.character.rect.center, ENEMY_COLOR, 10, self.character.strata + 1,
+                self.character.center_position, ENEMY_COLOR, 10, self.character.strata + 1,
                 proj_info,
                 velocity=proj_velocity, 
                 trail=True
@@ -549,7 +585,7 @@ class Floater(FloaterEnemy):
 
             particles = []
             for _ in range(5):
-                cir = Circle(self.character.rect.center, ENEMY_COLOR, 6, 0)
+                cir = Circle(self.character.center_position, ENEMY_COLOR, 6, 0)
                 cir.set_goal(
                             50, 
                             position=(
@@ -570,8 +606,8 @@ class Floater(FloaterEnemy):
             scene.add_sprites(proj)
 
     def __init__(self, position, strata, level=1):
-        super().__init__(position, pygame.Surface((64, 64)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'floater'
+        super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
+        self.secondary_sprite_id = 'grelemental'
 
         self.default_movement_info = {
             'direction': 0,
@@ -590,8 +626,8 @@ class Floater(FloaterEnemy):
         self.movement_info = self.default_movement_info.copy()
 
         self.default_combat_info = {
-            'max_health': 75,
-            'health': 75,
+            'max_health': 100,
+            'health': 100,
             
             'health_regen_amount': 0,
             'health_regen_tick': 0,
@@ -615,7 +651,7 @@ class Floater(FloaterEnemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .35,
+            'max_health_scaling': .55,
             'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
@@ -627,13 +663,23 @@ class Floater(FloaterEnemy):
             'damage_frames': 0,
             'damage_frames_max': 0,
 
-            'img': None
+            'imgs': None,
+            'scale': 2,
+
+            'sin_count': 0,
+            'sin_amplifier': .01,
+
+            'size': 10,
+            'color': ENEMY_COLOR,
+
+            'radius': 60,
+            'angle': 0,
+            'position': [0, 0],
+
+            'angle_speed': 4
         }
 
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
-        img = pygame.transform.scale(img, (img.get_width() * 2, img.get_height() * 2))
-
-        self.img_info['img'] = img
+        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
 
         self.ability_info = {
             'activation_frames': [0, 60],
@@ -652,8 +698,41 @@ class Floater(FloaterEnemy):
     def set_images(self, scene, dt):
         self.image.fill((0, 0, 0, 0))
 
-        img = self.img_info['img'].copy()
+        index = abs(round(math.sin(self.img_info['sin_count'] * self.img_info['sin_amplifier']) * (len(self.img_info['imgs']) - 1)))
+
+        img = self.img_info['imgs'][index ].copy()
+
+        img = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale']))
         self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+
+        self.img_info['sin_count'] += 1 *dt
+
+        self.img_info['angle'] += self.img_info['angle_speed'] * dt
+
+        a = (self.img_info['angle'] - 90) * math.pi / 180
+        x = self.img_info['radius'] * math.cos(a)
+        y = self.img_info['radius'] * math.sin(a)
+
+        pos = [
+            self.center_position[0] + x,
+            self.center_position[1] + y
+        ]
+
+        self.img_info['position'] = pos
+
+        pygame.draw.circle(scene.entity_surface, self.img_info['color'], pos, self.img_info['size'])
+
+        for i in range(7):
+            ab = ((self.img_info['angle'] - self.img_info['angle_speed'] * (i + 2)) - 90) * math.pi / 180
+            xb = self.img_info['radius'] * math.cos(ab)
+            yb = self.img_info['radius'] * math.sin(ab)
+
+            posb = [
+                self.center_position[0] + xb,
+                self.center_position[1] + yb
+            ]
+
+            pygame.draw.circle(scene.entity_surface, self.img_info['color'], posb, (self.img_info['size'] - (i + 1)))
 
     def display(self, scene, dt):
         if scene.paused:

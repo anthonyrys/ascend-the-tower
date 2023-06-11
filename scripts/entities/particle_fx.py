@@ -137,8 +137,12 @@ class Image(Particle):
             )
 
         if 'position' in self.goal_info:
-            self.rect.x = self.original_position[0] + (self.goal_info['position'][0] - self.original_position[0]) * self.easing_styles['position'](abs_prog)
-            self.rect.y = self.original_position[1] + (self.goal_info['position'][1] - self.original_position[1]) * self.easing_styles['position'](abs_prog)
+            pos = [
+                self.original_position[0] + (self.goal_info['position'][0] - self.original_position[0]) * self.easing_styles['position'](abs_prog),
+                self.original_position[1] + (self.goal_info['position'][1] - self.original_position[1]) * self.easing_styles['position'](abs_prog)
+            ]
+
+            self.rect = self.image.get_rect(center = pos)
 
         else:
             self.rect = self.image.get_rect(center = self.original_position)

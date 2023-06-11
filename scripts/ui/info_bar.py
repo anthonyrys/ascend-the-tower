@@ -90,7 +90,7 @@ class HealthBar(InfoBar):
         self.image.blit(self.health, (0, 0))
         self.image.blit(self.frame, (0, 0))
 
-        if self.hovering:
+        if self.hovering and not scene.paused:
             textbox = TextBox((0, 0), f'{self.player.combat_info["health"]} / {self.player.combat_info["max_health"]}', size=.6)
             
             self.image.blit(

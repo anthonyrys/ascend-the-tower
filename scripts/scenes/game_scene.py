@@ -4,20 +4,26 @@ Holds the game scene class.
 
 from scripts.constants import SCREEN_DIMENSIONS, PLAYER_COLOR
 from scripts.engine import Entity, Easings, get_sprite_colors
+from scripts.engine import BoxCamera
 
+from scripts.entities.player import Player
 from scripts.core_systems.talents import get_all_talents
 from scripts.core_systems.abilities import get_all_abilities
 from scripts.core_systems.wave_handler import WaveHandler
 
 from scripts.entities.particle_fx import Circle
+from scripts.entities.interactable import ArenaCrystal
+from scripts.entities.tiles import Floor, Ceiling, Barrier, Ramp, Block
 
 from scripts.scenes.scene import Scene
 
 from scripts.ui.card import StandardCard, StatCard
+from scripts.ui.text_box import TextBox
 
 import pygame
 import random
 import math
+import os
 
 class GameScene(Scene):
     '''
@@ -42,11 +48,12 @@ class GameScene(Scene):
         
         on_player_death(): called once the player dies.
 
-        on_level_complete(): called once the level is completed.
+        on_area_complete(): called once the level is completed.
         on_wave_complete(): called once the wave is completed; awards the player with cards.
 
         remove_cards(): the function given to the card object when a card is selected.
         generate_standard_cards(): generates a list of talent/ability cards for the player to choose from.
+        generate_ability_fail_cards(): generates a list of the player's ability cards to replace.
         generate_stat_cards(): generates a list of stat cards for the player to choose from.
 
         apply_scene_fx: applies effects for the scene surfaces according to the scene_fx dictionary,
@@ -62,14 +69,8 @@ class GameScene(Scene):
                 'type': None, 
                 'amount': 1.0,
                 'frames': [0, 0],
-                'easing': 'ease_out_quint'
-            },
-
-            'entity_dim': {
-                'type': None, 
-                'amount': 0.0,
-                'frames': [0, 0],
-                'easing': 'ease_out_quint'
+                'easing': 'ease_out_quint',
+                'threshold': 0
             },
 
             'entity_zoom': {
@@ -77,6 +78,16 @@ class GameScene(Scene):
                 'amount': 0.0,
                 'frames': [0, 0],
                 'easing': 'ease_out_quint'
+            },
+            
+            'background': {
+                'parallax': None
+            },
+
+            'particles': {
+                'frames': [0, 100],
+                'img_scale': 3,
+                'imgs': []
             }
         }
 
@@ -85,11 +96,48 @@ class GameScene(Scene):
         self.scene_fx['&dim']['frames'][0] = 45
         self.scene_fx['&dim']['frames'][1] = 45
 
-        self.player = None
+        img = pygame.image.load(os.path.join('imgs', 'background', 'parallax.png')).convert_alpha()
+        img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+        img = pygame.mask.from_surface(img).to_surface(setcolor=(7, 7, 7), unsetcolor=(0, 0, 0, 0))
+
+        self.scene_fx['background']['parallax'] = img
+        
+        self.tiles = {
+            'barrier_y': [
+                Floor((0, 5000), (255, 255, 255, 0), (250, 250), 1),
+                Ceiling((0, 2750), (255, 255, 255, 0), (250, 250), 1)
+            ],
+
+            'barrier_x': [
+                Barrier((3000, 5000), (255, 255, 255, 0), (250, 250), ['player'], 1),        
+                Barrier((6750, 0), (255, 255, 255, 0), (250, 250), ['player'], 1)
+            ],
+
+            'floor': [
+                Floor((3000, 5000), (255, 255, 255), (4000, 25), 1)
+            ],
+
+            'ramps': [
+                Ramp((4824, 4904), 1, 'right', (255, 255, 255), 1),
+                Ramp((5080, 4904), 1, 'left', (255, 255, 255), 1)
+            ],
+
+            'blocks': [
+                Block((4920, 4952), (255, 255, 255), (160, 48), 1)
+            ],
+
+            'crystal': ArenaCrystal((4992, 4890), 1)
+        }
+
+        self.player = Player((self.tiles['floor'][0].center_position[0] + 200, 4800), 4)
+
+        self.camera = BoxCamera(self.player)
+        self.camera_offset = [0, 0]
 
         self.ui_elements = []
 
         self.wave_handler = WaveHandler(self)
+        self.wave_handler.spawn_rect = pygame.Rect(3250, 3000, 3500, 2250)
 
         self.card_info = {
             'overflow': [],
@@ -133,6 +181,7 @@ class GameScene(Scene):
         self.scene_fx['&dim']['type'] = 'in'
         self.scene_fx['&dim']['amount'] = 1
         self.scene_fx['&dim']['frames'][1] = 30
+        self.scene_fx['&dim']['threshold'] = 0
 
         self.delay_timers.append([90, self.scene_handler.set_new_scene, [self.__class__, {}]])
 
@@ -185,57 +234,65 @@ class GameScene(Scene):
         
         self.add_sprites(particles)
 
-    def on_level_complete(self):
+    def on_area_complete(self):
         ...
 
     def on_wave_complete(self):
-        cards = self.generate_stat_cards()
+        cards, flavor_text = self.generate_stat_cards()
         self.card_info['overflow'].append([self.generate_standard_cards, []])
 
         self.in_menu = True
         self.paused = True
 
-        self.scene_fx['entity_dim']['easing'] = 'ease_out_quint'
-        self.scene_fx['entity_dim']['type'] = 'in'
+        self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+        self.scene_fx['&dim']['type'] = 'in'
 
-        self.scene_fx['entity_dim']['amount'] = .75
-        self.scene_fx['entity_dim']['frames'][1] = 30
+        self.scene_fx['&dim']['amount'] = .75
+        self.scene_fx['&dim']['frames'][1] = 30
+        
+        self.scene_fx['&dim']['threshold'] = 1
 
         for frame in self.ui_elements:
             frame.image.set_alpha(100)
-        
+
         self.add_sprites(cards)
+        self.add_sprites(flavor_text)
 
-    def remove_cards(self, selected_card, cards):
+    def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
-            card.tween_info['base_position'] = [card.original_rect.x, card.original_rect.y]
-            card.tween_info['position'] = [card.rect.x, 0 - card.rect.height * 1.1]
-
             if card == selected_card:
-                card.tween_info['position'] = [card.rect.x, SCREEN_DIMENSIONS[1] * 1.1]
+                card.set_position_tween([card.rect.x, SCREEN_DIMENSIONS[1] * 1.1], 20, 'ease_out_quint')
 
-            card.tween_info['frames'] = 0
-            card.tween_info['frames_max'] = 20
-                
-            card.tween_info['flag'] = 'del'
-            card.tween_info['on_finished'] = 'del'
+            else:
+                card.set_position_tween([card.rect.x, 0 - card.rect.height * 1.1], 20, 'ease_out_quint')
+
+            card.set_flag('del')
+
+            card.on_del_sprite(self, 20)
+
+        flavor_text.set_position_tween((flavor_text.rect.x, 0), 30, 'ease_out_quint')
+        flavor_text.set_alpha_tween(0, 25, 'ease_out_sine')
+
+        flavor_text.on_del_sprite(self, 25)
 
         if self.card_info['overflow']:
-            cards = self.card_info['overflow'][0][0](*self.card_info['overflow'][0][1])
+            new_cards, new_flavor_text = self.card_info['overflow'][0][0](*self.card_info['overflow'][0][1])
 
-            if cards:
+            if new_cards:
                 del self.card_info['overflow'][0]
-                self.add_sprites(cards)
+
+                self.add_sprites(new_cards)
+                self.add_sprites(new_flavor_text)
                 
                 return False
 
         self.in_menu = False
         self.paused = False
 
-        self.scene_fx['entity_dim']['type'] = 'out'
-        self.scene_fx['entity_dim']['easing'] = 'ease_in_quint'
-        self.scene_fx['entity_dim']['frames'][0] = 30
-        self.scene_fx['entity_dim']['frames'][1] = 30
+        self.scene_fx['&dim']['type'] = 'out'
+        self.scene_fx['&dim']['easing'] = 'ease_in_quint'
+        self.scene_fx['&dim']['frames'][0] = 30
+        self.scene_fx['&dim']['frames'][1] = 30
 
         for frame in self.ui_elements:
             frame.image.set_alpha(255)
@@ -243,7 +300,7 @@ class GameScene(Scene):
         return True
     
     def generate_standard_cards(self, count=3):
-        def on_select(selected_card, cards):
+        def on_select(selected_card, cards, flavor_text):
             if selected_card.draw.DRAW_TYPE == 'TALENT':
                 self.player.talents.append(selected_card.draw(self, self.player))
                 print(f'selected talent card: {selected_card.draw.DESCRIPTION["name"]}')
@@ -257,14 +314,14 @@ class GameScene(Scene):
                         break
 
                 if not added:
-                    self.card_info['overflow'].append([self.generate_ability_fail_cards, [selected_card]])
+                    self.card_info['overflow'].insert(0, [self.generate_ability_fail_cards, [selected_card]])
 
                 print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
 
-            self.remove_cards(selected_card, cards)
+            self.remove_cards(selected_card, cards, flavor_text)
 
         if count <= 0:
-            return
+            return None, None
         
         talent_exclude_list = []
         ability_exclude_list = []
@@ -289,7 +346,7 @@ class GameScene(Scene):
             drawables.append(talent)    
 
         if len(drawables) < draw_count:
-            return
+            return None, None
         
         for ability in get_all_abilities():
             if ability.ABILITY_ID in ability_exclude_list:
@@ -320,14 +377,23 @@ class GameScene(Scene):
 
             i += 1
 
+        flavor_text = TextBox((0, 0), 'the towers knowledge reveals itself..', color=(255, 255, 255))
+
+        flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
+        flavor_text.image.set_alpha(0)
+
+        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
+        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+
         for card in cards:
             card.cards = cards
+            card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards
+        return cards, flavor_text
 
     def generate_ability_fail_cards(self, previous_selected_card):
-        def on_select(selected_card, cards):
+        def on_select(selected_card, cards, flavor_text):
             for inp in self.player.abilities.keys():
                 if self.player.abilities[inp].__class__ != selected_card.draw:
                     continue
@@ -339,7 +405,7 @@ class GameScene(Scene):
 
             print(f'replaced ability card: {selected_card.draw.DESCRIPTION["name"]} -> {previous_selected_card.draw.DESCRIPTION["name"]}')
 
-            self.remove_cards(selected_card, cards)
+            self.remove_cards(selected_card, cards, flavor_text)
 
         existing_abilities = [a for a in self.player.abilities.values() if a.ABILITY_ID[0] != '@']
         draw_count = len(existing_abilities)
@@ -360,20 +426,29 @@ class GameScene(Scene):
 
             i += 1
 
+        flavor_text = TextBox((0, 0), 'choose an ability to discard..', color=(255, 255, 255))
+
+        flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
+        flavor_text.image.set_alpha(0)
+
+        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
+        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+
         for card in cards:
             card.cards = cards
+            card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards
+        return cards, flavor_text
 
     def generate_stat_cards(self):
-        def on_select(selected_card, cards):
+        def on_select(selected_card, cards, flavor_text):
             print(f'selected stat card: {selected_card.stat["name"]}')
             
             for i in range(len(selected_card.stat['stat'])):
                 self.player.set_stat(selected_card.stat['stat'][i], selected_card.stat['value'][i], True)
 
-            self.remove_cards(selected_card, cards)
+            self.remove_cards(selected_card, cards, flavor_text)
 
         cards = []
         count = len(self.card_info['stat_info'])
@@ -391,34 +466,26 @@ class GameScene(Scene):
             cards.append(StatCard((x + (i * 200), y), stat, spawn='y'))
             i += 1
 
+        flavor_text = TextBox((0, 0), 'you feel yourself become stronger..', color=(255, 255, 255))
+
+        flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
+        flavor_text.image.set_alpha(0)
+
+        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
+        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+
         for card in cards:
             card.cards = cards
+            card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards
+        return cards, flavor_text
 
-    def apply_scene_fx(self):
+    def apply_scene_fx(self, dt):
         entity_display = pygame.Surface(SCREEN_DIMENSIONS).convert_alpha()
+        entity_display.fill((0, 0, 0, 0))
+
         entity_display.blit(self.entity_surface, (-self.camera_offset[0], -self.camera_offset[1]))
-
-        if self.scene_fx['entity_dim']['type']:
-            abs_prog = self.scene_fx['entity_dim']['frames'][0] / self.scene_fx['entity_dim']['frames'][1]
-            img = pygame.Surface(SCREEN_DIMENSIONS)
-            img.fill((0, 0, 0))
-
-            if self.scene_fx['entity_dim']['type'] == 'in':
-                img.set_alpha(255 * (self.scene_fx['entity_dim']['amount'] * getattr(Easings, self.scene_fx['entity_dim']['easing'])(abs_prog)))
-                if self.scene_fx['entity_dim']['frames'][0] < self.scene_fx['entity_dim']['frames'][1]:
-                    self.scene_fx['entity_dim']['frames'][0] += 1
-
-            elif self.scene_fx['entity_dim']['type'] == 'out':
-                img.set_alpha(255 * (self.scene_fx['entity_dim']['amount'] * getattr(Easings, self.scene_fx['entity_dim']['easing'])(abs_prog)))
-                if self.scene_fx['entity_dim']['frames'][0] > 0:
-                    self.scene_fx['entity_dim']['frames'][0] -= 1
-                else:
-                    self.scene_fx['entity_dim']['type'] = None
-
-            entity_display.blit(img, (0, 0))
 
         if self.scene_fx['entity_zoom']['type']:
             abs_prog = self.scene_fx['entity_zoom']['frames'][0] / self.scene_fx['entity_zoom']['frames'][1]
@@ -457,6 +524,12 @@ class GameScene(Scene):
                 else:
                     self.scene_fx['&dim']['type'] = None
 
+        parallax = self.scene_fx['background']['parallax']
+        parallax_size = self.scene_fx['background']['parallax'].get_size()
+        for v in range(10):
+            for i in range(10):
+                self.background_surface.blit(parallax, ((v * 250) + (parallax_size[0] * (i - 5)) - (48 * i), (parallax_size[1] * (i - .5)) - (48 * i)))
+
         return [None, entity_display, None, dim_display]
 
     def display(self, screen, clock, dt):
@@ -476,7 +549,7 @@ class GameScene(Scene):
             self.view.width * 2, self.view.height * 2
         )
 
-        self.background_surface.fill((0, 0, 0, 255), self.view)
+        self.background_surface.fill((0, 0, 0, 255), entity_view)
         self.entity_surface.fill((0, 0, 0, 0), entity_view)
         self.ui_surface.fill((0, 0, 0, 0), self.view)
 
@@ -492,11 +565,13 @@ class GameScene(Scene):
 
                 sprite.display(self, dt)
 
-        for barrier in self.tiles['barrier_y']:
-            barrier.rect.centerx = self.player.rect.centerx
+        if 'barrier_y' in self.tiles:
+            for barrier in self.tiles['barrier_y']:
+                barrier.rect.centerx = self.player.rect.centerx
 
-        for barrier in self.tiles['barrier_x']:
-            barrier.rect.centery = self.player.rect.centery
+        if 'barrier_x' in self.tiles:
+            for barrier in self.tiles['barrier_x']:
+                barrier.rect.centery = self.player.rect.centery
 
         remove_list = []
         for i in range(len(self.delay_timers)):
@@ -509,17 +584,22 @@ class GameScene(Scene):
 
         for element in remove_list:
             self.delay_timers.remove(element)
-
-        self.camera_offset = self.camera.update(dt)
         
-        display_list = self.apply_scene_fx()
-        screen.blit(self.background_surface, (0, 0))
-        screen.blit(display_list[1], (display_list[1].get_rect(center=screen.get_rect().center)))
-        screen.blit(self.ui_surface, (0, 0))
+        self.camera_offset = self.camera.update(dt)
 
-        if display_list[3]:
+        display_list = self.apply_scene_fx(dt)
+        screen.blit(self.background_surface, (-self.camera_offset[0] * .1, -self.camera_offset[1] * .1))
+        if display_list[3] and self.scene_fx['&dim']['threshold'] == 2:
             screen.blit(display_list[3], (0, 0))
 
+        screen.blit(display_list[1], (display_list[1].get_rect(center=screen.get_rect().center)))
+        if display_list[3] and self.scene_fx['&dim']['threshold'] == 1:
+            screen.blit(display_list[3], (0, 0))
+            
+        screen.blit(self.ui_surface, (0, 0))
+        if display_list[3] and self.scene_fx['&dim']['threshold'] == 0:
+            screen.blit(display_list[3], (0, 0))
+    
         self.mouse.display(self, screen)
 
         self.frame_count_raw += 1 * dt

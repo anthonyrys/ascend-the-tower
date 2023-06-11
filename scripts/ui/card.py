@@ -25,7 +25,6 @@ class Card(Frame):
 
         on_select: function that is called when the card is selected
 
-        tween_info: information on the easing and tweening of the object.
         hover_info: information on the position and easing of the object when it is hovering.
 
     Methods:
@@ -33,6 +32,8 @@ class Card(Frame):
 
         on_hover_start(): called when mouse is hovering over the card.
         on_hover_end(): called when mouse has stopped hovering over the card.
+
+        set_flag(): sets the flag variable of the card object.
 
         on_mouse_down(): called when the mouse is pressed.
     '''
@@ -111,26 +112,19 @@ class Card(Frame):
         self.sprite_id = 'card'
 
         self.on_select = None
-
-        self.tween_info = {
-            'frames': 0,
-            'frames_max': 0,
-            'easing': getattr(Easings, 'ease_out_cubic'),
-
-            'position': [],
-            'base_position': [],
-
-            'flag': 'init',
-            'on_finished': None
-        }
+        
+        self.flag = 'init'
+        self.delay_timers.append([30, lambda: self.set_flag(None), []])
 
         self.hover_info = {
             'x': self.rect.x,
             'y': self.rect.y - 10,
 
             'frames': 5,
-            'easing': getattr(Easings, 'ease_out_cubic'),
+            'easing': 'ease_out_cubic',
         }
+
+        self.tween_information['inherited'] = False
 
         self.hover_rect.width = self.rect.width
         self.hover_rect.height = self.rect.height + 16
@@ -142,61 +136,40 @@ class Card(Frame):
             if spawn == 'x':
                 self.rect.x = 0 - (self.image.get_width())
 
-            self.tween_info['position'] = [self.original_rect.x, self.original_rect.y]
-            self.tween_info['base_position'] = [self.rect.x, self.rect.y]
-
-            self.tween_info['frames'] = 0
-            self.tween_info['frames_max'] = 30
+            self.set_position_tween([self.original_rect.x, self.original_rect.y], 30, 'ease_out_cubic')
 
     def create_card(self):
         ...
 
     def on_hover_start(self, scene):
         self.hovering = True
-        self.tween_info['position'] = [self.hover_info['x'], self.hover_info['y']]
-        self.tween_info['base_position'] = [self.original_rect.x, self.original_rect.y]
-
-        self.tween_info['frames'] = 0
-        self.tween_info['frames_max'] = self.hover_info['frames']
-
-        self.tween_info['easing'] = self.hover_info['easing']
-        self.tween_info['flag'] = 'hover_start'
+        self.set_position_tween([self.hover_info['x'], self.hover_info['y']], self.hover_info['frames'], self.hover_info['easing'])
 
     def on_hover_end(self, scene):
         self.hovering = False
-        self.tween_info['position'] = [self.original_rect.x, self.original_rect.y]
-        self.tween_info['base_position'] = [self.rect.x, self.rect.y]
-
-        self.tween_info['frames'] = 0
-        self.tween_info['frames_max'] = self.hover_info['frames']
-
-        self.tween_info['easing'] = self.hover_info['easing']
-        self.tween_info['flag'] = 'hover_end'
+        self.set_position_tween([self.original_rect.x, self.original_rect.y], self.hover_info['frames'], self.hover_info['easing'])
 
     def on_mouse_down(self, scene, event):
         self.on_hover_end(scene)
 
+    def set_flag(self, flag):
+        self.flag = flag
+
     def display(self, scene, dt):
-        if self.tween_info['frames'] < self.tween_info['frames_max']:
-            abs_prog = self.tween_info['frames'] / self.tween_info['frames_max']
-
-            self.rect.x = self.tween_info['base_position'][0] + (self.tween_info['position'][0] - self.tween_info['base_position'][0]) * self.tween_info['easing'](abs_prog)
-            self.rect.y = self.tween_info['base_position'][1] + (self.tween_info['position'][1] - self.tween_info['base_position'][1]) * self.tween_info['easing'](abs_prog)
-
-            self.tween_info['frames'] += 1 * dt
+        if self.tween_information['position']['frames'][0] < self.tween_information['position']['frames'][1]:
+            abs_prog = self.tween_information['position']['frames'][0] / self.tween_information['position']['frames'][1]
         
-        elif self.tween_info['flag'] is not None:
-            self.tween_info['flag'] = None
+            self.rect.x = self.tween_information['position']['old_position'][0] + (self.tween_information['position']['new_position'][0] - self.tween_information['position']['old_position'][0]) * self.tween_information['position']['easing_style'](abs_prog)
+            self.rect.y = self.tween_information['position']['old_position'][1] + (self.tween_information['position']['new_position'][1] - self.tween_information['position']['old_position'][1]) * self.tween_information['position']['easing_style'](abs_prog)
 
-            self.rect.x = self.tween_info['position'][0]
-            self.rect.y = self.tween_info['position'][1]
+            self.tween_information['position']['frames'][0] += 1 * dt
 
-            self.tween_info['frames'] = 0
-            self.tween_info['frames_max'] = 0
-
-            if self.tween_info['on_finished'] == 'del':
-                scene.del_sprites(self)
-                return
+        if self.tween_information['alpha']['frames'][0] < self.tween_information['alpha']['frames'][1]:
+            abs_prog = self.tween_information['alpha']['frames'][0] / self.tween_information['alpha']['frames'][1]
+        
+            self.image.set_alpha(self.tween_information['alpha']['old_alpha'] + (self.tween_information['alpha']['new_alpha'] - self.tween_information['alpha']['old_alpha']) * self.tween_information['alpha']['easing_style'](abs_prog))
+            
+            self.tween_information['alpha']['frames'][0] += 1 * dt
 
         if self.hovering:
             create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)
@@ -262,20 +235,14 @@ class StandardCard(Card):
         return img
 
     def on_hover_start(self, scene):
-        if self.tween_info['flag'] == 'init':
-            return
-        
-        if self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
         
         super().on_hover_start(scene)
         scene.add_sprites(list(self.hover_texts.values()))
 
     def on_hover_end(self, scene):
-        if self.tween_info['flag'] == 'init':
-            return
-        
-        if self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
         
         super().on_hover_end(scene)
@@ -288,11 +255,11 @@ class StandardCard(Card):
         if event != 1:
             return
 
-        if self.tween_info['flag'] == 'init' or self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
 
         super().on_mouse_down(scene, event)
-        self.on_select(self, self.cards)
+        self.on_select(self, self.cards, self.flavor_text)
 
 class StatCard(Card):
     def __init__(self, position, stat, spawn=None):
@@ -328,20 +295,14 @@ class StatCard(Card):
         return img
     
     def on_hover_start(self, scene):
-        if self.tween_info['flag'] == 'init':
-            return
-        
-        if self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
         
         super().on_hover_start(scene)
         scene.add_sprites(list(self.hover_texts.values()))
 
     def on_hover_end(self, scene):
-        if self.tween_info['flag'] == 'init':
-            return
-        
-        if self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
         
         super().on_hover_end(scene)
@@ -354,8 +315,8 @@ class StatCard(Card):
         if event != 1:
             return
 
-        if self.tween_info['flag'] == 'init' or self.tween_info['flag'] == 'del':
+        if self.flag is not None:
             return
 
         super().on_mouse_down(scene, event)
-        self.on_select(self, self.cards)
+        self.on_select(self, self.cards, self.flavor_text)

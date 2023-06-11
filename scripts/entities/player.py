@@ -3,7 +3,7 @@ Holds the player class.
 '''
 
 from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
-from scripts.engine import Inputs, Entity
+from scripts.engine import Inputs, Entity, check_line_collision, get_closest_sprite, get_distance
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
@@ -39,7 +39,8 @@ class Player(GameEntity):
 
     Methods:
         get_ui_elements(): returns ui objects for the scene to display.
-        
+        get_interactable(): gets all interactable sprites.
+
         on_jump(): called when the player presses the up key.
         on_respawn(): called when the player respawns after death.
         on_death(): called when the player dies.
@@ -139,6 +140,12 @@ class Player(GameEntity):
         self.talents = []
         self.talent_info = {}
 
+        self.interact_info = {
+            'distance': 100,
+            'sprite': None,
+            'text': None
+        }
+
     def get_ui_elements(self):
         ui_elements = []
 
@@ -146,6 +153,31 @@ class Player(GameEntity):
         ui_elements.append(Hotbar(self, (SCREEN_DIMENSIONS[0] * .5, SCREEN_DIMENSIONS[1] - 70), 3))
 
         return ui_elements
+
+    def get_interactable(self, scene):
+        self.interact_info['sprite'] = None
+
+        scene.del_sprites(self.interact_info['text'])
+        self.interact_info['text'] = None
+
+        sprites = [s[0] for s in check_line_collision(self.center_position, scene.mouse.entity_pos, [s for s in scene.sprites if s.sprite_id == 'interactable'])]
+        sprites = [s for s in sprites if get_distance(self, s) <= self.interact_info['distance'] 
+                   and get_distance(scene.mouse.entity_pos, s.true_position) <= self.interact_info['distance'] 
+                   and s.interactable
+            ]
+
+        if not sprites:
+            return
+        
+        self.interact_info['sprite'] = get_closest_sprite(self, sprites)
+        self.interact_info['text'] = TextBox(
+            [scene.mouse.rect.centerx, scene.mouse.rect.top - (40 * .5)],
+            f'{pygame.key.name(Inputs.KEYBINDS["interact"][0])}: {self.interact_info["sprite"].selected_text}',
+            color=self.interact_info['sprite'].selected_color,
+            size=.5
+        )
+
+        scene.add_sprites(self.interact_info['text'])
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -158,6 +190,9 @@ class Player(GameEntity):
             if action in list(self.abilities.keys()):
                 if self.abilities[action]:
                     self.abilities[action].call(scene, keybind=action)
+
+            if action == 'interact' and self.interact_info['sprite']:
+                self.interact_info['sprite'].on_interact(scene)
 
             if self.timed_inputs.get(action):
                 for ability in [a for a in self.abilities.values() if a is not None and a.keybind_info['double_tap']]:
@@ -382,36 +417,7 @@ class Player(GameEntity):
                         
                 self.velocity[1] = 0
 
-        ramps = [s for s in scene.sprites if s.secondary_sprite_id == 'ramp']
-        for ramp in ramps:
-            if not self.rect.colliderect(ramp.rect):
-                if ramp in self.collision_ignore:
-                    self.collision_ignore.remove(ramp)
-                    
-                if ramp in self.collisions:
-                    self.collisions.remove(ramp)
-                
-                continue
-
-            if ramp in self.collision_ignore:
-                continue
-
-            if self.velocity[1] < -4 and ramp not in self.collision_ignore:
-               self.collision_ignore.append(ramp) 
-               continue
-
-            pos = ramp.get_y_value(self)
-            if pos - self.rect.bottom < 4:
-                self.rect.bottom = pos
-                self.collide_points['bottom'] = True
-
-                if ramp not in self.collisions:
-                    self.collisions.append(ramp)
-
-                if self.movement_info['jumps'] != self.movement_info['max_jumps']:
-                    self.movement_info['jumps'] = self.movement_info['max_jumps']
-                            
-                self.velocity[1] = 0
+        self.apply_collision_y_ramp([s for s in scene.sprites if s.secondary_sprite_id == 'ramp'])
 
     def apply_afterimages(self, scene, dt, visuals=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:
@@ -528,7 +534,8 @@ class Player(GameEntity):
             self.apply_collision_y(scene, dt)
 
             self.set_frame_state()
-        
+            self.get_interactable(scene)
+
         for visual in self.visuals:
             visual.display(self, scene, dt)
 
