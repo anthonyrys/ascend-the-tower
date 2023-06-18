@@ -30,7 +30,7 @@ class Mouse(pygame.sprite.Sprite):
         return pygame.mask.from_surface(self.image)
     
     def check_ui_hover(self, scene):
-        for sprite in [s for s in scene.sprites if isinstance(s, Frame)]:
+        for sprite in [s for s in scene.sprite_list if isinstance(s, Frame)]:
             if not check_pixel_collision(self, sprite):
                 if not self.rect.colliderect(sprite.hover_rect):
                     if sprite.hovering:

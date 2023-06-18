@@ -81,7 +81,7 @@ class Enemy(GameEntity):
         pos = self.center_position
         particles = []
         for color in get_sprite_colors(self, .5):
-            radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .11)
+            radius = round(((self.image.get_width() + self.image.get_height()) / 2) * round(random.uniform(.06, .11), 2))
 
             cir = Circle(pos, color, radius, 0)
             cir.set_goal(
@@ -121,7 +121,7 @@ class Enemy(GameEntity):
             particles = []
 
             for color in get_sprite_colors(self, .75):
-                radius = round(((self.image.get_width() + self.image.get_height()) / 2) * .1)
+                radius = round(((self.image.get_width() + self.image.get_height()) / 2) * round(random.uniform(.05, .1), 2))
 
                 cir = Circle(pos, color, radius, 0)
                 cir.set_goal(
@@ -203,21 +203,21 @@ class HumanoidEnemy(Enemy):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        self.apply_collision_x_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']])
+        self.apply_collision_x_default(scene.get_sprites('tile', include=['block', 'barrier']))
 
     def apply_collision_y(self, scene, dt):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']]):
+        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['block', 'barrier'])):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['ceiling', 'floor']]):
+        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['ceiling', 'floor'])):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
      
-        platforms = [s for s in scene.sprites if s.secondary_sprite_id == 'platform']
+        platforms = scene.get_sprites('tile', 'platform')
         for platform in platforms:
             if not self.rect.colliderect(platform.rect):
                 if platform in self.collision_ignore:
@@ -240,7 +240,7 @@ class HumanoidEnemy(Enemy):
                         
                 self.velocity[1] = 0
 
-        self.apply_collision_y_ramp([s for s in scene.sprites if s.secondary_sprite_id == 'ramp'])
+        self.apply_collision_y_ramp(scene.get_sprites('tile', 'ramp'))
 
 class FlyerEnemy(Enemy):
     def __init__(self, position, img, dimensions, strata, alpha):
@@ -557,30 +557,35 @@ class GraniteElemental(FloaterEnemy):
                 'amount': self.character.combat_info['base_damage'] * self.ability_info['damage_multiplier']})
 
         def call(self, scene, keybind=None):
+            if self.character.ability_info['activation_cancel']:
+                return
+            
             player = scene.player
-            dist = get_distance(self.character, player)
 
-            proj_velocity = [
-                round((player.rect.x - self.character.rect.x) / (dist / self.ability_info['speed'])),
-                round((player.rect.y - self.character.rect.y) / (dist / self.ability_info['speed']))
+            direction = [
+                player.center_position[0] - self.character.center_position[0],
+                player.center_position[1] - self.character.center_position[1]
             ]
+            multiplier = self.ability_info['speed'] / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+            vel = [direction[0] * multiplier, direction[1] * multiplier]
 
             proj_info = {
                 'collision': 'pixel',
-                'collision_exclude': ['particle', 'projectile', 'enemy'],
+                'collisions': ['player', 'tile'],
                 'collision_function': {
                     'player': self.collision_player,
                     'default': self.collision_default
-                },
-
-                'duration': 90
+                }
             }
 
             proj = ProjectileStandard(
                 self.character.center_position, ENEMY_COLOR, 10, self.character.strata + 1,
                 proj_info,
-                velocity=proj_velocity, 
-                trail=True
+                velocity=vel,
+                duration=90,
+                settings={
+                    'trail': True
+                }
             )
 
             particles = []
@@ -589,8 +594,8 @@ class GraniteElemental(FloaterEnemy):
                 cir.set_goal(
                             50, 
                             position=(
-                                self.character.rect.center[0] + random.randint(-50, 50) + (proj_velocity[0] * 15), 
-                                self.character.rect.center[1] + random.randint(-50, 50) + (proj_velocity[1] * 15)
+                                self.character.rect.center[0] + random.randint(-50, 50) + (vel[0] * 15), 
+                                self.character.rect.center[1] + random.randint(-50, 50) + (vel[1] * 15)
                             ), 
                             radius=0, 
                             width=0
@@ -609,6 +614,11 @@ class GraniteElemental(FloaterEnemy):
         super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
         self.secondary_sprite_id = 'grelemental'
 
+        self.image.fill((0, 0, 0, 0))
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
+        img = pygame.transform.scale(img, (img.get_width() * 2, img.get_height() * 2))
+        self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+
         self.default_movement_info = {
             'direction': 0,
 
@@ -616,7 +626,7 @@ class GraniteElemental(FloaterEnemy):
             'friction_frames': 0,
 
             'per_frame_movespeed': .5,
-            'max_movespeed': 6,
+            'max_movespeed': 4,
 
             'jump_power': 1,
             'jumps': 0,
@@ -640,7 +650,7 @@ class GraniteElemental(FloaterEnemy):
             'crit_strike_chance': 0,
             'crit_strike_multiplier': 0,
 
-            'knockback_resistance': .9,
+            'knockback_resistance': .5,
             
             'immunities': get_immunity_dict(),
             'mitigations': get_mitigation_dict()
@@ -663,28 +673,22 @@ class GraniteElemental(FloaterEnemy):
             'damage_frames': 0,
             'damage_frames_max': 0,
 
-            'imgs': None,
-            'scale': 2,
-
             'sin_count': 0,
             'sin_amplifier': .01,
 
             'size': 10,
             'color': ENEMY_COLOR,
 
-            'radius': 60,
+            'radius': 65,
             'angle': 0,
             'position': [0, 0],
 
-            'angle_speed': 4
+            'angle_speed': 3
         }
-
-        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
 
         self.ability_info = {
             'activation_frames': [0, 60],
-            'activation_charge_up_percentage': .66,
-            'activation_charge_up': False
+            'activation_cancel': False
         }
 
         self.abilities.append(self.Blast(self))
@@ -693,19 +697,10 @@ class GraniteElemental(FloaterEnemy):
         super().on_damaged(scene, info)
 
         self.ability_info['activation_frames'][0] = random.randint(0, 5)
-        self.ability_info['activation_charge_up'] = False
+        self.ability_info['activation_cancel'] = True
 
     def set_images(self, scene, dt):
-        self.image.fill((0, 0, 0, 0))
-
-        index = abs(round(math.sin(self.img_info['sin_count'] * self.img_info['sin_amplifier']) * (len(self.img_info['imgs']) - 1)))
-
-        img = self.img_info['imgs'][index ].copy()
-
-        img = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale']))
-        self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
-
-        self.img_info['sin_count'] += 1 *dt
+        self.img_info['sin_count'] += 1 * dt
 
         self.img_info['angle'] += self.img_info['angle_speed'] * dt
 
@@ -740,33 +735,27 @@ class GraniteElemental(FloaterEnemy):
             super().display(scene, dt)
             return
 
-        if check_line_collision(scene.player.rect.center, self.rect.center, scene.sprites, ['player', 'enemy', 'particle', 'projectile']):
+        if check_line_collision(scene.player.rect.center, self.rect.center, scene.get_sprites('tile', exclude='ramp')):
             self.ability_info['activation_frames'][0] = random.randint(0, 5)
-            self.ability_info['activation_charge_up'] = False
         
         self.ability_info['activation_frames'][0] += 1 * dt
 
-        charge_up_frames = round(self.ability_info['activation_frames'][1] * self.ability_info['activation_charge_up_percentage'])
-        if round(self.ability_info['activation_frames'][0]) == charge_up_frames and not self.ability_info['activation_charge_up']:
-            self.ability_info['activation_charge_up'] = True
-
-            frames = round(self.ability_info['activation_frames'][1]) - round(self.ability_info['activation_frames'][1] * .66)
+        if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
+            self.ability_info['activation_cancel'] = False
+            self.ability_info['activation_frames'][0] = 0
             particle = Circle(
                 [0, 0],
                 ENEMY_COLOR,
-                50,
+                65,
                 3,
                 self
             )
 
-            particle.set_goal(frames, position=[0, 0], radius=0, width=3)
+            particle.set_goal(20, position=[0, 0], radius=0, width=3, alpha=0)
+            particle.set_easings(radius='ease_in_sine', alpha='ease_in_cubic')
             scene.add_sprites(particle)
 
-        if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
-            self.ability_info['activation_frames'][0] = 0
-            self.ability_info['activation_charge_up'] = False
-
-            random.choice(self.abilities).call(scene)
+            self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
 
         self.ai.update(scene, dt, scene.player)
         self.apply_gravity(dt, .25)

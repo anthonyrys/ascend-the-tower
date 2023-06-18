@@ -23,12 +23,12 @@ class GameLoop(GameScene):
 
         self.add_sprites(self.player)
 
-        for sprite_list in self.tiles.values():
-            if not isinstance(sprite_list, list):
-                self.add_sprites(sprite_list)
+        for tile in self.tiles.values():
+            if not isinstance(tile, list):
+                self.add_sprites(tile)
                 continue
             
-            for sprite in sprite_list:
+            for sprite in tile:
                 self.add_sprites(sprite)
 
         self.add_sprites(self.ui_elements)

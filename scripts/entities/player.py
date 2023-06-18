@@ -160,7 +160,7 @@ class Player(GameEntity):
         scene.del_sprites(self.interact_info['text'])
         self.interact_info['text'] = None
 
-        sprites = [s[0] for s in check_line_collision(self.center_position, scene.mouse.entity_pos, [s for s in scene.sprites if s.sprite_id == 'interactable'])]
+        sprites = [s[0] for s in check_line_collision(self.center_position, scene.mouse.entity_pos, scene.get_sprites('interactable'))]
         sprites = [s for s in sprites if get_distance(self, s) <= self.interact_info['distance'] 
                    and get_distance(scene.mouse.entity_pos, s.true_position) <= self.interact_info['distance'] 
                    and s.interactable
@@ -171,11 +171,14 @@ class Player(GameEntity):
         
         self.interact_info['sprite'] = get_closest_sprite(self, sprites)
         self.interact_info['text'] = TextBox(
-            [scene.mouse.rect.centerx, scene.mouse.rect.top - (40 * .5)],
+            [0, self.interact_info['sprite'].rect.top - (60 * .5)],
             f'{pygame.key.name(Inputs.KEYBINDS["interact"][0])}: {self.interact_info["sprite"].selected_text}',
             color=self.interact_info['sprite'].selected_color,
             size=.5
         )
+
+        self.interact_info['text'].uses_entity_surface = True
+        self.interact_info['text'].rect.x = self.interact_info['sprite'].rect.centerx - self.interact_info['text'].image.get_width() * .5
 
         scene.add_sprites(self.interact_info['text'])
 
@@ -374,7 +377,7 @@ class Player(GameEntity):
         self.collide_points['left'] = False
 
         if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
-            self.apply_collision_x_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']])
+            self.apply_collision_x_default(scene.get_sprites('tile', include=['block', 'barrier']))
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -382,15 +385,15 @@ class Player(GameEntity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['block', 'barrier']]):
+        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['block', 'barrier'])):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default([s for s in scene.sprites if s.secondary_sprite_id in ['ceiling', 'floor']]):
+        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['ceiling', 'floor'])):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
      
-        platforms = [s for s in scene.sprites if s.secondary_sprite_id == 'platform']
+        platforms = scene.get_sprites('tile', 'platform')
         for platform in platforms:
             if not self.rect.colliderect(platform.rect):
                 if platform in self.collision_ignore:
@@ -417,7 +420,7 @@ class Player(GameEntity):
                         
                 self.velocity[1] = 0
 
-        self.apply_collision_y_ramp([s for s in scene.sprites if s.secondary_sprite_id == 'ramp'])
+        self.apply_collision_y_ramp(scene.get_sprites('tile', 'ramp'))
 
     def apply_afterimages(self, scene, dt, visuals=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:

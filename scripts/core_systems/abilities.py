@@ -3,7 +3,7 @@ File that holds Ability baseclass as well as ability subclasses.
 '''
 
 from scripts.constants import PLAYER_COLOR
-from scripts.engine import check_line_collision, check_pixel_collision, get_distance
+from scripts.engine import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
 
 from scripts.entities.particle_fx import Circle
 
@@ -95,7 +95,7 @@ class Ability:
     def check_draw_condition(player):
         return True
             
-    def call(self, scene, keybind=None):
+    def call(self, scene, keybind=None, ignores_cooldown=False):
         # print(f'{self.ABILITY_ID}::call()')
 
         if self.ABILITY_ID is not None:
@@ -181,6 +181,28 @@ class PrimaryAttack(Ability):
     def on_collide_tile(self, scene, dt, tile):
         self.character.velocity = [round(-self.velocity[0] * .3, 1), round(-self.velocity[1] * .3, 1)]
 
+        pos = self.character.center_position
+        particles = []
+
+        for color in get_sprite_colors(tile, .15):
+            color[3] = 255
+            cir = Circle(pos, color, random.randint(3, 6), 0)
+            cir.set_goal(
+                        60, 
+                        position=(
+                            pos[0] + random.randint(-150, 150) + self.character.velocity[0] * 10, 
+                            pos[1] + random.randint(-25, 25) + self.character.velocity[1] * 10
+                        ), 
+                        radius=0, 
+                        width=0
+                    )
+            
+            cir.set_easings(radius='ease_out_sine')
+            cir.set_gravity(4)
+            particles.append(cir)
+        
+        scene.add_sprites(particles)
+
     def on_collide_enemy(self, scene, dt, enemy):
         call_talents(scene, self.character, {f'on_{self.ABILITY_ID}_collide': self})
 
@@ -197,7 +219,7 @@ class PrimaryAttack(Ability):
 
         pos = enemy.center_position
         for _ in range(8):
-            cir = Circle(pos, self.ability_info['color'], 8, 0)
+            cir = Circle(pos, self.ability_info['color'], random.randint(4, 8), 0)
             cir.set_goal(
                         75, 
                         position=(pos[0] + random.randint(-250, 250), pos[1] + random.randint(-250, 250)), 
@@ -227,7 +249,7 @@ class PrimaryAttack(Ability):
         self.start = self.character.center_position
         self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
 
-        tiles = [s for s in scene.sprites if s.sprite_id == 'tile' and s.secondary_sprite_id != 'platform']
+        tiles = scene.get_sprites('tile', exclude=['platform'])
 
         tile_col = check_line_collision(self.start, self.destination, tiles)
         if tile_col != []:
@@ -327,14 +349,24 @@ class PrimaryAttack(Ability):
             return
         
         collision = None
-        collidables = [s for s in scene.sprites if s.sprite_id == 'tile' and s.secondary_sprite_id != 'platform']
+        collidables = scene.get_sprites('tile', exclude=['platform'])
+
+        vel_pos = [
+            self.character.center_position[0] + self.character.velocity[0] * dt,
+            self.character.center_position[1] + self.character.velocity[1] * dt
+        ]
+
         for collidable in collidables:
+            if check_line_collision(self.character.center_position, vel_pos, scene.get_sprites('tile', exclude=['platform', 'ramp'])):
+                collision = collidable
+                break
+
             if not check_pixel_collision(self.character, collidable):
                 continue
 
             collision = collidable
 
-        enemies = [s for s in scene.sprites if s.sprite_id == 'enemy']
+        enemies = scene.get_sprites('enemy')
         for enemy in enemies:
             if enemy.combat_info['immunities'][self.ability_info['damage_type'] + '&']:
                 continue
@@ -401,8 +433,8 @@ class PrimaryAttack(Ability):
 
         for i in range(self.img_radius):
             cir_pos = [
-                self.character.rect.centerx - (round(self.velocity[0] * dt) * (.1 * (i + 1))),
-                self.character.rect.centery - (round(self.velocity[1] * dt) * (.1 * (i + 1)))
+                self.character.rect.centerx - (round(self.velocity[0] * dt) * (.075 * (i + 1))),
+                self.character.rect.centery - (round(self.velocity[1] * dt) * (.075 * (i + 1)))
             ]
 
             pygame.draw.circle(scene.entity_surface, self.ability_info['color'], cir_pos, (self.img_radius - (i + 1)))
@@ -440,6 +472,7 @@ class RainOfArrows(Ability):
         self.ability_info['active'] = False
         self.ability_info['cooldown_timer'] = 300
         self.ability_info['damage_percentage'] = .5
+        self.ability_info['projectile_duration'] = 45
 
         self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
@@ -453,12 +486,10 @@ class RainOfArrows(Ability):
 
         self.ability_info['projectile_info'] = {
             'collision': 'rect',
-            'collision_exclude': ['particle', 'projectile', 'tile', 'player'],
+            'collisions': 'enemy',
             'collision_function': {
                 'enemy': self.collision_enemy
-            },
-
-            'duration': 45
+            }
         }
 
     def collision_enemy(self, scene, projectile, sprite):
@@ -467,34 +498,38 @@ class RainOfArrows(Ability):
     
         self.character.on_attack(scene, info)
 
-    def call(self, scene, keybind=None):
-        if self.ability_info['active']:
+    def call(self, scene, keybind=None, ignore_cooldown=False):
+        if self.ability_info['active'] and not ignore_cooldown:
             return
 
-        if self.ability_info['cooldown'] > 0:
+        if self.ability_info['cooldown'] > 0 and not ignore_cooldown:
             return
 
         if any(list(self.character.overrides.values())):
             return
 
-        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        if not ignore_cooldown:
+            self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+
         super().call(scene, keybind)
         
         self.ability_info['active'] = True
 
         particle = Circle(
             [0, 0],
-            PLAYER_COLOR,
+            (255, 255, 255),
             0,
             5,
             self.character
         )
 
-        particle.set_goal(15, position=[0, 0], radius=60, width=1)
+        particle.set_goal(15, position=[0, 0], radius=60, width=1, alpha=0)
+        particle.set_easings(alpha='ease_in_sine')
+
         scene.add_sprites(particle)
 
         pos = scene.mouse.entity_pos.copy()
-        pos[1] -= (self.ability_info['spawn_info']['velocity'][1] * (self.ability_info['projectile_info']['duration'] * .25))
+        pos[1] -= (self.ability_info['spawn_info']['velocity'][1] * (self.ability_info['projectile_duration'] * .25))
 
         self.ability_info['spawn_info']['position'] = pos
         self.ability_info['spawn_info']['duration'][0] = 0
@@ -524,11 +559,12 @@ class RainOfArrows(Ability):
                 None,
                 self.character.strata + 1,
                 self.ability_info['projectile_info'],
-                velocity=self.ability_info['spawn_info']['velocity']
+                velocity=self.ability_info['spawn_info']['velocity'],
+                duration=self.ability_info['projectile_duration']
             )
 
             projectile.image.set_alpha(0)
-            projectile.set_alpha_tween(15, 255)
+            projectile.set_alpha_tween(255, 20, 'ease_out_quint')
 
             scene.add_sprites(projectile)
     
@@ -574,17 +610,19 @@ class IntangibleShroud(Ability):
 
         self.character.combat_info['immunities']['all'] = False
 
-    def call(self, scene, keybind=None):
+    def call(self, scene, keybind=None, ignore_cooldown=False):
         if self.ability_info['active']:
             return
 
-        if self.ability_info['cooldown'] > 0:
+        if self.ability_info['cooldown'] > 0 and not ignore_cooldown:
             return
         
         if any(list(self.character.overrides.values())):
             return
 
-        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+        if not ignore_cooldown:
+            self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
+
         super().call(scene, keybind)
 
         self.ability_info['active'] = True
@@ -595,7 +633,7 @@ class IntangibleShroud(Ability):
         particles = []
         pos = self.character.center_position
         for _ in range(6):
-            cir = Circle(pos, (255, 255, 255), 8, 0)
+            cir = Circle(pos, (255, 255, 255), random.randint(6, 8), 0)
             cir.set_goal(
                         75, 
                         position=(pos[0] + random.randint(-75, 75), pos[1] + random.randint(-75, 75)), 
@@ -626,12 +664,10 @@ class IntangibleShroud(Ability):
             for visual in self.character.visuals:
                 visual.image.set_alpha(255)
 
-            self.character.combat_info['immunities']['all'] = False
-    
             particles = []
             pos = self.character.center_position
             for _ in range(3):
-                cir = Circle(pos, (255, 255, 255), 6, 0)
+                cir = Circle(pos, (255, 255, 255), random.randint(4, 6), 0)
                 cir.set_goal(
                             60, 
                             position=(pos[0] + random.randint(-50, 50), pos[1] + random.randint(-50, 50)), 
@@ -679,13 +715,11 @@ class HolyJavelin(Ability):
         self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
         self.ability_info['projectile_info'] = {
-            'collision': 'rect',
-            'collision_exclude': ['particle', 'projectile', 'player'],
+            'collision': 'pixel',
+            'collisions': ['tile', 'enemy'],
             'collision_function': {
                 'default': self.collide_default
-            },
-
-            'duration': 150
+            }
         }
 
         self.ability_info['speed'] = 30
@@ -699,7 +733,7 @@ class HolyJavelin(Ability):
     def collide_default(self, scene, projectile, sprite):
         enemies = []
 
-        for e in [s for s in scene.sprites if s.sprite_id == 'enemy']:
+        for e in scene.get_sprites('enemy'):
             if e in enemies:
                 continue
 
@@ -783,7 +817,10 @@ class HolyJavelin(Ability):
             self.character.strata + 1,
             self.ability_info['projectile_info'],
             velocity=vel,
-            afterimages=True
+            duration=150,
+            settings={
+                'afterimages': [0, 1]
+            }
         )
 
         projectile.glow['active'] = True
@@ -821,16 +858,17 @@ class HolyJavelin(Ability):
         
         self.character.overrides['ability-passive'] = None
 
-    def call(self, scene, keybind=None):
-        if self.ability_info['cooldown'] > 0:
+    def call(self, scene, keybind=None, ignore_cooldown=False):
+        if self.ability_info['cooldown'] > 0 and not ignore_cooldown:
             return
         
         if any(list(self.character.overrides.values())):
             return
 
-        self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
-        self.ability_info['countdown'] = [20, 20]
+        if not ignore_cooldown:
+            self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
 
+        self.ability_info['countdown'] = [20, 20]
         super().call(scene, keybind)
         
         self.character.overrides['ability-passive'] = self
@@ -844,7 +882,8 @@ class HolyJavelin(Ability):
             self.character
         )
 
-        particle.set_goal(self.ability_info['countdown'][1], position=[0, 0], radius=0, width=3)
-            
+        particle.set_goal(self.ability_info['countdown'][1], position=[0, 0], radius=0, width=3, alpha=0)
+        particle.set_easings(alpha='ease_out_sine')
+
         scene.set_dt_multiplier(.5, self.ability_info['countdown'][1])
         scene.add_sprites(particle)

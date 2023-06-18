@@ -14,23 +14,18 @@ class Projectile(Entity):
 
     Variables:
         info: general information about the projectile.
-        trail: whether or not the projectile leaves a trail.
-        afterimages: whether or not the projectile will leave afterimages.
-        afterimages_frames: afterimage timer for the apply_afterimages function.
+        settings: settings for how the projectile should be displayed.
 
         duration: duration of the projectile.
         prev_positions: list of the previous positions the projectile had.
         prev_player_position: previous position of the player.
 
-        alpha_info: information on how the image alpha should be tweened.
-
     Methods:
         on_collision(): called when the projectile collides with its given sprites.
-        set_alpha_tween(): sets the alpha_info values.
         apply_afterimages(): applies afterimages of the projectile if enabled.
     '''
 
-    def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], trail=False, afterimages=False):
+    def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], duration=0, settings={}):
         if isinstance(img, tuple):
             self.radius = dimensions
             self.color = img
@@ -48,23 +43,11 @@ class Projectile(Entity):
         
         self.velocity = velocity
         self.info = info
-        self.trail = trail
-        self.afterimages = afterimages
-        self.afterimage_frames = [0, 1]
+        self.settings = settings
 
-        self.duration = 0
+        self.duration = duration
         self.prev_positions = []
         self.prev_player_position = None
-
-        self.alpha_info = {
-            'easing_style': getattr(Easings, 'ease_out_quint'),
-
-            'frames': 0,
-            'max_frames': 0,
-
-            'alpha': 0,
-            'base_alpha': 0
-        }
 
     def on_collision(self, scene, sprite):
         if 'collision_function' in self.info:
@@ -76,19 +59,12 @@ class Projectile(Entity):
 
         scene.del_sprites(self)
 
-    def set_alpha_tween(self, frames, alpha):
-        self.alpha_info['frames'] = 0
-        self.alpha_info['max_frames'] = frames
-
-        self.alpha_info['alpha'] = alpha
-        self.alpha_info['base_alpha'] = self.image.get_alpha()
-
     def apply_afterimages(self, scene, dt):
-        self.afterimage_frames[0] += 1 * dt
-        if self.afterimage_frames[0] < self.afterimage_frames[1]:
+        self.settings['afterimages'][0] += 1 * dt
+        if self.settings['afterimages'][0] < self.settings['afterimages'][1]:
             return
         
-        self.afterimage_frames[0] = 0
+        self.settings['afterimages'][0] = 0
         
         img = Image(
             self.center_position,
@@ -100,64 +76,14 @@ class Projectile(Entity):
         scene.add_sprites(img)
 
     def display(self, scene, dt):
-        if self.alpha_info['frames'] < self.alpha_info['max_frames']:
-            abs_prog = self.alpha_info['frames'] / self.alpha_info['max_frames']
-            alpha = self.alpha_info['base_alpha'] + ((self.alpha_info['alpha'] - self.alpha_info['base_alpha']) * self.alpha_info['easing_style'](abs_prog))
-
-            self.image.set_alpha(alpha)
-            self.alpha_info['frames'] += 1 * dt
-
-        if self.afterimages:
-            self.apply_afterimages(scene, dt)
-
-        super().display(scene, dt)
-
-class ProjectileStandard(Projectile):
-    def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], trail=False, afterimages=False):
-        super().__init__(position, img, dimensions, strata, info, alpha, velocity, trail, afterimages)
-
-        self.secondary_sprite_id = 'standard_projectile'
-
-    def display(self, scene, dt):
-        if self.duration >= self.info['duration']:
+        if self.duration <= 0:
             scene.del_sprites(self)
             return
-        
-        self.prev_positions.append([self.rect.x, self.rect.y])
 
         self.rect.x += round(self.velocity[0] * dt, 1)
         self.rect.y += round(self.velocity[1] * dt, 1)
 
-        if self.info:
-            if self.info['collision'] == 'pixel':
-                for sprite in [s for s in scene.sprites if s.sprite_id not in self.info['collision_exclude']]:
-                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
-                        continue
-
-                    if sprite.sprite_id == 'player' and self.prev_player_position:
-                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
-                            self.on_collision(scene, sprite)
-
-                    if not check_pixel_collision(self, sprite):
-                        continue
-
-                    self.on_collision(scene, sprite)
-
-            if self.info['collision'] == 'rect':
-                for sprite in [s for s in scene.sprites if s.sprite_id not in self.info['collision_exclude']]:
-                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
-                        continue
-
-                    if sprite.sprite_id == 'player' and self.prev_player_position:
-                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
-                            self.on_collision(scene, sprite)
-
-                    if not self.rect.colliderect(sprite.rect):
-                        continue
-
-                    self.on_collision(scene, sprite)
-
-        if self.trail:
+        if 'trail' in self.settings:
             for i in range(self.radius):
                 cir_pos = [
                     self.rect.centerx - (round(self.velocity[0]) * (.25 * (i + 1))),
@@ -167,6 +93,51 @@ class ProjectileStandard(Projectile):
                 pygame.draw.circle(scene.entity_surface, self.color, cir_pos, (self.radius - (i + 1)))
 
         self.prev_player_position = scene.player.rect.center
-        self.duration += 1 * dt
+        self.duration -= 1 * dt
+
+        if 'afterimages' in self.settings:
+            self.apply_afterimages(scene, dt)
+
+        super().display(scene, dt)
+
+class ProjectileStandard(Projectile):
+    def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], duration=0, settings={}):
+        super().__init__(position, img, dimensions, strata, info, alpha, velocity, duration, settings)
+
+        self.secondary_sprite_id = 'standard_projectile'
+
+    def display(self, scene, dt):
+        if self.info:
+            if self.info['collision'] == 'pixel':
+                for sprite in scene.get_sprites(self.info['collisions']):
+                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
+                        continue
+
+                    if sprite.sprite_id == 'player' and self.prev_player_position:
+                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
+                            self.on_collision(scene, sprite)
+                            break
+
+                    if not check_pixel_collision(self, sprite):
+                        continue
+
+                    self.on_collision(scene, sprite)
+                    break
+
+            if self.info['collision'] == 'rect':
+                for sprite in scene.get_sprites(self.info['collisions']):
+                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
+                        continue
+
+                    if sprite.sprite_id == 'player' and self.prev_player_position:
+                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
+                            self.on_collision(scene, sprite)
+                            break
+
+                    if not self.rect.colliderect(sprite.rect):
+                        continue
+
+                    self.on_collision(scene, sprite)
+                    break
 
         super().display(scene, dt)

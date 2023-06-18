@@ -387,6 +387,20 @@ class Entity(pygame.sprite.Sprite):
                 rect
             )
 
+        remove_list = []
+        for i in range(len(self.delay_timers)):
+            if self.delay_timers[i][0] <= 0:
+                continue
+            
+            self.delay_timers[i][0] -= 1
+
+            if self.delay_timers[i][0] <= 0 and self.delay_timers[i][1]:
+                self.delay_timers[i][1](*self.delay_timers[i][2])
+                remove_list.append(self.delay_timers[i])
+
+        for element in remove_list:
+            self.delay_timers.remove(element)
+
         if self.uses_ui_surface:
             scene.ui_surface.blit(
                 self.image, 
@@ -570,11 +584,11 @@ def check_pixel_collision(primary_sprite, secondary_sprite):
 
     return collision
 
-def check_line_collision(start, end, sprites, exclude=[]):
+def check_line_collision(start, end, sprites):
     clipped_sprites = []
 
     for sprite in sprites:
-        if sprite.rect.clipline(start, end) and sprite.sprite_id not in exclude:
+        if sprite.rect.clipline(start, end):
             clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
 
     return clipped_sprites

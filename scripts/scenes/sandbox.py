@@ -24,8 +24,8 @@ class Sandbox(GameScene):
 
         self.add_sprites(self.player)
 
-        for sprite_list in self.tiles.values():
-            for sprite in sprite_list:
+        for tile in self.tiles.values():
+            for sprite in tile:
                 self.add_sprites(sprite)
 
         self.add_sprites(self.ui_elements)

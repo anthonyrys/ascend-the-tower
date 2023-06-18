@@ -553,7 +553,7 @@ class GameScene(Scene):
         self.entity_surface.fill((0, 0, 0, 0), entity_view)
         self.ui_surface.fill((0, 0, 0, 0), self.view)
 
-        display_order = self.sort_sprites(self.sprites)
+        display_order = self.sort_sprites(self.sprite_list)
         for _, v in sorted(display_order.items()):
             for sprite in v: 
                 if not sprite.active:

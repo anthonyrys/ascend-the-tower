@@ -64,7 +64,9 @@ class Particle(Entity):
 class Circle(Particle):
     def __init__(self, position, color, radius, width, attach=None):
         super().__init__(position, (0, 0, 0), (radius * 2, radius * 2), None)
+        self.secondary_sprite_id = 'circle'
 
+        self.alpha = self.image.get_alpha()
         self.position, self.base_position = position, position
         self.radius, self.base_radius = radius, radius
         self.width, self.base_width = width, width
@@ -73,6 +75,7 @@ class Circle(Particle):
 
         self.easing_styles['radius'] = getattr(Easings, 'ease_out_cubic')
         self.easing_styles['width'] = getattr(Easings, 'ease_in_sine')
+        self.easing_styles['alpha'] = getattr(Easings, 'ease_in_sine')
 
         self.attach = attach
 
@@ -95,11 +98,14 @@ class Circle(Particle):
         if self.attach:
             self.rect = self.image.get_rect(center=(self.attach.rect.center))
             
-        else:
+        elif 'position' in self.goal_info:
             self.rect = self.image.get_rect(center=(
                 self.base_position[0] + (self.goal_info['position'][0] - self.base_position[0]) * self.easing_styles['position'](abs_prog),
                 self.base_position[1] + (self.goal_info['position'][1] - self.base_position[1]) * self.easing_styles['position'](abs_prog))
             )
+        
+        else:
+            self.rect = self.image.get_rect(center=self.base_position)
 
         if self.gravity:
             self.rect.y += self.gravity * self.frame_count
@@ -109,13 +115,17 @@ class Circle(Particle):
             self.color, (self.image.get_width() * .5, self.image.get_height() * .5), self.radius, self.width
         )
 
+        if 'alpha' in self.goal_info:
+            self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * self.easing_styles['alpha'](abs_prog)))
+
         super().display(scene, dt)
         self.frame_count += 1 * dt
 
 class Image(Particle):
     def __init__(self, position, img, strata, alpha):
         super().__init__(position, img, None, strata, alpha)
-        
+        self.secondary_sprite_id = 'image'
+
         self.alpha = self.image.get_alpha()
         self.position, self.original_position = position, position
         
@@ -147,7 +157,8 @@ class Image(Particle):
         else:
             self.rect = self.image.get_rect(center = self.original_position)
 
-        self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * self.easing_styles['alpha'](abs_prog)))
+        if 'alpha' in self.goal_info:
+            self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * self.easing_styles['alpha'](abs_prog)))
 
         super().display(scene, dt)
         self.frame_count += 1 * dt

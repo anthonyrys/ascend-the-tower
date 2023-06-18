@@ -119,7 +119,7 @@ class WaveHandler:
         
         self.wave_info = {}
         
-        for enemy in [e for e in self.scene.sprites if e.sprite_id == 'enemy']:
+        for enemy in self.scene.get_sprites('enemy'):
             enemy.on_death(self.scene, None)
 
         self.scene.delay_timers.append([45, self.scene.on_wave_complete, []])

@@ -3,12 +3,13 @@ File that holds Talent baseclass as well as talent subclasses.
 '''
 
 from scripts.constants import HEAL_COLOR, PLAYER_COLOR
-from scripts.engine import get_distance, Entity
+from scripts.engine import get_distance, get_closest_sprite, Entity, Easings
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
 
 from scripts.entities.particle_fx import Image, Circle
+from scripts.entities.projectile import ProjectileStandard
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
@@ -642,7 +643,7 @@ class ChainReaction(Talent):
 		target = info['target']
 		enemies = []
 
-		for sprite in [s for s in scene.sprites if s.sprite_id == 'enemy' and s != target]:
+		for sprite in [s for s in scene.get_sprites('enemy') if s != target]:
 			if charges <= 0:
 				break
 			
@@ -875,3 +876,355 @@ class LingeringShroud(Talent):
 		super().call(call, scene, info)
 		
 		self.player.combat_info['mitigations']['all'][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]
+
+class EvasiveManeuvers(Talent):
+	TALENT_ID = 'evasive_maneuvers'
+	TALENT_CALLS = ['on_@dash']
+
+	DESCRIPTION = {
+		'name': 'Evasive Maneuvers',
+		'description': 'Dashing grants temporary immunity to contact damage.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'evasive-maneuvers',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['resistance/immunity'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['active'] = True
+		self.talent_info['frames'] = 0
+		self.talent_info['frames_max'] = 20
+
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+
+		self.talent_info['active'] = True
+
+		self.player.combat_info['immunities']['contact'] = self.talent_info['frames_max']
+		self.talent_info['frames'] = self.talent_info['frames_max']
+
+		particle = Circle(
+			[0, 0],
+			(255, 255, 255),
+			0,
+			5,
+			self.player
+		)
+
+		particle.set_goal(12, position=[0, 0], radius=60, width=1, alpha=0)
+		particle.set_easings(alpha='ease_in_sine')
+		
+		scene.add_sprites(particle)
+
+	def update(self, scene, dt):
+		super().update(scene, dt)
+
+		if not self.talent_info['active']:
+			return
+
+		self.player.image.set_alpha(55)
+
+		for visual in self.player.visuals:
+			visual.image.set_alpha(55)
+
+		self.talent_info['frames'] -= 1 * dt
+		
+		if self.talent_info['frames'] <= 0:
+			self.talent_info['active'] = False
+
+			for visual in self.player.visuals:
+				visual.image.set_alpha(255)
+
+class Reprisal(Talent):
+	class ReprisalFamiliar(Entity):
+		def __init__(self, player):
+			self.color = (255, 75, 75)
+
+			img = pygame.Surface((14, 14)).convert_alpha()
+			img.set_colorkey((0, 0, 0))
+			pygame.draw.circle(img, self.color, img.get_rect().center, 7)
+
+			super().__init__(player.center_position, img, None, player.strata - 1)
+
+			self.player = player
+			self.active = False
+
+			self.combat_info = {
+				'max_distance': 600,
+				'damage_multiplier': .35,
+				'cooldown': [0, 20],
+				'speed': 15,
+				'size': 7,
+
+				'projectile_info': {
+					'collision': 'pixel',
+					'collisions': ['enemy'],
+					'collision_function': {
+						'default': self.collide_default,
+						'enemy': self.collide_enemy
+					}
+				}
+			}
+
+			self.sin_info = {
+				'amplifier': 2.5,
+				'frequency': .1,
+				'count': 0
+			}
+
+			self.direction_info = {
+				'previous_direction': self.player.movement_info['direction'],
+				'offset': 25,
+				'easing_offset': [0, 25],
+				'easing': getattr(Easings, 'ease_out_cubic'),
+				'frames': [0, 0]
+			}
+
+			self.glow['active'] = True
+			self.glow['size'] = 1.5
+			self.glow['intensity'] = .3
+
+		def collide_default(self, scene, projectile, sprite):
+			particles = []
+			pos = projectile.center_position
+
+			for _ in range(3):
+				cir = Circle(pos, projectile.color, 4, 0)
+				cir.set_goal(
+							75, 
+							position=(
+								pos[0] + random.randint(-75, 75) + (projectile.velocity[0] * 10), 
+								pos[1] + random.randint(-75, 75) + (projectile.velocity[1] * 10)
+							), 
+							radius=0, 
+							width=0
+						)
+
+				cir.glow['active'] = True
+				cir.glow['size'] = 1.25
+				cir.glow['intensity'] = .25
+
+				particles.append(cir)
+				
+			scene.add_sprites(particles)
+
+		def collide_enemy(self, scene, projectile, sprite):
+			self.collide_default(scene, projectile, sprite)
+
+			info = register_damage(
+				scene, 
+				self.player,
+				sprite, 
+				{
+				'type': 'magical', 
+				'amount': self.player.combat_info['base_damage'] * self.combat_info['damage_multiplier'],
+				'velocity': None
+				}
+			)
+
+			self.player.on_attack(scene, info)
+				
+		def set_position(self, dt):
+			if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
+				self.direction_info['previous_direction'] = self.player.movement_info['direction']
+				self.direction_info['easing_offset'] = [self.direction_info['offset'], 25 * self.player.movement_info['direction']]
+				self.direction_info['frames'][1] = 10
+
+			if self.direction_info['frames'][1] != 0:
+				abs_prog = self.direction_info['frames'][0] / self.direction_info['frames'][1]
+
+				self.direction_info['offset'] = (
+					self.direction_info['easing_offset'][0] + 
+					((self.direction_info['easing_offset'][1] - self.direction_info['easing_offset'][0]) * self.direction_info['easing'](abs_prog))
+				)
+
+				self.direction_info['frames'][0] += 1 * dt
+
+				if self.direction_info['frames'][0] >= self.direction_info['frames'][1]:
+					self.direction_info['frames'] = [0, 0]
+
+			pos = [
+				self.player.previous_center_position[0] - self.direction_info['offset'],
+				self.player.previous_center_position[1] - 15
+			]
+
+			if self.player.velocity[0] != 0 and (round(self.player.velocity[0]) ^ self.player.movement_info['direction']) < 0:
+				pos[0] += round(self.player.velocity[0] * .75)
+
+			self.rect.centerx = pos[0]
+			self.rect.centery = pos[1] - round((self.sin_info['amplifier'] * math.sin(self.sin_info['frequency'] * (self.sin_info['count']))))
+
+			self.sin_info['count'] += 1 * dt
+
+		def display(self, scene, dt):
+			self.set_position(dt)
+
+			enemies = [e for e in scene.get_sprites('enemy') if get_distance(self.player, e) <= self.combat_info['max_distance']]
+			enemy = None
+			if enemies:
+				enemy = get_closest_sprite(self.player, enemies)
+			
+			self.combat_info['cooldown'][0] += 1 * dt
+			if self.combat_info['cooldown'][0] >= self.combat_info['cooldown'][1] and enemy:
+				self.combat_info['cooldown'][0] = 0
+
+				direction = [
+					enemy.center_position[0] - self.center_position[0],
+					enemy.center_position[1] - self.center_position[1]
+				]
+				multiplier = self.combat_info['speed'] / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+				vel = [direction[0] * multiplier, direction[1] * multiplier]
+
+				proj = ProjectileStandard(
+					self.center_position, self.color, self.combat_info['size'], self.strata + 1,
+					self.combat_info['projectile_info'],
+					velocity=vel,
+					duration=90,
+					settings={
+						'trail': True
+                	}
+				)
+
+				scene.add_sprites(proj)
+            
+			super().display(scene, dt)
+
+	TALENT_ID = 'reprisal'
+	TALENT_CALLS = ['on_player_damaged']
+
+	DESCRIPTION = {
+		'name': 'Reprisal',
+		'description': 'Taking damage summons a familiar that attacks nearby enemies.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'reprisal',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['hurt/death']
+			]
+		}
+
+		return card_info
+
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['duration'] = [0, 120]
+		self.talent_info['familiar'] = self.ReprisalFamiliar(self.player)
+
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+
+		self.talent_info['duration'][0] = self.talent_info['duration'][1]
+		
+		if not self.talent_info['familiar'].active:
+			self.talent_info['familiar'].active = True
+
+			particle = Circle(
+				[0, 0],
+				self.talent_info['familiar'].color,
+				0,
+				5,
+				self.talent_info['familiar']
+			)
+
+			particle.set_goal(12, position=[0, 0], radius=25, width=1, alpha=0)
+			particle.set_easings(alpha='ease_in_sine')
+			
+			scene.add_sprites(particle)
+
+	def update(self, scene, dt):
+		if self.talent_info['duration'][0] <= 0:
+			if self.talent_info['familiar'].active:
+				self.talent_info['familiar'].active = False
+				self.talent_info['familiar'].combat_info['cooldown'][0] = 0
+
+				particle = Circle(
+					self.talent_info['familiar'].center_position,
+					self.talent_info['familiar'].color,
+					0,
+					5
+				)
+
+				particle.set_goal(12, radius=25, width=1, alpha=0)
+				particle.set_easings(alpha='ease_in_sine')
+				
+				scene.add_sprites(particle)
+
+			return
+		
+		self.talent_info['duration'][0] -= 1 * dt
+		self.talent_info['familiar'].display(scene, dt)
+
+class ChaosTheory(Talent):
+	TALENT_ID = 'chaos_theory'
+	TALENT_CALLS = ['on_ability']
+
+	DESCRIPTION = {
+		'name': 'Chaos Theory',
+		'description': 'Using an ability has a chance to instantly use the other, regardless of cooldown.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'chaos-theory',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['other'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+
+	@staticmethod
+	def check_draw_condition(player):
+		for ability in player.abilities.values():
+			if not ability:
+				return False
+
+		return True
+
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['cooldown_timer'] = 30
+		self.talent_info['chance'] = .2
+
+	def call(self, call, scene, info):
+		if self.talent_info['cooldown'] > 0:
+			return
+		
+		if info.ABILITY_ID[0] == '@':
+			return
+		
+		self.talent_info['cooldown'] = self.talent_info['cooldown_timer']
+		super().call(call, scene, info)
+
+		ability = [a for a in self.player.abilities.values() if a and a.ABILITY_ID[0] != '@' and a != info]
+
+		if ability and round(random.uniform(0, 1), 2) <= self.talent_info['chance']:
+			ability[0].call(scene, ignore_cooldown=True)
+	

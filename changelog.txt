@@ -245,82 +245,125 @@ v0.3.2
         ^ Intended to help the player keep up with enemy stat scaling
 
 v0.4.0
-- Added Background parallax image
+    - Added Background parallax image
 
-- Added Rock Golem enemy images
-- Added Stone Sentry enemy images
-- Added Granite Elemental enemy images
+    - Added Rock Golem enemy images
+    - Added Stone Sentry enemy images
+    - Added Granite Elemental enemy images
 
-- Added ArenaCrystal interactable image
+    - Added ArenaCrystal interactable image
 
-- Removed Humanoid enemy images
-- Removed Flyer enemy images
-- Removed Floater enemy images
+    - Removed Humanoid enemy images
+    - Removed Flyer enemy images
+    - Removed Floater enemy images
 
-- Renamed evasive_shroud ability card icon to intangible_shroud
+    - Renamed evasive_shroud ability card icon to intangible_shroud
 
-- Added Lingering Shroud talent card icon
+    - Added Lingering Shroud talent card icon
 
-- Changed SCREEN_COLOR to (0, 0, 0) from (44, 44, 44)
+    - Changed SCREEN_COLOR to (0, 0, 0) from (44, 44, 44)
 
-- Added interact keybind to Input class
+    - Added interact keybind to Input class
 
-- Added delay_timers and tween_information variables to Frame and Entity classes
-- Added set_position_tween and set_alpha_tween functions to Frame and Entity classes
-- Added true_position and center_position properties to Frame class
-- Added rect_offset variable to Frame class
-- Added on_del_sprite function to Frame class
+    - Added delay_timers and tween_information variables to Frame and Entity classes
+    - Added set_position_tween and set_alpha_tween functions to Frame and Entity classes
+    - Added true_position and center_position properties to Frame class
+    - Added rect_offset variable to Frame class
+    - Added on_del_sprite function to Frame class
 
-- Fixed an issue where create_outline_full and create_outline_edge functions would not consider rect_offset
+    - Fixed an issue where create_outline_full and create_outline_edge functions would not consider rect_offset
 
-- Renamed EvasiveShroud ability to IntangibleShroud
-- Renamed EvasiveManeuvers talent to LingeringShroud
+    - Renamed EvasiveShroud ability to IntangibleShroud
+    - Renamed EvasiveManeuvers talent to LingeringShroud
 
-- Reduced HolyJavelin damage_multiplier to 1.5 from 2.25
+    - Reduced HolyJavelin damage_multiplier to 1.5 from 2.25
 
-- Fixed an issue where Bloodlust talent would sometimes crash the game
+    - Fixed an issue where Bloodlust talent would sometimes crash the game
 
-- Renamed WaveHandler MAX_LEVEL, level, level_info variables to MAX_AREAS, area, and area_info
-- Renamed WaveHandler on_level_completed and new_level functions to on_area_complete and new_area
-- Renamed WaveHandler floor variable to level
+    - Renamed WaveHandler MAX_LEVEL, level, level_info variables to MAX_AREAS, area, and area_info
+    - Renamed WaveHandler on_level_completed and new_level functions to on_area_complete and new_area
+    - Renamed WaveHandler floor variable to level
 
-- Reworked Humanoid enemy class into RockGolem
-- Reworked Flyer enemy class into StoneSentry
-- Reworked Floater enemy class into GraniteElemental
+    - Reworked Humanoid enemy class into RockGolem
+    - Reworked Flyer enemy class into StoneSentry
+    - Reworked Floater enemy class into GraniteElemental
 
-- Added floor, floor_info, and spawn_rect variables to WaveHandler class 
+    - Added floor, floor_info, and spawn_rect variables to WaveHandler class 
 
-- Added apply_collision_y_ramp function to GameEntity class
-    ^ Both Player and HumanoidEnemy classes now use apply_collision_y_ramp function
+    - Added apply_collision_y_ramp function to GameEntity class
+        ^ Both Player and HumanoidEnemy classes now use apply_collision_y_ramp function
 
-- Added images, image_count_raw and image_count variables to Image particle class
+    - Added images, image_count_raw and image_count variables to Image particle class
 
-- Added apply_afterimages function to StoneSentry enemy class
+    - Added apply_afterimages function to StoneSentry enemy class
 
-- Added Interactable base class
-- Added ArenaCrystal interactable class
-    ^ Allows player to now control wave progression
+    - Added Interactable base class
+    - Added ArenaCrystal interactable class
+        ^ Allows player to now control wave progression
 
-- Added get_interactable function to Player class
+    - Added get_interactable function to Player class
 
-- Increased RockGolem max_health_scaling to .65 from .45
-- Increased StoneSentry max_health_scaling to .55 from .35
-- Increased GraniteElemental max_health to 100 from 75
-- Increased GraniteElemental max_health_scaling to .55 from .35
+    - Increased RockGolem max_health_scaling to .65 from .45
+    - Increased StoneSentry max_health_scaling to .55 from .35
+    - Increased GraniteElemental max_health to 100 from 75
+    - Increased GraniteElemental max_health_scaling to .55 from .35
 
-- Changed Image particle class to now set positions relative to the center of the image
+    - Changed Image particle class to now set positions relative to the center of the image
 
-- Fixed an issue where GameEntity apply_collision_x_default function would sometimes override apply_collision_y_default in collisions
+    - Fixed an issue where GameEntity apply_collision_x_default function would sometimes override apply_collision_y_default in collisions
 
-- Added Background parallax effect to GameScene class
+    - Added Background parallax effect to GameScene class
 
-- Increased SceneHandler background_surface size to (10000, 10000) from (2500, 2500)
-- Increased SceneHandler entity_surface size to (10000, 10000) from (5000, 5000)
+    - Increased SceneHandler background_surface size to (10000, 10000) from (2500, 2500)
+    - Increased SceneHandler entity_surface size to (10000, 10000) from (5000, 5000)
 
-- Changed GameScene class to now use set_position_tween and set_alpha_tween functions
+    - Changed GameScene class to now use set_position_tween and set_alpha_tween functions
 
-- Added Card selection flavor text
-- Added set_flag function to Card class
+    - Added Card selection flavor text
+    - Added set_flag function to Card class
 
-- Changed Card class to now use delay_timers variable
-- Changed Card class to now use set_position_tween and set_alpha_tween functions
+    - Changed Card class to now use delay_timers variable
+    - Changed Card class to now use set_position_tween and set_alpha_tween functions
+
+v0.4.1
+- Added Chaos Theory and Reprisal talent icon images
+
+- Changed GraniteElemental enemy image
+
+- Removed exclude parameter from check_line_collision function
+
+- Added ignores_cooldown parameter to Ability call function
+- Added line collision detection to PrimaryAbility for checking tile collisions
+- Added particles for PrimaryAbility tile collisions
+
+- Added 3 talents: Evasive Maneuvers, Reprisal, and Chaos Theory
+
+- Changed PrimaryAbility collision particles to now be randomly sized
+- Changed IntangibleShroud activation particles to now be randomly sized
+- Changed HolyJavelin projectile collision type to pixel from rect
+
+- Fixed an issue where PrimaryAbility would not draw the player trail if the scene is paused
+
+- Added secondary_sprite_id values to Circle and Image particle classes
+- Added alpha tweening to Circle particle class
+
+- Changed Player interact text to now always be positioned above the Interactable
+- Changed Enemy on_damaged and on_death particles to now be randomly sized
+- Changed GraniteElemental to now use delay_timers for ability activation
+
+- Changed Projectile trail and afterimages variables to settings variable
+- Changed Projectile class 'collision_exclude' value to 'collisions'
+    ^ The value is now inclusive rather than exclusive
+
+- Removed Projectile alpha_info variable and set_alpha_tween function
+
+- Fixed an issue where GraniteElemental enemy's line of sight would incorrectly consider Ramp tiles
+
+- Fixed an issue where ProjectileStandard would register multiple times when colliding with more than one entity
+
+- Added sprite_list property to Scene class
+- Added get_sprites function to Scene class
+
+- Reworked Scene sprites variable into a dictionary from a list
+    ^ Simplifies the process of getting specific sprites via their id
+    ^ References to the former sprites variable is replaced with Scene get_sprites function
