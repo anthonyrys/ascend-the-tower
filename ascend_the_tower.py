@@ -1,7 +1,3 @@
-'''
-The main file which should be executed.
-'''
-
 def main(screen, clock, scene_handler):
     quit = False
 
@@ -11,34 +7,32 @@ def main(screen, clock, scene_handler):
         quit = scene_handler.update()
         pygame.display.flip()
 
-        pygame.display.set_caption(f'{TITLE} | fps: {round(clock.get_fps(), 1)}')
         clock.tick(FRAME_RATE)
 
 if __name__ == '__main__':
-    from scripts.constants import (
-        TITLE,
+    from scripts import (
+        TITLE, VERSION,
         FRAME_RATE,
         SCREEN_DIMENSIONS,
         SCREEN_COLOR
     )
-    from scripts.engine import (
-        Fonts,
-        Inputs
-    )
-
+    
     from scripts.scenes.scene_handler import SceneHandler
+    
+    from scripts.utils.fonts import Fonts
+    from scripts.utils.inputs import Inputs
 
     import pygame
     import sys
     
     pygame.init()
 
-    pygame.display.set_caption(TITLE)
+    pygame.display.set_caption(f'{TITLE} [{VERSION}]')
     pygame.mouse.set_visible(False)
 
     screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
     clock = pygame.time.Clock()
-
+    
     # Initializes custom classes for the game
     Fonts.init()
     Inputs.init()

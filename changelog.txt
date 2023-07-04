@@ -326,44 +326,125 @@ v0.4.0
     - Changed Card class to now use set_position_tween and set_alpha_tween functions
 
 v0.4.1
-- Added Chaos Theory and Reprisal talent icon images
+    - Added Chaos Theory and Reprisal talent icon images
 
-- Changed GraniteElemental enemy image
+    - Changed GraniteElemental enemy image
 
-- Removed exclude parameter from check_line_collision function
+    - Removed exclude parameter from check_line_collision function
 
-- Added ignores_cooldown parameter to Ability call function
-- Added line collision detection to PrimaryAbility for checking tile collisions
-- Added particles for PrimaryAbility tile collisions
+    - Added ignores_cooldown parameter to Ability call function
+    - Added line collision detection to PrimaryAbility for checking tile collisions
+    - Added particles for PrimaryAbility tile collisions
 
-- Added 3 talents: Evasive Maneuvers, Reprisal, and Chaos Theory
+    - Added 3 talents: Evasive Maneuvers, Reprisal, and Chaos Theory
 
-- Changed PrimaryAbility collision particles to now be randomly sized
-- Changed IntangibleShroud activation particles to now be randomly sized
-- Changed HolyJavelin projectile collision type to pixel from rect
+    - Changed PrimaryAbility collision particles to now be randomly sized
+    - Changed IntangibleShroud activation particles to now be randomly sized
+    - Changed HolyJavelin projectile collision type to pixel from rect
 
-- Fixed an issue where PrimaryAbility would not draw the player trail if the scene is paused
+    - Fixed an issue where PrimaryAbility would not draw the player trail if the scene is paused
 
-- Added secondary_sprite_id values to Circle and Image particle classes
-- Added alpha tweening to Circle particle class
+    - Added secondary_sprite_id values to Circle and Image particle classes
+    - Added alpha tweening to Circle particle class
 
-- Changed Player interact text to now always be positioned above the Interactable
-- Changed Enemy on_damaged and on_death particles to now be randomly sized
-- Changed GraniteElemental to now use delay_timers for ability activation
+    - Changed Player interact text to now always be positioned above the Interactable
+    - Changed Enemy on_damaged and on_death particles to now be randomly sized
+    - Changed GraniteElemental to now use delay_timers for ability activation
 
-- Changed Projectile trail and afterimages variables to settings variable
-- Changed Projectile class 'collision_exclude' value to 'collisions'
-    ^ The value is now inclusive rather than exclusive
+    - Changed Projectile trail and afterimages variables to settings variable
+    - Changed Projectile class 'collision_exclude' value to 'collisions'
+        ^ The value is now inclusive rather than exclusive
 
-- Removed Projectile alpha_info variable and set_alpha_tween function
+    - Removed Projectile alpha_info variable and set_alpha_tween function
 
-- Fixed an issue where GraniteElemental enemy's line of sight would incorrectly consider Ramp tiles
+    - Fixed an issue where GraniteElemental enemy's line of sight would incorrectly consider Ramp tiles
 
-- Fixed an issue where ProjectileStandard would register multiple times when colliding with more than one entity
+    - Fixed an issue where ProjectileStandard would register multiple times when colliding with more than one entity
 
-- Added sprite_list property to Scene class
-- Added get_sprites function to Scene class
+    - Added sprite_list property to Scene class
+    - Added get_sprites function to Scene class
 
-- Reworked Scene sprites variable into a dictionary from a list
-    ^ Simplifies the process of getting specific sprites via their id
-    ^ References to the former sprites variable is replaced with Scene get_sprites function
+    - Reworked Scene sprites variable into a dictionary from a list
+        ^ Simplifies the process of getting specific sprites via their id
+        ^ References to the former sprites variable is replaced with Scene get_sprites function
+
+v0.5.0
+[ADD] 
+    Changelog-test file
+    __init__ file to every folder
+
+    VERSION to constants file
+
+    Size parameter to OnFire __init__ function
+    
+    Get_all_tiles() function to tiles file
+    Killbrick tile
+
+    Tilemap rendering
+        ^ Scenes uses tilemap_loader file to get tile information
+        ^ Scene entity_surface size is determined by tilemap_loader
+
+    FPS counter to Scene class
+
+    Sprite baseclass
+        ^ Gets rid of redundant code from the Entity and Frame class
+
+[REWORK]
+    Sting Like A Bee talent
+        ^ Allow the player to call PrimaryAttack again while airborne if the previous has hit an enemy
+        
+    Scene sprite_list property is more dynamic
+
+[CHANGE] 
+    PrimaryAttack ability is only callable once the player has touched the ground
+    PrimaryAttack enemy collision particles is positioned where the collision occurred
+
+    HolyJavelin general collision particles is positioned where the collision occurred
+
+    Register_damage function ignores immunities if damage is minor
+
+    GameScene on_player_death particles is randomly sized
+
+    GraniteElemental Projectile color to (230, 100, 30) from ENEMY_COLOR
+    GraniteElemental gravity multiplier to 0.05 from 0.25
+    GraniteElemental Blast inflicts OnFire Debuff
+
+    Halo and TemperanceHalo classes dims if PrimaryAttack cannot be called
+
+[INCREASE]
+    Max_health increase from stat cards to 20 from 10
+    Base_damage increase from stat cards to 10 from 5
+    Crit_strike_multiplier increase from stat cards to .15 from .1
+    
+[REDUCE]
+    PrimaryAttack speed to 55 from 60
+
+    GraniteElemental Blast damage_multiplier to .6 from 1.2
+
+[REMOVE]
+    Code documentation
+    
+    Engine file
+        ^ Classes inside Engine file has been moved to their respective folders
+
+    Wave_handler file
+    Interactable file
+    Game_loop file
+
+    Chunk_renderer file
+    Surface_gfx file
+
+    Parallax image file
+    
+    Ceiling and Barrier tile classes
+
+    Background, entity and ui surface variables from SceneHandler
+        ^ Surfaces are defined inside their respective Scene classes
+
+    Surfaces parameter from Scene __init__ function
+    
+    Background parallax from GameScene
+
+[FIX]
+    Issue where Ramps ignores collision on certain Y velocities
+    Issue where Block collisions fail at larger lag spikes

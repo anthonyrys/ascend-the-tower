@@ -1,21 +1,21 @@
-'''
-Holds the player class.
-'''
-
-from scripts.constants import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
-from scripts.engine import Inputs, Entity, check_line_collision, get_closest_sprite, get_distance
+from scripts import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
 
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
+from scripts.entities.entity import Entity
 from scripts.entities.game_entity import GameEntity
 from scripts.entities.particle_fx import Circle, Image
 
-from scripts.services.spritesheet_loader import load_spritesheet
+from scripts.services import load_spritesheet
 
 from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar
 from scripts.ui.hotbar import Hotbar
+
+from scripts.utils import check_line_collision, get_closest_sprite, get_distance
+from scripts.utils.inputs import Inputs
+
 
 import pygame
 import math
@@ -82,6 +82,15 @@ class Player(GameEntity):
             self.rect.centery = player.rect.top - 5 - round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
             
             self.sin_count += 1 * dt
+
+            primary_ability = player.abilities['primary']
+            if primary_ability.ability_info['cooldown'] > 0:
+                self.glow['active'] = False
+                self.image.set_alpha(55)
+
+            elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+                self.glow['active'] = True
+                self.set_alpha_tween(255, 5, 'ease_out_sine')
 
             super().display(scene, dt)
 
@@ -245,8 +254,9 @@ class Player(GameEntity):
     def on_respawn(self):
         ...
 
-    def on_death(self, scene, info):
-        call_talents(scene, self, {'on_player_death': info})
+    def on_death(self, scene, info, true=False):
+        if not true:
+            call_talents(scene, self, {'on_player_death': info})
         
         if self.get_stat('health') != 0:
             return
@@ -297,6 +307,9 @@ class Player(GameEntity):
         scene.add_sprites(particle)
 
     def on_damaged(self, scene, info):
+        if 'minor' in info:
+            return
+        
         sprite = info['primary']
         
         if self.overrides['ability']:
@@ -375,9 +388,13 @@ class Player(GameEntity):
     def apply_collision_x(self, scene):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
+        
+        excludes = ['ramp']
+        if self.overrides['inactive']:
+            excludes.append('killbrick')
 
         if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
-            self.apply_collision_x_default(scene.get_sprites('tile', include=['block', 'barrier']))
+            self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=excludes))
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -385,14 +402,14 @@ class Player(GameEntity):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['block', 'barrier'])):
+        excludes = ['ramp']
+        if self.overrides['inactive']:
+            excludes.append('killbrick')
+
+        if 'bottom' in self.apply_collision_y_default(scene, scene.get_sprites('tile', exclude=excludes)):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['ceiling', 'floor'])):
-            if self.movement_info['jumps'] != self.movement_info['max_jumps']:
-                self.movement_info['jumps'] = self.movement_info['max_jumps']
-     
         platforms = scene.get_sprites('tile', 'platform')
         for platform in platforms:
             if not self.rect.colliderect(platform.rect):
@@ -420,7 +437,7 @@ class Player(GameEntity):
                         
                 self.velocity[1] = 0
 
-        self.apply_collision_y_ramp(scene.get_sprites('tile', 'ramp'))
+        self.apply_collision_y_ramp(scene, scene.get_sprites('tile', 'ramp'))
 
     def apply_afterimages(self, scene, dt, visuals=True):
         if abs(self.velocity[0]) <= self.movement_info['max_movespeed'] + self.movement_info['per_frame_movespeed']:

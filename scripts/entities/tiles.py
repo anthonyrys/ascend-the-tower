@@ -1,19 +1,18 @@
-'''
-Holds the general tiles of the game and different structures.
-'''
+from scripts.entities.entity import Entity
 
-from scripts.engine import Entity
-
-from scripts.services.spritesheet_loader import load_spritesheet
+from scripts.services import load_spritesheet
 
 import pygame
+import inspect
+import sys
 import os
 
+def get_all_tiles():
+    tile_list = [t for t in inspect.getmembers(sys.modules[__name__], inspect.isclass)]
+			
+    return tile_list
+
 class Tile(Entity):
-    '''
-    The general tile class.
-    '''
-    
     def __init__(self, position, img, dimensions, strata=None, alpha=None):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'tile'
@@ -29,56 +28,20 @@ class Block(Tile):
     def display(self, scene, dt):
         super().display(scene, dt)
 
-class Floor(Tile):
-    def __init__(self, position, img, dimensions, strata=None):
-        super().__init__(position, img, dimensions, strata)
-        self.secondary_sprite_id = 'floor'
-
-    def display(self, scene, dt):
-        super().display(scene, dt)
-
-class Ceiling(Tile):
-    def __init__(self, position, img, dimensions, strata=None):
-        super().__init__(position, img, dimensions, strata)
-        self.secondary_sprite_id = 'ceiling'
-
-    def display(self, scene, dt):
-        super().display(scene, dt)
-
 class Ramp(Tile):
-    def __init__(self, position, ramp_type, direction, color, strata=None):
-        imgs = load_spritesheet(os.path.join('imgs', 'entities', 'tiles', 'ramps.png'))
-        img = imgs[ramp_type]
-
+    def __init__(self, position, image, direction, strata=None):
         position = list(position)
 
-        if ramp_type == 1:
-            img_size = img.get_size()
-
-            surf = pygame.Surface((img_size[0], img_size[1] / 2)).convert_alpha()
-            surf.blit(img, (0, -img_size[1] / 2))
-            surf.set_colorkey((0, 0, 0))
-
-            img = surf
-            position[1] += img.get_height() * 6
-            
-        img_size = img.get_size()
-        img = pygame.transform.scale(img, (img_size[0] * 6, img_size[1] * 6)).convert_alpha()
-
-        if direction == 'left':
-            img = pygame.transform.flip(img, True, False).convert_alpha()
-
-        super().__init__(position, img, None, strata)
+        super().__init__(position, image, None, strata)
         self.secondary_sprite_id = 'ramp'
 
-        self.ramp_type = ramp_type
         self.direction = direction
 
         self.width = self.rect.width
         self.height = self.rect.height
 
     def get_y_value(self, sprite):
-        if self.direction == 'right':
+        if self.direction == 'left':
             dist = self.rect.left - sprite.rect.right
 
             if dist >= 0:
@@ -89,9 +52,11 @@ class Ramp(Tile):
             if abs_pos > self.width:
                 abs_pos = self.width
 
-            return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
+            value = round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
 
-        elif self.direction == 'left':
+            return value
+
+        elif self.direction == 'right':
             dist = self.rect.right - sprite.rect.left
             if dist <= 0:
                 return sprite.rect.bottom
@@ -101,7 +66,9 @@ class Ramp(Tile):
             if abs_pos > self.width:
                 abs_pos = self.width
 
-            return round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
+            value = round((self.image.get_rect().bottom + self.rect.y) - (self.height * (abs_pos / self.width)))
+            
+            return value
 
     def display(self, scene, dt):
         super().display(scene, dt)
@@ -114,11 +81,12 @@ class Platform(Tile):
     def display(self, scene, dt):
         super().display(scene, dt)
 
-class Barrier(Tile):
-    def __init__(self, position, img, dimensions, sprite_ids, strata=None):
+class Killbrick(Tile):
+    def __init__(self, position, img, dimensions, strata=None):
+        img.fill((0, 0, 0))
+
         super().__init__(position, img, dimensions, strata)
-        self.secondary_sprite_id = 'barrier'
-        self.sprite_ids = sprite_ids
+        self.secondary_sprite_id = 'killbrick'
 
     def display(self, scene, dt):
         super().display(scene, dt)

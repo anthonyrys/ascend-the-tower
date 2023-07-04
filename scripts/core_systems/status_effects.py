@@ -1,8 +1,5 @@
-'''
-File that holds StatusEffect baseclass as well as StatusEffect subclasses.
-'''
-
 from scripts.core_systems.combat_handler import register_damage
+
 from scripts.entities.particle_fx import Circle
 
 import pygame
@@ -35,25 +32,6 @@ def get_debuff(entity, signature):
     return debuff_list
 
 class StatusEffect:
-    '''
-    StatusEffect baseclass that is meant to be inherited from.
-
-    Variables:
-        entity: the entity object
-        signature: a unique string used to identify status effects
-
-        duration: duration of the status effect.
-        stat: the stat that is being affected.
-        value: value of much the stat is being affected.
-
-        dot: whether or not the status effect is damage over time.
-
-    Methods:
-        update: updates the status effect every frame.
-        apply: applies the status effect onto the entity's stats.
-        end: returns the entity's stats prior to applying.
-    '''
-
     STATUS_EFFECT_TYPE = None 
 
     def __init__(self, entity, signature, stat, value, duration, dot):
@@ -113,7 +91,7 @@ class Debuff(StatusEffect):
         super().end()
 
 class OnFire(Debuff):
-    def __init__(self, primary_entity, entity, signature, value, duration, tick_rate=.2):
+    def __init__(self, primary_entity, entity, signature, value, duration, tick_rate=.2, size=7):
         super().__init__(entity, signature, 'health', value, duration, dot=True)
 
         self.primary_entity = primary_entity
@@ -123,6 +101,7 @@ class OnFire(Debuff):
 
         self.particle_color = (255, 88, 34)
         self.particle_rate = [0, 1]
+        self.particle_size = size
 
     def update(self, scene, dt):
         super().update(scene, dt)
@@ -135,7 +114,7 @@ class OnFire(Debuff):
             pos[0] += random.randint(-20, 20)
             pos[1] += random.randint(-20, 20)
 
-            particle = Circle(pos, self.particle_color, 7, 0)
+            particle = Circle(pos, self.particle_color, self.particle_size, 0)
             particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
 
             particle.glow['active'] = True

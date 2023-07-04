@@ -1,22 +1,20 @@
-'''
-Holds the enemy baseclass as well as enemy subclasses.
-'''
-
-from scripts.constants import ENEMY_COLOR, CRIT_COLOR
-from scripts.engine import get_sprite_colors, check_pixel_collision, get_distance, check_line_collision
+from scripts import ENEMY_COLOR, CRIT_COLOR
 
 from scripts.core_systems.abilities import Ability
 from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_damage
 from scripts.core_systems.enemy_ai import HumanoidAi, FlyerAi, FloaterAi
+from scripts.core_systems.status_effects import OnFire, get_debuff
 
 from scripts.entities.game_entity import GameEntity
 from scripts.entities.particle_fx import Circle, Image
 from scripts.entities.projectile import ProjectileStandard
 
-from scripts.services.spritesheet_loader import load_spritesheet
+from scripts.services import load_spritesheet
 
 from scripts.ui.info_bar import EnemyBar
 from scripts.ui.text_box import TextBox
+
+from scripts.utils import get_sprite_colors, check_pixel_collision, get_distance, check_line_collision
 
 import pygame
 import random
@@ -24,25 +22,6 @@ import math
 import os
 
 class Enemy(GameEntity):
-    '''
-    Enemy baseclass, intended to be inherited from.
-
-    Variables:
-        ai: ai object used to control the enemy.
-        healthbar: InfoBar object to display enemy information (health).
-
-        level_info: information used to determine the strength of the enemy.
-        img_info: information on how the enemy images should be displayed.
-
-        abilities: a list of abilities that the entity can use.
-        ability_info: information on how the enemy abilities should function.
-
-    Methods:
-        on_death(): called when the enemy has died.
-        on_damaged(): called when the enemy has been damaged.
-        set_stats(): sets the enemy stats using the level_info.
-    '''
-
     def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'enemy'
@@ -75,7 +54,7 @@ class Enemy(GameEntity):
             {'type': 'contact', 'amount': self.combat_info['base_damage'], 'velocity': self.velocity}
         )
         
-    def on_death(self, scene, info):
+    def on_death(self, scene, info, true=False):
         scene.on_enemy_death(self)
 
         pos = self.center_position
@@ -203,20 +182,16 @@ class HumanoidEnemy(Enemy):
         self.collide_points['right'] = False
         self.collide_points['left'] = False
 
-        self.apply_collision_x_default(scene.get_sprites('tile', include=['block', 'barrier']))
+        self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=['ramp']))
 
     def apply_collision_y(self, scene, dt):
         self.collide_points['top'] = False
         self.collide_points['bottom'] = False
 
-        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['block', 'barrier'])):
+        if 'bottom' in self.apply_collision_y_default(scene, scene.get_sprites('tile', exclude=['ramp'])):
             if self.movement_info['jumps'] != self.movement_info['max_jumps']:
                 self.movement_info['jumps'] = self.movement_info['max_jumps']
 
-        if 'bottom' in self.apply_collision_y_default(scene.get_sprites('tile', include=['ceiling', 'floor'])):
-            if self.movement_info['jumps'] != self.movement_info['max_jumps']:
-                self.movement_info['jumps'] = self.movement_info['max_jumps']
-     
         platforms = scene.get_sprites('tile', 'platform')
         for platform in platforms:
             if not self.rect.colliderect(platform.rect):
@@ -240,7 +215,7 @@ class HumanoidEnemy(Enemy):
                         
                 self.velocity[1] = 0
 
-        self.apply_collision_y_ramp(scene.get_sprites('tile', 'ramp'))
+        self.apply_collision_y_ramp(scene, scene.get_sprites('tile', 'ramp'))
 
 class FlyerEnemy(Enemy):
     def __init__(self, position, img, dimensions, strata, alpha):
@@ -523,8 +498,12 @@ class GraniteElemental(FloaterEnemy):
         def __init__(self, character):
             super().__init__(character)
         
-            self.ability_info['damage_multiplier'] = 1.2
+            self.ability_info['damage_multiplier'] = .6
             self.ability_info['speed'] = 15
+
+            self.ability_info['signature'] = f'{self.character.secondary_sprite_id}_blast'
+            self.ability_info['duration'] = 30
+            self.ability_info['status_effect_multiplier'] = .25
 
         def collision_default(self, scene, projectile, sprite):
             particles = []
@@ -556,6 +535,16 @@ class GraniteElemental(FloaterEnemy):
                 'type': 'magical', 
                 'amount': self.character.combat_info['base_damage'] * self.ability_info['damage_multiplier']})
 
+            has_debuff = get_debuff(sprite, self.ability_info['signature'])
+
+            if has_debuff:
+                has_debuff.duration = self.ability_info['duration']
+                return
+            
+            damage = self.character.combat_info['base_damage'] * self.ability_info['status_effect_multiplier']
+            debuff = OnFire(self.character, sprite, self.ability_info['signature'], damage, self.ability_info['duration'], size=5)
+            sprite.debuffs.append(debuff)
+            
         def call(self, scene, keybind=None):
             if self.character.ability_info['activation_cancel']:
                 return
@@ -579,7 +568,7 @@ class GraniteElemental(FloaterEnemy):
             }
 
             proj = ProjectileStandard(
-                self.character.center_position, ENEMY_COLOR, 10, self.character.strata + 1,
+                self.character.center_position, self.character.img_info['color'], 10, self.character.strata + 1,
                 proj_info,
                 velocity=vel,
                 duration=90,
@@ -590,7 +579,7 @@ class GraniteElemental(FloaterEnemy):
 
             particles = []
             for _ in range(5):
-                cir = Circle(self.character.center_position, ENEMY_COLOR, 6, 0)
+                cir = Circle(self.character.center_position, self.character.img_info['secondary_color'], 6, 0)
                 cir.set_goal(
                             50, 
                             position=(
@@ -677,7 +666,8 @@ class GraniteElemental(FloaterEnemy):
             'sin_amplifier': .01,
 
             'size': 10,
-            'color': ENEMY_COLOR,
+            'color': (230, 100, 30),
+            'secondary_color': (255, 40, 0),
 
             'radius': 65,
             'angle': 0,
@@ -745,7 +735,7 @@ class GraniteElemental(FloaterEnemy):
             self.ability_info['activation_frames'][0] = 0
             particle = Circle(
                 [0, 0],
-                ENEMY_COLOR,
+                self.img_info['color'],
                 65,
                 3,
                 self
@@ -758,7 +748,7 @@ class GraniteElemental(FloaterEnemy):
             self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
 
         self.ai.update(scene, dt, scene.player)
-        self.apply_gravity(dt, .25)
+        self.apply_gravity(dt, .05)
 
         if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
             self.velocity[0] = 0

@@ -1,11 +1,3 @@
-'''
-File that handles all combat methods (damage, healing, mitigations, immunities).
-
-DAMAGE_TYPES: list of the avaliable damage types.
-HEALTH_TYPES: list of the avaliable healing types.
-DAMAGE_VARIATION_PERCENTAGE: a decimal that is used to fluxate damage values.
-'''
-
 import random
 
 DAMAGE_TYPES = ['contact', 'physical', 'magical', 'special']
@@ -42,11 +34,12 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     if secondary_sprite.combat_info['immunities']['all']:
         return False
 
-    if secondary_sprite.combat_info['immunities'][info['type'] + '&']:
-        return False
-        
-    if secondary_sprite.combat_info['immunities'][info['type']] > 0:
-        return False
+    if 'minor' not in info:
+        if secondary_sprite.combat_info['immunities'][info['type'] + '&']:
+            return False
+            
+        if secondary_sprite.combat_info['immunities'][info['type']] > 0:
+            return False
         
     info['primary'] = primary_sprite
     info['target'] = secondary_sprite

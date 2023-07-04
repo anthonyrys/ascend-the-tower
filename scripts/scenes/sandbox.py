@@ -1,8 +1,4 @@
-'''
-Holds the Sandbox class.
-'''
-
-from scripts.constants import SCREEN_DIMENSIONS
+from scripts.entities.enemy import RockGolem, StoneSentry, GraniteElemental
 
 from scripts.scenes.game_scene import GameScene
 
@@ -12,23 +8,19 @@ import pygame
 import random
 
 class Sandbox(GameScene):
-    def __init__(self, scene_handler, surfaces, mouse, sprites=None):
-        super().__init__(scene_handler, surfaces, mouse, sprites)
+    def __init__(self, scene_handler, mouse, sprites=None):
+        super().__init__(scene_handler, mouse, sprites)
 
-        del self.tiles['crystal']
-        
-        self.ui_elements.extend(self.player.get_ui_elements())
-        self.ui_elements.append(TextBox((40, SCREEN_DIMENSIONS[1] - 50), '0: fullscreen', size=.5))
-        self.ui_elements.append(TextBox((40, SCREEN_DIMENSIONS[1] - 100), '3: draw cards', size=.5))
-        self.ui_elements.append(TextBox((40, SCREEN_DIMENSIONS[1] - 150), '4: spawn enemy', size=.5))
+        self.ui_elements.extend([
+            TextBox((10, 130), '3: draw regular cards', size=.5),
+            TextBox((10, 160), '4: draw stat cards', size=.5),
+            TextBox((10, 190), '5: spawn enemy', size=.5),
+            TextBox((10, 220), '0: fullscreen', size=.5)
+        ])
 
-        self.add_sprites(self.player)
-
-        for tile in self.tiles.values():
-            for sprite in tile:
-                self.add_sprites(sprite)
-
+        self.add_sprites(self.tiles)
         self.add_sprites(self.ui_elements)
+        self.add_sprites(self.player)
 
     def on_key_down(self, event):
         super().on_key_down(event)
@@ -36,12 +28,48 @@ class Sandbox(GameScene):
         if self.paused:
             return
         
-        if event.key == pygame.key.key_code('3'):
-            super().on_wave_complete()
+        if event.key == pygame.K_3:
+            cards, text = self.generate_standard_cards()
 
-        elif event.key == pygame.key.key_code('4'):
-            enemy = random.choice(self.wave_handler.ENEMY_INFO[1])(self.wave_handler.get_spawn_position(), 6)
+            self.in_menu = True
+            self.paused = True
 
+            self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+            self.scene_fx['&dim']['type'] = 'in'
+
+            self.scene_fx['&dim']['amount'] = .75
+            self.scene_fx['&dim']['frames'][1] = 30
+            
+            self.scene_fx['&dim']['threshold'] = 1
+
+            for frame in self.ui_elements:
+                frame.image.set_alpha(100)
+
+            self.add_sprites(cards)
+            self.add_sprites(text)
+
+        elif event.key == pygame.K_4:
+            cards, text = self.generate_stat_cards()
+
+            self.in_menu = True
+            self.paused = True
+
+            self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+            self.scene_fx['&dim']['type'] = 'in'
+
+            self.scene_fx['&dim']['amount'] = .75
+            self.scene_fx['&dim']['frames'][1] = 30
+            
+            self.scene_fx['&dim']['threshold'] = 1
+
+            for frame in self.ui_elements:
+                frame.image.set_alpha(100)
+
+            self.add_sprites(cards)
+            self.add_sprites(text)
+
+        elif event.key == pygame.K_5:
+            enemy = random.choice([RockGolem, StoneSentry, GraniteElemental])(self.mouse.entity_pos, 6)
             self.add_sprites(enemy)
 
     def on_player_death(self):

@@ -1,43 +1,17 @@
-'''
-Holds the card baseclass and subclasses.
-'''
-
-from scripts.constants import SCREEN_DIMENSIONS
-from scripts.engine import Frame, Easings, create_outline_edge
+from scripts import SCREEN_DIMENSIONS
 
 from scripts.services.spritesheet_loader import load_spritesheet
 
 from scripts.ui.text_box import TextBox
+from scripts.ui.frame import Frame
+
+from scripts.utils import create_outline_edge
+from scripts.utils.easings import Easings
 
 import pygame
 import os
 
 class Card(Frame):
-    '''
-    Used to display ability, talent and stat information.
-
-    Variables:
-        IMG_SCALE: scale factor the images.
-        BASE: image of the card base.
-        
-        ICONS: a collection of icons for the different types of talents/abilities/stats.
-        SYMBOLS: a collection of symbols to display the descriptions of the different talents/abilities.
-
-        on_select: function that is called when the card is selected
-
-        hover_info: information on the position and easing of the object when it is hovering.
-
-    Methods:
-        create_card(): creates a new card to display.
-
-        on_hover_start(): called when mouse is hovering over the card.
-        on_hover_end(): called when mouse has stopped hovering over the card.
-
-        set_flag(): sets the flag variable of the card object.
-
-        on_mouse_down(): called when the mouse is pressed.
-    '''
-
     IMG_SCALE = 4
 
     BASE = None

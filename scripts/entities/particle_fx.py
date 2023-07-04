@@ -1,8 +1,6 @@
-'''
-Holds the objects used to create simple particles.
-'''
+from scripts.entities.entity import Entity
 
-from scripts.engine import Easings, Entity
+from scripts.utils.easings import Easings
 
 import pygame
 

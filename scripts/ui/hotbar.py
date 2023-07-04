@@ -1,36 +1,13 @@
-'''
-Holds the Hotbar and AbilityFrame class.
-'''
-
-from scripts.engine import Frame, Inputs
-
+from scripts.ui.frame import Frame
+from scripts.ui.text_box import TextBox 
 from scripts.ui.card import Card
-from scripts.ui.text_box import TextBox
+
+from scripts.utils.inputs import Inputs
 
 import pygame
 import os
 
 class AbilityFrame(Frame):
-    '''
-    Frame that displays ability information
-
-    Variables:
-        player: the initialized player class.
-        key: the player's input key for the ability.
-
-        pulse_info: information on how the image should be pulsed.
-
-        cooldown_alpha: alpha value for when the ability is on cooldown.
-
-        background: background surface for the ability frame.
-        cooldown: cooldown surface for the ability frame.
-        original_cooldown: an original copy of the cooldown surface.
-        frame: the decorative frame for the ability.
-
-    Methods:
-        set_pulse(): sets the values of pulse_info.
-    '''
-
     def __init__(self, player, key):
         IMG_SCALE = 2.5
     

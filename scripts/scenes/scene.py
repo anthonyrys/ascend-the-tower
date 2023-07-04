@@ -1,53 +1,14 @@
-'''
-Baseclass for the game scene.
-'''
+from scripts import SCREEN_DIMENSIONS
 
-from scripts.constants import SCREEN_DIMENSIONS
 from scripts.entities.particle_fx import Particle
+
+from scripts.ui.text_box import TextBox
 
 import pygame
 
 class Scene:
-    '''
-    Variables:
-        sprite_list: a single list of all the current sprites.
-        
-        surfaces: a list of surfaces given by the scene handler.
-        mouse: a mouse object.
-
-        view: a pygame surface view of the current screen.
-
-        dt_info: info on how delta time should be percvied.
-
-        sprites: a list of the current sprites within the scene.
-
-        frame_count: the number of frames that has passed in the scene (rounded).
-        frame_count_raw: the number of frames that has passed in the scene (not rounded).
-
-        in_menu: whether the scene is in a menu.
-        paused: whether the scene is paused.
-
-    Methods:
-        sort_sprites: sorts the sprites based on their strata level.
-
-        on_mouse_down: called when the mouse has been pressed.
-        on_mouse_down: called when the mouse has been released.
-
-        on_key_down: called when a key is pressed.
-        on_key_up: called when a key is released.
-
-        set_dt_multiplier: sets dt_info multiplier for a duration.
-
-        get_sprites: returns a list of sprites based on the given arguments.
-        add_sprites: add sprites to the scene.
-        del_sorites: deletes sprites from the scene.
-    '''
-
-    def __init__(self, scene_handler, surfaces, mouse, sprites=None):
+    def __init__(self, scene_handler, mouse, sprites=None):
         self.scene_handler = scene_handler
-        
-        self.surfaces = surfaces
-        self.background_surface, self.entity_surface, self.ui_surface = self.surfaces
         self.mouse = mouse
 
         self.view = pygame.Surface(SCREEN_DIMENSIONS).get_rect()
@@ -70,9 +31,15 @@ class Scene:
     def sprite_list(self):
         sprite_list = []
 
-        for value in self.sprites.values():
-            for sprites in value.values():
-                sprite_list.extend(sprites)
+        def tick(d):
+            for _, v in d.items():
+                if isinstance(v, list):
+                    sprite_list.extend(v)
+                    continue
+
+                tick(v)
+
+        tick(self.sprites)
 
         return sprite_list
     
@@ -112,7 +79,10 @@ class Scene:
         return display_order
         
     def display(self, screen, clock, dt):
-        ...
+        fps_surface = TextBox.create_text_line('default', str(round(clock.get_fps())))
+        fps_position = [SCREEN_DIMENSIONS[0] - 5, 5]
+
+        screen.blit(fps_surface, fps_surface.get_rect(topright=fps_position))
 
     def on_mouse_down(self, event):
         for sprite in self.sprite_list:

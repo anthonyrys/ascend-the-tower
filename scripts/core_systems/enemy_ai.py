@@ -1,23 +1,8 @@
-'''
-Holds the Ai classes that is used by the enemy classes.
-'''
-
-from scripts.engine import get_distance, check_line_collision
+from scripts.utils import get_distance, check_line_collision
 
 import pygame
 
 class AiTemplate:
-    '''
-    Class that determines how the enemy should act and move.
-
-    Variables:
-        sprite: The enemy object.
-        ai_type: The type of AI (changed by subclasses).
-
-    Methods:
-        update(): update the enemy object every frame.
-    '''
-    
     def __init__(self, ai_type, sprite):
         self.ai_type = ai_type
         self.sprite = sprite
@@ -111,12 +96,6 @@ class FloaterAi(AiTemplate):
 
         if check_line_collision(self.sprite.rect.center, pos_a, tiles) or check_line_collision(self.sprite.rect.center, pos_b, tiles):
             self.sprite.velocity[1] -= jp if self.sprite.velocity[1] > -max_ms else 0
-
-        floor = [t for t in tiles if t.secondary_sprite_id == 'floor']
-        if floor:
-            floor = floor[0]
-            if floor.rect.centery < self.sprite.rect.centery:
-                self.sprite.velocity[1] -= jp if self.sprite.velocity[1] > -max_ms else 0
 
         if self.sprite.velocity[0] > self.sprite.movement_info['max_movespeed']:
             if (abs(self.sprite.velocity[0]) - self.sprite.movement_info['max_movespeed']) < self.sprite.movement_info['friction']:

@@ -1,18 +1,15 @@
-'''
-File that holds Ability baseclass as well as ability subclasses.
-'''
-
-from scripts.constants import PLAYER_COLOR
-from scripts.engine import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
-
-from scripts.entities.particle_fx import Circle
+from scripts import PLAYER_COLOR
 
 from scripts.core_systems.talents import call_talents
 from scripts.core_systems.combat_handler import register_damage
 
 from scripts.entities.projectile import ProjectileStandard
+from scripts.entities.particle_fx import Circle
 
 from scripts.ui.card import Card
+
+from scripts.utils import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
+
 
 import pygame
 import random
@@ -32,30 +29,6 @@ def get_all_abilities():
     return ability_list
 
 class Ability:
-    '''
-    Ability baseclass that is meant to be inherited from.
-
-    Variables:
-        DRAW_TYPE: used to distinguish between card types.
-        DRAW_SPECIAL: used to determine how a card is created.
-        ABILITY_ID: the id of the ability.
-        DESCRIPTION: the description of the ability; used for card creation.
-
-        character: the entity object.
-        overrides: if the entity should be overriden by the ability.
-
-        ability_info: used for custom ability functions.
-        keybind_info: information on which keybind activates the ability.
-
-    Methods:
-        fetch(): returns the card info.
-        check_draw_condition(): returns whether the ability is able to be drawn.
-
-        call(): calls the ability to activate. 
-        end(): terminate the ability and return to normal entity state.
-        update(): update the object every frame.
-    '''
-
     DRAW_TYPE = 'ABILITY'
     DRAW_SPECIAL = ['ability', (255, 255, 255)]
 
@@ -155,6 +128,8 @@ class PrimaryAttack(Ability):
         self.state = 'inactive'
         self.collision_state = None
 
+        self.can_call = False
+
         self.velocity = []
         self.start = []
         self.destination = []
@@ -163,7 +138,7 @@ class PrimaryAttack(Ability):
 
         self.ability_info['cooldown_timer'] = 30
 
-        self.ability_info['speed'] = 60
+        self.ability_info['speed'] = 55
         self.ability_info['gravity_frames'] = 20
 
         self.ability_info['hit_immunity'] = 15
@@ -184,9 +159,9 @@ class PrimaryAttack(Ability):
         pos = self.character.center_position
         particles = []
 
-        for color in get_sprite_colors(tile, .15):
+        for color in get_sprite_colors(tile):
             color[3] = 255
-            cir = Circle(pos, color, random.randint(3, 6), 0)
+            cir = Circle(pos, color, random.randint(5, 8), 0)
             cir.set_goal(
                         60, 
                         position=(
@@ -217,7 +192,16 @@ class PrimaryAttack(Ability):
         self.character.on_attack(scene, info)
         call_talents(scene, self.character, {f'on_{self.ABILITY_ID}_attack': info})
 
-        pos = enemy.center_position
+        overlap_offset = [
+            self.character.center_position[0] - enemy.center_position[0],
+            self.character.center_position[1] - enemy.center_position[1]
+        ]
+
+        overlap = self.character.mask.overlap_mask(enemy.mask, overlap_offset).to_surface().get_rect()
+        overlap.x, overlap.y = self.character.rect.x, self.character.rect.y
+        
+        pos = overlap.center
+        
         for _ in range(8):
             cir = Circle(pos, self.ability_info['color'], random.randint(4, 8), 0)
             cir.set_goal(
@@ -240,7 +224,7 @@ class PrimaryAttack(Ability):
         scene.add_sprites(particles)   
 
     def call(self, scene, keybind=None): 
-        if self.ability_info['cooldown'] > 0:
+        if self.ability_info['cooldown'] > 0 or not self.can_call:
             return
         
         if any(list(self.character.overrides.values())):
@@ -250,7 +234,6 @@ class PrimaryAttack(Ability):
         self.destination = [scene.mouse.entity_pos[0], scene.mouse.entity_pos[1]]
 
         tiles = scene.get_sprites('tile', exclude=['platform'])
-
         tile_col = check_line_collision(self.start, self.destination, tiles)
         if tile_col != []:
             self.destination = list(tile_col[0][1][0])
@@ -262,6 +245,7 @@ class PrimaryAttack(Ability):
         
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['damage'] = self.character.combat_info['base_damage']
+        self.can_call = False
 
         super().call(scene, keybind)
 
@@ -345,19 +329,33 @@ class PrimaryAttack(Ability):
 
     def update(self, scene, dt):
         if self.state != 'active':
+            if self.character.collide_points['bottom']:
+                self.can_call = True
+        
             super().update(scene, dt)
             return
         
         collision = None
         collidables = scene.get_sprites('tile', exclude=['platform'])
-
+        collidables = [c for c in collidables if get_distance(self.character, c) < 100]
+        
         vel_pos = [
             self.character.center_position[0] + self.character.velocity[0] * dt,
             self.character.center_position[1] + self.character.velocity[1] * dt
         ]
 
         for collidable in collidables:
-            if check_line_collision(self.character.center_position, vel_pos, scene.get_sprites('tile', exclude=['platform', 'ramp'])):
+            line_col = check_line_collision(self.character.center_position, vel_pos, collidables)
+
+            if line_col:
+                pos = [
+                    round(line_col[0][1][0][0] - self.character.velocity[0] * .5),
+                    round(line_col[0][1][0][1] - self.character.velocity[1] * .5)
+                ]
+
+                self.character.collision_ignore.append(collidable)
+                self.character.rect.center = pos
+
                 collision = collidable
                 break
 
@@ -466,7 +464,7 @@ class RainOfArrows(Ability):
         super().__init__(character)
 
         IMG_SCALE = 1.5
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'rain-of-arrows.png'))
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'rain-of-arrows.png')).convert_alpha()
         img.set_colorkey((0, 0, 0))
 
         self.ability_info['active'] = False
@@ -761,7 +759,16 @@ class HolyJavelin(Ability):
             self.character.on_attack(scene, info)
 
         particles = []
-        pos = projectile.center_position
+
+        overlap_offset = [
+            sprite.center_position[0] - projectile.center_position[0],
+            sprite.center_position[1] - projectile.center_position[1]
+        ]
+
+        overlap = projectile.mask.overlap_mask(sprite.mask, overlap_offset).to_surface().get_rect()
+        overlap.x, overlap.y = projectile.rect.x, projectile.rect.y
+
+        pos = overlap.center
 
         for _ in range(8):
             cir = Circle(pos, PLAYER_COLOR, 12, 0)

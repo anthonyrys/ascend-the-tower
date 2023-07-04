@@ -1,18 +1,17 @@
-'''
-File that holds Talent baseclass as well as talent subclasses.
-'''
-
-from scripts.constants import HEAL_COLOR, PLAYER_COLOR
-from scripts.engine import get_distance, get_closest_sprite, Entity, Easings
+from scripts import HEAL_COLOR, PLAYER_COLOR
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
 
+from scripts.entities.entity import Entity
 from scripts.entities.particle_fx import Image, Circle
 from scripts.entities.projectile import ProjectileStandard
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
+
+from scripts.utils import get_distance, get_closest_sprite
+from scripts.utils.easings import Easings
 
 import pygame
 import inspect
@@ -51,30 +50,6 @@ def reset_talents(player):
 		talent.reset()
 
 class Talent:
-	'''
-    Talent baseclass that is meant to be inherited from.
-
-    Variables:
-        DRAW_TYPE: used to distinguish between card types.
-        DRAW_SPECIAL: used to determine how a card is created.
-        TALENT_ID: the id of the talent.
-		TALENT_CALLS: list of strings that is used to call specific talents.
-        DESCRIPTION: the description of the talent; used for card creation.
-
-        player: the player object.
-        overrides: if the player should be overriden by the talent.
-
-        talent_info: used for custom talent functions.
-
-    Methods:
-        fetch(): returns the card info.
-        check_draw_condition(): returns whether the talent is able to be drawn.
-
-        call(): calls the talent to activate depending on TALENT_CALLS. 
-        reset(): resets the talent to its pre-call() state.
-        update(): update the object every frame.
-    '''
-
 	DRAW_TYPE = 'TALENT'
 	DRAW_SPECIAL = None
 
@@ -246,11 +221,11 @@ class FloatLikeAButterfly(Talent):
 
 class StingLikeABee(Talent):
 	TALENT_ID = 'sting_like_a_bee'
-	TALENT_CALLS = ['on_player_kill']
+	TALENT_CALLS = ['on_@primary_collide']
 
 	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Defeating an enemy resets your jumps.'
+		'description': 'Hitting an enemy with your primary attack allows you to use it again while airborne.'
 	}
 
 	@staticmethod
@@ -281,7 +256,7 @@ class StingLikeABee(Talent):
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
-		self.player.set_stat('jumps', self.player.get_stat('max_jumps'), False)
+		info.can_call = True
 
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
@@ -349,6 +324,15 @@ class Temperance(Talent):
 			self.rect.centery = player.rect.top - 17 - round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
 			
 			self.sin_count += 1 * dt
+
+			primary_ability = player.abilities['primary']
+			if primary_ability.ability_info['cooldown'] > 0:
+				self.glow['active'] = False
+				self.image.set_alpha(55)
+
+			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+				self.glow['active'] = True
+				self.set_alpha_tween(255, 5, 'ease_out_sine')
 
 			super().display(scene, dt)
 

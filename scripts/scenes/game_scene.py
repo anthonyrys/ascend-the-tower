@@ -1,24 +1,22 @@
-'''
-Holds the game scene class.
-'''
+from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR
 
-from scripts.constants import SCREEN_DIMENSIONS, PLAYER_COLOR
-from scripts.engine import Entity, Easings, get_sprite_colors
-from scripts.engine import BoxCamera
-
-from scripts.entities.player import Player
 from scripts.core_systems.talents import get_all_talents
 from scripts.core_systems.abilities import get_all_abilities
-from scripts.core_systems.wave_handler import WaveHandler
 
+from scripts.entities.entity import Entity
+from scripts.entities.player import Player
 from scripts.entities.particle_fx import Circle
-from scripts.entities.interactable import ArenaCrystal
-from scripts.entities.tiles import Floor, Ceiling, Barrier, Ramp, Block
 
 from scripts.scenes.scene import Scene
 
+from scripts.services import load_tilemap
+
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
+
+from scripts.utils import get_sprite_colors
+from scripts.utils.camera import BoxCamera
+from scripts.utils.easings import Easings
 
 import pygame
 import random
@@ -26,41 +24,12 @@ import math
 import os
 
 class GameScene(Scene):
-    '''
-    Variables:
-        delay_timers: list of functions to be called after a certain amount of time.
+    def __init__(self, scene_handler, mouse, sprites=None):
+        super().__init__(scene_handler, mouse, sprites)
 
-        scene_fx: special effects for the scene surfaces.
-
-        player: the player controlled sprite.
-
-        ui_elements: a collection of ui sprites.
-
-        wave_handler: the initialized WaveHandler object.
-
-        card_info: information on how the card ui should function.
-
-    Methods:
-        on_scene_end(): called when the scene ends; calls SceneHandler set_new_scene().
-
-        on_enemy_spawn(): called once an enemy within the scene spawns.
-        on_enemy_death(): called once an enemy within the scene dies.
-        
-        on_player_death(): called once the player dies.
-
-        on_area_complete(): called once the level is completed.
-        on_wave_complete(): called once the wave is completed; awards the player with cards.
-
-        remove_cards(): the function given to the card object when a card is selected.
-        generate_standard_cards(): generates a list of talent/ability cards for the player to choose from.
-        generate_ability_fail_cards(): generates a list of the player's ability cards to replace.
-        generate_stat_cards(): generates a list of stat cards for the player to choose from.
-
-        apply_scene_fx: applies effects for the scene surfaces according to the scene_fx dictionary,
-    '''
-
-    def __init__(self, scene_handler, surfaces, mouse, sprites=None):
-        super().__init__(scene_handler, surfaces, mouse, sprites)
+        self.background_surface = pygame.Surface(SCREEN_DIMENSIONS, pygame.SRCALPHA).convert_alpha()
+        self.entity_surface = None
+        self.ui_surface = pygame.Surface((2000, 2000), pygame.SRCALPHA).convert_alpha()
 
         self.delay_timers = []
 
@@ -78,16 +47,6 @@ class GameScene(Scene):
                 'amount': 0.0,
                 'frames': [0, 0],
                 'easing': 'ease_out_quint'
-            },
-            
-            'background': {
-                'parallax': None
-            },
-
-            'particles': {
-                'frames': [0, 100],
-                'img_scale': 3,
-                'imgs': []
             }
         }
 
@@ -96,48 +55,13 @@ class GameScene(Scene):
         self.scene_fx['&dim']['frames'][0] = 45
         self.scene_fx['&dim']['frames'][1] = 45
 
-        img = pygame.image.load(os.path.join('imgs', 'background', 'parallax.png')).convert_alpha()
-        img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
-        img = pygame.mask.from_surface(img).to_surface(setcolor=(7, 7, 7), unsetcolor=(0, 0, 0, 0))
-
-        self.scene_fx['background']['parallax'] = img
-        
-        self.tiles = {
-            'barrier_y': [
-                Floor((0, 5000), (255, 255, 255, 0), (250, 250), 1),
-                Ceiling((0, 2750), (255, 255, 255, 0), (250, 250), 1)
-            ],
-
-            'barrier_x': [
-                Barrier((3000, 5000), (255, 255, 255, 0), (250, 250), ['player'], 1),        
-                Barrier((6750, 0), (255, 255, 255, 0), (250, 250), ['player'], 1)
-            ],
-
-            'floor': [
-                Floor((3000, 5000), (255, 255, 255), (4000, 25), 1)
-            ],
-
-            'ramps': [
-                Ramp((4824, 4904), 1, 'right', (255, 255, 255), 1),
-                Ramp((5080, 4904), 1, 'left', (255, 255, 255), 1)
-            ],
-
-            'blocks': [
-                Block((4920, 4952), (255, 255, 255), (160, 48), 1)
-            ],
-
-            'crystal': ArenaCrystal((4992, 4890), 1)
-        }
-
-        self.player = Player((self.tiles['floor'][0].center_position[0] + 200, 4800), 4)
+        self.player = Player((0, 0), 4)
 
         self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
 
         self.ui_elements = []
-
-        self.wave_handler = WaveHandler(self)
-        self.wave_handler.spawn_rect = pygame.Rect(3250, 3000, 3500, 2250)
+        self.ui_elements.extend(self.player.get_ui_elements())
 
         self.card_info = {
             'overflow': [],
@@ -150,14 +74,14 @@ class GameScene(Scene):
                     'name': 'Vitality', 
                     'description': '+ Max Health',
                     'stat': ['max_health', 'health'],
-                    'value': [10, 10]
+                    'value': [20, 20]
                 },
 
                 {
                     'name': 'Potency', 
                     'description': '+ Damage',
                     'stat': ['base_damage'],
-                    'value': [5]
+                    'value': [10]
                 },
 
                 {
@@ -171,10 +95,12 @@ class GameScene(Scene):
                     'name': 'Dexterity', 
                     'description': '+ Critical Strike',
                     'stat': ['crit_strike_chance', 'crit_strike_multiplier'],
-                    'value': [.05, .1]
+                    'value': [.05, .15]
                 },
             ]
         }
+
+        self.load_tilemap()
 
     def on_scene_end(self):
         self.scene_fx['&dim']['easing'] = 'ease_out_quint'
@@ -186,10 +112,10 @@ class GameScene(Scene):
         self.delay_timers.append([90, self.scene_handler.set_new_scene, [self.__class__, {}]])
 
     def on_enemy_spawn(self):
-        self.wave_handler.on_enemy_spawn()
+        ...
 
     def on_enemy_death(self, enemy):
-        self.wave_handler.on_enemy_death()
+        ...
 
     def on_player_death(self):
         self.player.overrides['death'] = True
@@ -205,7 +131,7 @@ class GameScene(Scene):
         particles = []
 
         for color in get_sprite_colors(self.player, 2):
-            cir = Circle(pos, color, 10, 0)
+            cir = Circle(pos, color, random.randint(6, 10), 0)
             cir.set_goal(
                         150, 
                         position=(pos[0] + random.randint(-450, 450), pos[1] + random.randint(-350, -250)), 
@@ -234,29 +160,12 @@ class GameScene(Scene):
         
         self.add_sprites(particles)
 
-    def on_area_complete(self):
-        ...
+    def load_tilemap(self):
+        tilemap = load_tilemap('floor-1')
 
-    def on_wave_complete(self):
-        cards, flavor_text = self.generate_stat_cards()
-        self.card_info['overflow'].append([self.generate_standard_cards, []])
-
-        self.in_menu = True
-        self.paused = True
-
-        self.scene_fx['&dim']['easing'] = 'ease_out_quint'
-        self.scene_fx['&dim']['type'] = 'in'
-
-        self.scene_fx['&dim']['amount'] = .75
-        self.scene_fx['&dim']['frames'][1] = 30
-        
-        self.scene_fx['&dim']['threshold'] = 1
-
-        for frame in self.ui_elements:
-            frame.image.set_alpha(100)
-
-        self.add_sprites(cards)
-        self.add_sprites(flavor_text)
+        self.entity_surface = tilemap['surface']
+        self.tiles = tilemap['tiles']
+        self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn']
 
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
@@ -524,12 +433,6 @@ class GameScene(Scene):
                 else:
                     self.scene_fx['&dim']['type'] = None
 
-        parallax = self.scene_fx['background']['parallax']
-        parallax_size = self.scene_fx['background']['parallax'].get_size()
-        for v in range(10):
-            for i in range(10):
-                self.background_surface.blit(parallax, ((v * 250) + (parallax_size[0] * (i - 5)) - (48 * i), (parallax_size[1] * (i - .5)) - (48 * i)))
-
         return [None, entity_display, None, dim_display]
 
     def display(self, screen, clock, dt):
@@ -565,14 +468,6 @@ class GameScene(Scene):
 
                 sprite.display(self, dt)
 
-        if 'barrier_y' in self.tiles:
-            for barrier in self.tiles['barrier_y']:
-                barrier.rect.centerx = self.player.rect.centerx
-
-        if 'barrier_x' in self.tiles:
-            for barrier in self.tiles['barrier_x']:
-                barrier.rect.centery = self.player.rect.centery
-
         remove_list = []
         for i in range(len(self.delay_timers)):
             if self.delay_timers[i][0] > 0:
@@ -588,7 +483,7 @@ class GameScene(Scene):
         self.camera_offset = self.camera.update(dt)
 
         display_list = self.apply_scene_fx(dt)
-        screen.blit(self.background_surface, (-self.camera_offset[0] * .1, -self.camera_offset[1] * .1))
+        screen.blit(self.background_surface, (0, 0))
         if display_list[3] and self.scene_fx['&dim']['threshold'] == 2:
             screen.blit(display_list[3], (0, 0))
 
@@ -604,3 +499,6 @@ class GameScene(Scene):
 
         self.frame_count_raw += 1 * dt
         self.frame_count = round(self.frame_count_raw)
+
+        super().display(screen, clock, dt)
+    

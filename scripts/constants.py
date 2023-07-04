@@ -1,8 +1,6 @@
-'''
-Holds the game constants.
-'''
+TITLE = 'Ascend The Tower'
+VERSION = '0.5.0'
 
-TITLE = 'untitled'
 FRAME_RATE = 30
 
 SCREEN_DIMENSIONS = (1280, 720)

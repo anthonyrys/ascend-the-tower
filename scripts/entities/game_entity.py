@@ -1,54 +1,12 @@
-'''
-Holds the game entity class.
-'''
-
-from scripts.engine import Entity
-
 from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_heal
+
+from scripts.entities.entity import Entity
+
+from scripts.utils import get_distance
 
 import pygame
 
 class GameEntity(Entity):
-    '''
-    Inherited from entity class.
-    Holds variables and methods that the player all enemies use.
-
-    Variables:
-        GRAVITY: the amount applied to the current gravity each frame.
-        MAX_GRAVITY: the maximum gravity that can be applied.
-        
-        overrides: dictonary of the different override scenarios.
-
-        cooldown_timers: base timers for player actions.
-        cooldowns: ongoing cooldowns for player actions.
-
-        gravity_info: information on the current values of the entity.
-        state_info: information on the current state of the entity.
-
-        default_movement_info: initial movement information of the entity.
-        movement_info: ongoing movement information of the entity.
-        default_combat_info: initial combat information of the entity.
-        combat_info: ongoing combat information of the entity.
-
-        buffs: list of buffs that the entity has.
-        debuffs: list of debuffs that the entity has.
-
-    Methods:
-        apply_collision_x_default(): applies the default collision to the entity's x axis.
-        apply_collision_y_default(): applies the default collision to the entity's y axis.
-        apply_collision_y_ramp(): applies the ramp collision to the entity's y axis.
-
-        apply_gravity(): applies gravity to the entity.
-
-        set_gravity(): sets the current gravity of the entity for a set amount of frames.
-        set_friction(): sets the entity friction temporarily.
-
-        get_stat(): returns a value of either the combat dictionary or the movement dictionary.
-        set_stat(): sets a value of either the combat dictionary or the movement dictionary.
-
-        set_frame_state(): sets the frame state of the player depending on movement.
-    '''
-
     GRAVITY = 2
     MAX_GRAVITY = 30
 
@@ -120,14 +78,13 @@ class GameEntity(Entity):
 
         self.visuals = []
 
-    def apply_collision_x_default(self, collidables):
+    def apply_collision_x_default(self, scene, collidables):
         callback_collision = []
 
         for collidable in collidables:
-            if collidable.secondary_sprite_id == 'barrier':
-                if self.sprite_id not in collidable.sprite_ids:
-                    continue
-
+            if get_distance(self, collidable) > 100:
+                continue
+            
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
                     self.collision_ignore.remove(collidable)
@@ -140,6 +97,12 @@ class GameEntity(Entity):
             if collidable in self.collision_ignore:
                 continue
 
+            if collidable.secondary_sprite_id == 'killbrick':
+                self.combat_info['health'] = 0
+                self.on_death(scene, None, True)
+                
+                return callback_collision
+            
             left = abs(self.rect.left - collidable.rect.right)
             right = abs(self.rect.right - collidable.rect.left)
 
@@ -169,13 +132,12 @@ class GameEntity(Entity):
 
         return callback_collision
 
-    def apply_collision_y_default(self, collidables):
+    def apply_collision_y_default(self, scene, collidables):
         callback_collision = []
 
         for collidable in collidables:
-            if collidable.secondary_sprite_id == 'barrier':
-                if self.sprite_id not in collidable.sprite_ids:
-                    continue
+            if get_distance(self, collidable) > 100:
+                continue
 
             if not self.rect.colliderect(collidable.rect):
                 if collidable in self.collision_ignore:
@@ -184,6 +146,24 @@ class GameEntity(Entity):
                 if collidable in self.collisions:
                     self.collisions.remove(collidable)
                     
+                continue
+
+            if collidable.secondary_sprite_id == 'killbrick':
+                self.combat_info['health'] = 0
+                self.on_death(scene, None, True)
+
+                return callback_collision
+
+            if collidable.rect.collidepoint(self.rect.center):
+                self.rect.bottom = collidable.rect.top
+                self.collide_points['bottom'] = True
+
+                callback_collision.append('bottom')
+
+                if collidable not in self.collisions:
+                    self.collisions.append(collidable)
+
+                self.velocity[1] = 0
                 continue
 
             if collidable in self.collision_ignore:
@@ -206,7 +186,7 @@ class GameEntity(Entity):
                     
                 self.velocity[1] = 0
 
-            elif collidable.secondary_sprite_id != 'ceiling':
+            else:
                 self.rect.bottom = collidable.rect.top
                 self.collide_points['bottom'] = True
 
@@ -219,8 +199,11 @@ class GameEntity(Entity):
 
         return callback_collision  
 
-    def apply_collision_y_ramp(self, ramps):
+    def apply_collision_y_ramp(self, scene, ramps):
         for ramp in ramps:
+            if get_distance(self, ramp) > 100:
+                continue
+    
             if not self.rect.colliderect(ramp.rect):
                 if ramp in self.collision_ignore:
                     self.collision_ignore.remove(ramp)
@@ -230,7 +213,7 @@ class GameEntity(Entity):
                 
                 continue
 
-            if ramp in self.collision_ignore:
+            if ramp in self.collision_ignore and self.velocity[1] < 0:
                 continue
 
             if self.velocity[1] < -4 and ramp not in self.collision_ignore:

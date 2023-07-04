@@ -1,30 +1,11 @@
-'''
-Holds the projectile baseclass as well as subclasses.
-'''
-
-from scripts.engine import Easings, Entity, check_pixel_collision, check_line_collision, get_distance
-
 from scripts.entities.particle_fx import Image
+from scripts.entities.entity import Entity
+
+from scripts.utils import check_pixel_collision, check_line_collision, get_distance
 
 import pygame
 
 class Projectile(Entity):
-    '''
-    The projectile baseclass; intended to be inherited from.
-
-    Variables:
-        info: general information about the projectile.
-        settings: settings for how the projectile should be displayed.
-
-        duration: duration of the projectile.
-        prev_positions: list of the previous positions the projectile had.
-        prev_player_position: previous position of the player.
-
-    Methods:
-        on_collision(): called when the projectile collides with its given sprites.
-        apply_afterimages(): applies afterimages of the projectile if enabled.
-    '''
-
     def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], duration=0, settings={}):
         if isinstance(img, tuple):
             self.radius = dimensions
