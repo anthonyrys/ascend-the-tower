@@ -1,0 +1,24 @@
+v0.5.1-test.1
+[ADD]
+    Bezier file
+
+[REWORK]
+    Easings functions into bezier curve points
+
+[CHANGE]
+    Sprite file to prefabs directory from utils directory
+
+    PrimaryAttack trail to particles
+
+[INCREASE]
+    PrimaryAttack particle size to 1.75 from 1.5
+
+[REMOVE]
+    Arena-crystal image file
+
+    Player interact_info variable
+    Player get_interactable variable
+
+    Easing file
+
+    Inputs interact keybind

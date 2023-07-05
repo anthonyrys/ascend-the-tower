@@ -3,7 +3,7 @@ from scripts import UI_HEALTH_COLOR
 from scripts.ui.text_box import TextBox 
 from scripts.ui.frame import Frame
 
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import os
@@ -30,7 +30,7 @@ class HealthBar(InfoBar):
 
         self.previous_health_percentage = 1
         self.tween_info = {
-            'easing': getattr(Easings, 'ease_out_sine'),
+            'bezier': [*presets['rest'], 0],
             'frames': 0,
             'max_frames': 0,
             'width': None
@@ -70,7 +70,7 @@ class HealthBar(InfoBar):
         if self.tween_info['frames'] < self.tween_info['max_frames']:
             abs_prog = self.tween_info['frames'] / self.tween_info['max_frames']
 
-            tweened_width = round((self.original_delay.get_width() * health_percentage - self.tween_info['width']) * self.tween_info['easing'](abs_prog))
+            tweened_width = round((self.original_delay.get_width() * health_percentage - self.tween_info['width']) * get_bezier_point(abs_prog, *self.tween_info['bezier']))
             self.delay = pygame.transform.scale(self.original_delay, (self.tween_info['width'] + tweened_width, self.original_delay.get_height()))
 
             self.tween_info['frames'] += 1 * dt

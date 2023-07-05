@@ -9,7 +9,7 @@ from scripts.entities.particle_fx import Circle
 from scripts.ui.card import Card
 
 from scripts.utils import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
-
+from scripts.utils.bezier import presets
 
 import pygame
 import random
@@ -172,7 +172,7 @@ class PrimaryAttack(Ability):
                         width=0
                     )
             
-            cir.set_easings(radius='ease_out_sine')
+            cir.set_beziers(radius=presets['ease_out'])
             cir.set_gravity(4)
             particles.append(cir)
         
@@ -212,7 +212,7 @@ class PrimaryAttack(Ability):
                     )
 
             cir.glow['active'] = True
-            cir.glow['size'] = 1.5
+            cir.glow['size'] = 1.75
             cir.glow['intensity'] = .25
 
             particles.append(cir)
@@ -404,7 +404,7 @@ class PrimaryAttack(Ability):
                             )
 
                     cir.glow['active'] = True
-                    cir.glow['size'] = 1.5
+                    cir.glow['size'] = 1.75
                     cir.glow['intensity'] = .25
 
                     particles.append(cir)
@@ -429,13 +429,28 @@ class PrimaryAttack(Ability):
         self.character.rect.x += round(self.velocity[0] * dt)
         self.character.rect.y += round(self.velocity[1] * dt)
 
-        for i in range(self.img_radius):
-            cir_pos = [
-                self.character.rect.centerx - (round(self.velocity[0] * dt) * (.075 * (i + 1))),
-                self.character.rect.centery - (round(self.velocity[1] * dt) * (.075 * (i + 1)))
-            ]
+        pos = self.character.center_position
+        particles = []
 
-            pygame.draw.circle(scene.entity_surface, self.ability_info['color'], cir_pos, (self.img_radius - (i + 1)))
+        for _ in range(1):
+            cir = Circle(pos, self.ability_info['color'], 6, 0)
+            cir.set_goal(
+                        75, 
+                        position=(
+                            pos[0] + (self.character.velocity[0] * 10), 
+                            pos[1] + random.randint(-150, 150) + (self.character.velocity[1] * 10)
+                        ), 
+                        radius=0, 
+                        width=0
+                    )
+
+            cir.glow['active'] = True
+            cir.glow['size'] = 2
+            cir.glow['intensity'] = .2
+
+            particles.append(cir)
+
+        scene.add_sprites(particles)
 
 class RainOfArrows(Ability):
     ABILITY_ID = 'rain_of_arrows'
@@ -522,7 +537,7 @@ class RainOfArrows(Ability):
         )
 
         particle.set_goal(15, position=[0, 0], radius=60, width=1, alpha=0)
-        particle.set_easings(alpha='ease_in_sine')
+        particle.set_beziers(alpha=[*presets['rest'], 0])
 
         scene.add_sprites(particle)
 
@@ -562,7 +577,7 @@ class RainOfArrows(Ability):
             )
 
             projectile.image.set_alpha(0)
-            projectile.set_alpha_tween(255, 20, 'ease_out_quint')
+            projectile.set_alpha_bezier(255, 20, presets['ease_out'])
 
             scene.add_sprites(projectile)
     
@@ -889,8 +904,8 @@ class HolyJavelin(Ability):
             self.character
         )
 
-        particle.set_goal(self.ability_info['countdown'][1], position=[0, 0], radius=0, width=3, alpha=0)
-        particle.set_easings(alpha='ease_out_sine')
+        particle.set_goal(self.ability_info['countdown'][1] * 1.25, position=[0, 0], radius=0, width=3, alpha=0)
+        particle.set_beziers(alpha=[*presets['rest'], 0])
 
         scene.set_dt_multiplier(.5, self.ability_info['countdown'][1])
         scene.add_sprites(particle)

@@ -8,9 +8,7 @@ class Inputs:
         'jump': [pygame.K_w, pygame.K_SPACE, pygame.K_UP],
 
         'ability_1': [pygame.K_1],
-        'ability_2': [pygame.K_2],
-
-        'interact': [pygame.K_f]
+        'ability_2': [pygame.K_2]
     }
 
     MOVEMENT = ['left', 'right', 'down', 'jump']

@@ -4,6 +4,8 @@ from scripts.scenes.game_scene import GameScene
 
 from scripts.ui.text_box import TextBox
 
+from scripts.utils.bezier import presets
+
 import pygame
 import random
 
@@ -34,7 +36,7 @@ class Sandbox(GameScene):
             self.in_menu = True
             self.paused = True
 
-            self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+            self.scene_fx['&dim']['bezier'] = presets['ease_out']
             self.scene_fx['&dim']['type'] = 'in'
 
             self.scene_fx['&dim']['amount'] = .75
@@ -54,7 +56,7 @@ class Sandbox(GameScene):
             self.in_menu = True
             self.paused = True
 
-            self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+            self.scene_fx['&dim']['bezier'] = presets['ease_out']
             self.scene_fx['&dim']['type'] = 'in'
 
             self.scene_fx['&dim']['amount'] = .75

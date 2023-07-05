@@ -1,4 +1,4 @@
-from scripts.utils.sprite import Sprite
+from scripts.prefabs.sprite import Sprite
 
 import pygame
 

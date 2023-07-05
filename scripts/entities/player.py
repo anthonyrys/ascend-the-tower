@@ -13,8 +13,8 @@ from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar
 from scripts.ui.hotbar import Hotbar
 
-from scripts.utils import check_line_collision, get_closest_sprite, get_distance
 from scripts.utils.inputs import Inputs
+from scripts.utils.bezier import presets
 
 
 import pygame
@@ -22,44 +22,7 @@ import math
 import os
 
 class Player(GameEntity):
-    '''
-    The class that the player controls.
-
-    Variables:
-        halo: the initialized halo class.
-        timed_inputs: dictionary to contain inputs.
-        timed_inputs_buffer: used to determine how long an input should stay in the dictionary.
-
-        healthbar: Infobar object to display player health.
-
-        abilities: dictonary of the current abilities the player has.
-
-        talents: list of the current talents the player has.
-        talent_info: dictonary of the information about the talents the player has.
-
-    Methods:
-        get_ui_elements(): returns ui objects for the scene to display.
-        get_interactable(): gets all interactable sprites.
-
-        on_jump(): called when the player presses the up key.
-        on_respawn(): called when the player respawns after death.
-        on_death(): called when the player dies.
-        on_attack(): called when the player attacks.
-        on_healed(): called when the player recives a heal.
-        on_damaged(): called when the player takes damage.
-
-        apply_movement(): uses the general inputs to determine player velocity.
-        apply_collision_x(): applies base collision for the x axis.
-        apply_collision_y(): applies base collision for the y axis.
-        apply_afterimages(): applies afterimages of the player if they have a speed boost.
-
-        set_images(): sets the player images.
-    '''
-
     class Halo(Entity):
-        '''
-        Cosmetic object for the player.
-        '''
         def __init__(self, strata):
             img = pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha()
             img_scale = 1.5
@@ -90,7 +53,7 @@ class Player(GameEntity):
 
             elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
                 self.glow['active'] = True
-                self.set_alpha_tween(255, 5, 'ease_out_sine')
+                self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 
             super().display(scene, dt)
 
@@ -149,12 +112,6 @@ class Player(GameEntity):
         self.talents = []
         self.talent_info = {}
 
-        self.interact_info = {
-            'distance': 100,
-            'sprite': None,
-            'text': None
-        }
-
     def get_ui_elements(self):
         ui_elements = []
 
@@ -162,34 +119,6 @@ class Player(GameEntity):
         ui_elements.append(Hotbar(self, (SCREEN_DIMENSIONS[0] * .5, SCREEN_DIMENSIONS[1] - 70), 3))
 
         return ui_elements
-
-    def get_interactable(self, scene):
-        self.interact_info['sprite'] = None
-
-        scene.del_sprites(self.interact_info['text'])
-        self.interact_info['text'] = None
-
-        sprites = [s[0] for s in check_line_collision(self.center_position, scene.mouse.entity_pos, scene.get_sprites('interactable'))]
-        sprites = [s for s in sprites if get_distance(self, s) <= self.interact_info['distance'] 
-                   and get_distance(scene.mouse.entity_pos, s.true_position) <= self.interact_info['distance'] 
-                   and s.interactable
-            ]
-
-        if not sprites:
-            return
-        
-        self.interact_info['sprite'] = get_closest_sprite(self, sprites)
-        self.interact_info['text'] = TextBox(
-            [0, self.interact_info['sprite'].rect.top - (60 * .5)],
-            f'{pygame.key.name(Inputs.KEYBINDS["interact"][0])}: {self.interact_info["sprite"].selected_text}',
-            color=self.interact_info['sprite'].selected_color,
-            size=.5
-        )
-
-        self.interact_info['text'].uses_entity_surface = True
-        self.interact_info['text'].rect.x = self.interact_info['sprite'].rect.centerx - self.interact_info['text'].image.get_width() * .5
-
-        scene.add_sprites(self.interact_info['text'])
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -202,9 +131,6 @@ class Player(GameEntity):
             if action in list(self.abilities.keys()):
                 if self.abilities[action]:
                     self.abilities[action].call(scene, keybind=action)
-
-            if action == 'interact' and self.interact_info['sprite']:
-                self.interact_info['sprite'].on_interact(scene)
 
             if self.timed_inputs.get(action):
                 for ability in [a for a in self.abilities.values() if a is not None and a.keybind_info['double_tap']]:
@@ -267,7 +193,7 @@ class Player(GameEntity):
         scene.set_dt_multiplier(.05, 30)
         scene.camera.set_camera_shake(0, 0)
         
-        scene.scene_fx['entity_zoom']['easing'] = 'ease_out_quint'
+        scene.scene_fx['entity_zoom']['bezier'] = presets['ease_out']
         scene.scene_fx['entity_zoom']['type'] = 'in'
         scene.scene_fx['entity_zoom']['frames'][1] = 30
         scene.scene_fx['entity_zoom']['amount'] = 1.0
@@ -554,7 +480,6 @@ class Player(GameEntity):
             self.apply_collision_y(scene, dt)
 
             self.set_frame_state()
-            self.get_interactable(scene)
 
         for visual in self.visuals:
             visual.display(self, scene, dt)

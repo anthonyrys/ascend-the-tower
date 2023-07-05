@@ -1,4 +1,4 @@
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import get_bezier_point
 
 import pygame
 
@@ -58,21 +58,28 @@ class Sprite(pygame.sprite.Sprite):
 
         self.delay_timers = []
 
-        self.tween_information = {
+        self.bezier_info = {
             'inherited': True,
 
-            'position': {
-                'old_position': [0, 0],
-                'new_position': [0, 0],
-                'frames': [0, 0],
-                'easing_style': None
+            'x': {
+                'p_0': [0, 0],
+                'p_1': [0, 0],
+                'f': [0, 0],
+                'b': None
+            },
+
+            'y': {
+                'p_0': [0, 0],
+                'p_1': [0, 0],
+                'f': [0, 0],
+                'b': None
             },
 
             'alpha': {
-                'old_alpha': 0,
-                'new_alpha': 0,
-                'frames': [0, 0],
-                'easing_style': None
+                'a_0': 0,
+                'a_1': 0,
+                'f': [0, 0],
+                'b': None
             }
         }
 
@@ -88,47 +95,48 @@ class Sprite(pygame.sprite.Sprite):
     def center_position(self):
         return [self.rect.centerx, self.rect.centery]
 
-    def set_position_tween(self, position, frames, easing_style):
-        self.tween_information['position']['old_position'] = self.true_position
-        self.tween_information['position']['new_position'] = position
-        self.tween_information['position']['frames'] = [0, frames]
+    def set_x_bezier(self, position, frames, bezier):
+        self.bezier_info['x']['p_0'] = self.rect.x
+        self.bezier_info['x']['p_1'] = position
+        self.bezier_info['x']['f'] = [0, frames]
+        self.bezier_info['x']['b'] = bezier
 
-        if not hasattr(Easings, easing_style):
-            self.tween_information['position']['easing_style'] = getattr(Easings, 'ease_out_sine')
-            return
+    def set_y_bezier(self, position, frames, bezier):
+        self.bezier_info['y']['p_0'] = self.rect.y
+        self.bezier_info['y']['p_1'] = position
+        self.bezier_info['y']['f'] = [0, frames]
+        self.bezier_info['y']['b'] = bezier
 
-        self.tween_information['position']['easing_style'] = getattr(Easings, easing_style)
-
-    def set_alpha_tween(self, alpha, frames, easing_style):
-        self.tween_information['alpha']['old_alpha'] = self.image.get_alpha()
-        self.tween_information['alpha']['new_alpha'] = alpha
-        self.tween_information['alpha']['frames'] = [0, frames]
-
-        if not hasattr(Easings, easing_style):
-            self.tween_information['alpha']['easing_style'] = getattr(Easings, 'ease_out_sine')
-            return
-
-        self.tween_information['alpha']['easing_style'] = getattr(Easings, easing_style)
+    def set_alpha_bezier(self, alpha, frames, bezier):
+        self.bezier_info['alpha']['a_0'] = self.image.get_alpha()
+        self.bezier_info['alpha']['a_1'] = alpha
+        self.bezier_info['alpha']['f'] = [0, frames]
+        self.bezier_info['alpha']['b'] = bezier
         
     def display(self, scene, dt):
         self.previous_true_position = [self.rect.x, self.rect.y]
         self.previous_center_position = [self.rect.centerx, self.rect.centery]
 
-        if self.tween_information['inherited']:
-            if self.tween_information['position']['frames'][0] < self.tween_information['position']['frames'][1]:
-                abs_prog = self.tween_information['position']['frames'][0] / self.tween_information['position']['frames'][1]
-            
-                self.rect.x = self.tween_information['position']['old_position'][0] + (self.tween_information['position']['new_position'][0] - self.tween_information['position']['old_position'][0]) * self.tween_information['position']['easing_style'](abs_prog)
-                self.rect.y = self.tween_information['position']['old_position'][1] + (self.tween_information['position']['new_position'][1] - self.tween_information['position']['old_position'][1]) * self.tween_information['position']['easing_style'](abs_prog)
+        if self.bezier_info['inherited']:
+            if self.bezier_info['x']['f'][0] < self.bezier_info['x']['f'][1]:
+                x_info = self.bezier_info['x']
+                self.rect.x = x_info['p_0'] + (x_info['p_1'] - x_info['p_0']) * get_bezier_point(x_info['f'][0] / x_info['f'][1], *x_info['b'])
 
-                self.tween_information['position']['frames'][0] += 1 * dt
+                self.bezier_info['x']['f'][0] += 1 * dt
 
-            if self.tween_information['alpha']['frames'][0] < self.tween_information['alpha']['frames'][1]:
-                abs_prog = self.tween_information['alpha']['frames'][0] / self.tween_information['alpha']['frames'][1]
-            
-                self.image.set_alpha(self.tween_information['alpha']['old_alpha'] + (self.tween_information['alpha']['new_alpha'] - self.tween_information['alpha']['old_alpha']) * self.tween_information['alpha']['easing_style'](abs_prog))
-                
-                self.tween_information['alpha']['frames'][0] += 1 * dt
+            if self.bezier_info['y']['f'][0] < self.bezier_info['y']['f'][1]:
+                y_info = self.bezier_info['y']
+                self.rect.y = y_info['p_0'] + (y_info['p_1'] - y_info['p_0']) * get_bezier_point(y_info['f'][0] / y_info['f'][1], *y_info['b'])
+
+                self.bezier_info['y']['f'][0] += 1 * dt
+
+            if self.bezier_info['alpha']['f'][0] < self.bezier_info['alpha']['f'][1]:
+                alpha_info = self.bezier_info['alpha']
+                alpha = alpha_info['a_0'] + (alpha_info['a_1'] - alpha_info['a_0']) * get_bezier_point(alpha_info['f'][0] / alpha_info['f'][1], *alpha_info['b'])
+
+                self.image.set_alpha(alpha)
+
+                self.bezier_info['alpha']['f'][0] += 1 * dt
 
         if self.glow['active']:
             image = pygame.transform.scale(self.image, (self.image.get_width() * self.glow['size'], self.image.get_height() * self.glow['size']))

@@ -16,7 +16,7 @@ from scripts.ui.text_box import TextBox
 
 from scripts.utils import get_sprite_colors
 from scripts.utils.camera import BoxCamera
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import random
@@ -38,7 +38,7 @@ class GameScene(Scene):
                 'type': None, 
                 'amount': 1.0,
                 'frames': [0, 0],
-                'easing': 'ease_out_quint',
+                'bezier': presets['ease_out'],
                 'threshold': 0
             },
 
@@ -46,12 +46,12 @@ class GameScene(Scene):
                 'type': None, 
                 'amount': 0.0,
                 'frames': [0, 0],
-                'easing': 'ease_out_quint'
+                'bezier': presets['ease_out']
             }
         }
 
         self.scene_fx['&dim']['type'] = 'out'
-        self.scene_fx['&dim']['easing'] = 'ease_out_cubic'
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['frames'][0] = 45
         self.scene_fx['&dim']['frames'][1] = 45
 
@@ -103,7 +103,7 @@ class GameScene(Scene):
         self.load_tilemap()
 
     def on_scene_end(self):
-        self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['type'] = 'in'
         self.scene_fx['&dim']['amount'] = 1
         self.scene_fx['&dim']['frames'][1] = 30
@@ -120,7 +120,7 @@ class GameScene(Scene):
     def on_player_death(self):
         self.player.overrides['death'] = True
 
-        self.scene_fx['entity_zoom']['easing'] = 'ease_in_quint'
+        self.scene_fx['entity_zoom']['bezier'] = presets['ease_in']
         self.scene_fx['entity_zoom']['type'] = 'out'
         self.scene_fx['entity_zoom']['frames'][0] = 45
         self.scene_fx['entity_zoom']['frames'][1] = 45
@@ -139,7 +139,7 @@ class GameScene(Scene):
                         width=0
                     )
             cir.set_gravity(5)
-            cir.set_easings(radius='ease_out_sine')
+            cir.set_beziers(radius=presets['ease_out'])
 
             particles.append(cir)
 
@@ -170,17 +170,16 @@ class GameScene(Scene):
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
             if card == selected_card:
-                card.set_position_tween([card.rect.x, SCREEN_DIMENSIONS[1] * 1.1], 20, 'ease_out_quint')
-
+                card.set_y_bezier(SCREEN_DIMENSIONS[1] * 1.1, 20, presets['ease_out'])
             else:
-                card.set_position_tween([card.rect.x, 0 - card.rect.height * 1.1], 20, 'ease_out_quint')
+                card.set_y_bezier(0 - card.rect.height * 1.1, 20, presets['ease_out'])
 
             card.set_flag('del')
 
             card.on_del_sprite(self, 20)
 
-        flavor_text.set_position_tween((flavor_text.rect.x, 0), 30, 'ease_out_quint')
-        flavor_text.set_alpha_tween(0, 25, 'ease_out_sine')
+        flavor_text.set_y_bezier(0, 30, presets['ease_out'])
+        flavor_text.set_alpha_bezier(0, 25, [*presets['rest'], 0])
 
         flavor_text.on_del_sprite(self, 25)
 
@@ -199,7 +198,7 @@ class GameScene(Scene):
         self.paused = False
 
         self.scene_fx['&dim']['type'] = 'out'
-        self.scene_fx['&dim']['easing'] = 'ease_in_quint'
+        self.scene_fx['&dim']['bezier'] = presets['ease_in']
         self.scene_fx['&dim']['frames'][0] = 30
         self.scene_fx['&dim']['frames'][1] = 30
 
@@ -291,8 +290,8 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -340,8 +339,8 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -380,8 +379,8 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -401,12 +400,12 @@ class GameScene(Scene):
             zoom = 1.0
             
             if self.scene_fx['entity_zoom']['type'] == 'in':
-                zoom += self.scene_fx['entity_zoom']['amount'] * getattr(Easings, self.scene_fx['entity_zoom']['easing'])(abs_prog)
+                zoom += self.scene_fx['entity_zoom']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['entity_zoom']['bezier'])
                 if self.scene_fx['entity_zoom']['frames'][0] < self.scene_fx['entity_zoom']['frames'][1]:
                     self.scene_fx['entity_zoom']['frames'][0] += 1
 
             elif self.scene_fx['entity_zoom']['type'] == 'out':
-                zoom += self.scene_fx['entity_zoom']['amount'] * getattr(Easings, self.scene_fx['entity_zoom']['easing'])(abs_prog)
+                zoom += self.scene_fx['entity_zoom']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['entity_zoom']['bezier'])
                 if self.scene_fx['entity_zoom']['frames'][0] > 0:
                     self.scene_fx['entity_zoom']['frames'][0] -= 1
                 else:
@@ -422,12 +421,12 @@ class GameScene(Scene):
             dim_display.fill((0, 0, 0))
 
             if self.scene_fx['&dim']['type'] == 'in':
-                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * getattr(Easings, self.scene_fx['&dim']['easing'])(abs_prog)))
+                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['&dim']['bezier'])))
                 if self.scene_fx['&dim']['frames'][0] < self.scene_fx['&dim']['frames'][1]:
                     self.scene_fx['&dim']['frames'][0] += 1
 
             elif self.scene_fx['&dim']['type'] == 'out':
-                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * getattr(Easings, self.scene_fx['&dim']['easing'])(abs_prog)))
+                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['&dim']['bezier'])))
                 if self.scene_fx['&dim']['frames'][0] > 0:
                     self.scene_fx['&dim']['frames'][0] -= 1
                 else:

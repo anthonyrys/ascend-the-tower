@@ -6,7 +6,7 @@ from scripts.ui.text_box import TextBox
 from scripts.ui.frame import Frame
 
 from scripts.utils import create_outline_edge
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import os
@@ -95,13 +95,13 @@ class Card(Frame):
             'y': self.rect.y - 10,
 
             'frames': 5,
-            'easing': 'ease_out_cubic',
+            'bezier': presets['ease_out'],
         }
-
-        self.tween_information['inherited'] = False
 
         self.hover_rect.width = self.rect.width
         self.hover_rect.height = self.rect.height + 16
+
+        self.bezier_info['inherited'] = False
 
         if spawn is not None:
             if spawn == 'y':
@@ -110,18 +110,23 @@ class Card(Frame):
             if spawn == 'x':
                 self.rect.x = 0 - (self.image.get_width())
 
-            self.set_position_tween([self.original_rect.x, self.original_rect.y], 30, 'ease_out_cubic')
+            self.set_x_bezier(self.original_rect.x, 30, presets['ease_out'])
+            self.set_y_bezier(self.original_rect.y, 30, presets['ease_out'])
 
     def create_card(self):
         ...
 
     def on_hover_start(self, scene):
         self.hovering = True
-        self.set_position_tween([self.hover_info['x'], self.hover_info['y']], self.hover_info['frames'], self.hover_info['easing'])
+
+        self.set_x_bezier(self.hover_info['x'], self.hover_info['frames'], self.hover_info['bezier'])
+        self.set_y_bezier(self.hover_info['y'], self.hover_info['frames'], self.hover_info['bezier'])
 
     def on_hover_end(self, scene):
         self.hovering = False
-        self.set_position_tween([self.original_rect.x, self.original_rect.y], self.hover_info['frames'], self.hover_info['easing'])
+
+        self.set_x_bezier(self.original_rect.x, self.hover_info['frames'], self.hover_info['bezier'])
+        self.set_y_bezier(self.original_rect.y, self.hover_info['frames'], self.hover_info['bezier'])
 
     def on_mouse_down(self, scene, event):
         self.on_hover_end(scene)
@@ -130,20 +135,25 @@ class Card(Frame):
         self.flag = flag
 
     def display(self, scene, dt):
-        if self.tween_information['position']['frames'][0] < self.tween_information['position']['frames'][1]:
-            abs_prog = self.tween_information['position']['frames'][0] / self.tween_information['position']['frames'][1]
-        
-            self.rect.x = self.tween_information['position']['old_position'][0] + (self.tween_information['position']['new_position'][0] - self.tween_information['position']['old_position'][0]) * self.tween_information['position']['easing_style'](abs_prog)
-            self.rect.y = self.tween_information['position']['old_position'][1] + (self.tween_information['position']['new_position'][1] - self.tween_information['position']['old_position'][1]) * self.tween_information['position']['easing_style'](abs_prog)
+        if self.bezier_info['x']['f'][0] < self.bezier_info['x']['f'][1]:
+            x_info = self.bezier_info['x']
+            self.rect.x = x_info['p_0'] + (x_info['p_1'] - x_info['p_0']) * get_bezier_point(x_info['f'][0] / x_info['f'][1], *x_info['b'])
 
-            self.tween_information['position']['frames'][0] += 1 * dt
+            self.bezier_info['x']['f'][0] += 1 * dt
 
-        if self.tween_information['alpha']['frames'][0] < self.tween_information['alpha']['frames'][1]:
-            abs_prog = self.tween_information['alpha']['frames'][0] / self.tween_information['alpha']['frames'][1]
-        
-            self.image.set_alpha(self.tween_information['alpha']['old_alpha'] + (self.tween_information['alpha']['new_alpha'] - self.tween_information['alpha']['old_alpha']) * self.tween_information['alpha']['easing_style'](abs_prog))
-            
-            self.tween_information['alpha']['frames'][0] += 1 * dt
+        if self.bezier_info['y']['f'][0] < self.bezier_info['y']['f'][1]:
+            y_info = self.bezier_info['y']
+            self.rect.y = y_info['p_0'] + (y_info['p_1'] - y_info['p_0']) * get_bezier_point(y_info['f'][0] / y_info['f'][1], *y_info['b'])
+
+            self.bezier_info['y']['f'][0] += 1 * dt
+
+        if self.bezier_info['alpha']['f'][0] < self.bezier_info['alpha']['f'][1]:
+            alpha_info = self.bezier_info['alpha']
+            alpha = alpha_info['a_0'] + (alpha_info['a_1'] - alpha_info['a_0']) * get_bezier_point(alpha_info['f'][0] / alpha_info['f'][1], *alpha_info['b'])
+
+            self.image.set_alpha(alpha)
+
+            self.bezier_info['alpha']['f'][0] += 1 * dt
 
         if self.hovering:
             create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)

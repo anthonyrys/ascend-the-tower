@@ -92,16 +92,6 @@ class AbilityFrame(Frame):
         surface.blit(text, text.get_rect(center=text_pos))
     
 class Hotbar(Frame):
-    '''
-    Manages and sets the positions for AbilityFrames.
-
-    Variables:
-        player: the initialized player class.
-
-        frames: a list of AbilityFrames.
-        frame_padding: padding between each frame.
-    '''
-
     def __init__(self, player, position, strata):
         super().__init__(position, pygame.Surface((300, 125)).convert_alpha(), None, strata, None)
         self.sprite_id = 'hotbar'
