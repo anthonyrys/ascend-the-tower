@@ -419,7 +419,7 @@ class WheelOfFortune(Talent):
 		self.talent_info['cooldown_timer'] = 300
 
 	def display_text(self, scene, stat):
-		img = TextBox((0, 0), '+ ' + self.talent_info['names'][stat], color=HEAL_COLOR, size=.5).image.copy()
+		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=HEAL_COLOR)
 		particle = Image(self.player.rect.center, img, 6, 255)
 		particle.set_beziers(alpha=presets['ease_in'])
 		particle.set_goal(

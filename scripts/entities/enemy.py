@@ -130,7 +130,7 @@ class Enemy(GameEntity):
            color = CRIT_COLOR
            size = .6
             
-        img = TextBox((0, 0), info['amount'], color=color, size=size).image.copy()
+        img = TextBox.create_text_line('default', info['amount'], size=size, color=color)
 
         particle = Image(self.rect.center, img, 6, 255)
         particle.set_beziers(radius=presets['ease_in'])

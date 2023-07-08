@@ -1,24 +1,53 @@
 v0.5.1-test.1
-[ADD]
-    Bezier file
+    [ADD]
+        Bezier file
 
-[REWORK]
-    Easings functions into bezier curve points
+    [REWORK]
+        Easings functions into bezier curve points
+
+    [CHANGE]
+        Sprite file to prefabs directory from utils directory
+
+        PrimaryAttack trail to particles
+
+    [INCREASE]
+        PrimaryAttack particle size to 1.75 from 1.5
+
+    [REMOVE]
+        Arena-crystal image file
+
+        Player interact_info variable
+        Player get_interactable variable
+
+        Easing file
+
+        Inputs interact keybind
+
+v0.5.1-test.2
+[ADD]
+    Tilemap cards-interactable image file
+
+    Interactable file
+        ^ Get_all_interactables function
+        ^ Interactable baseclass
+        ^ StandardCardInteractable and StatCardInteractable classes
+
+    GameScene on_enemy_death functionality
+
+    Interactables to load_tilemap function
 
 [CHANGE]
-    Sprite file to prefabs directory from utils directory
+    Tilemap funcs tileset to 1c
 
-    PrimaryAttack trail to particles
+    Load_tilemap function flags dictionary values to dynamic lists
 
-[INCREASE]
-    PrimaryAttack particle size to 1.75 from 1.5
+    WheelOfFortune display_text function to call create_text_line
+    Enemy on_damaged function to call create_text_line
+    Player on_damaged and on_healed function to call create_text_line
+        ^ Previously initialized TextBox object
+
+    Textbox create_text_line function to convert text argument to str
 
 [REMOVE]
-    Arena-crystal image file
-
-    Player interact_info variable
-    Player get_interactable variable
-
-    Easing file
-
-    Inputs interact keybind
+    Sandbox generate_standard_cards keybinding and ui
+    Sandbox generate_stat_cards keybinding and ui

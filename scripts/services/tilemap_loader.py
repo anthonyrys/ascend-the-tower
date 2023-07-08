@@ -1,6 +1,7 @@
 from scripts.services import load_spritesheet
 
 from scripts.entities.tiles import Block, Ramp, get_all_tiles
+from scripts.entities.interactables import get_all_interactables
 
 import pygame
 import json
@@ -32,9 +33,19 @@ def load_tilemap(name):
     tile_classes = {}
     for tile_class in get_all_tiles():
         tile_classes[tile_class[0].lower()] = tile_class[1]
+    
+    interactable_classes = {}
+    for interactable_class in get_all_interactables():
+        interactable_classes[interactable_class[0].lower()] = interactable_class[1]
 
     for tile_data in data['tiles']:
-        if tile_data['tile'].split('_')[0] == 'ramp':
+        if tile_data['tileset'] == 'flags':
+            if tile_data['tile'] not in flags:
+                flags[tile_data['tile']] = []
+
+            flags[tile_data['tile']].append(tile_data['position'])
+
+        elif tile_data['tile'].split('_')[0] == 'ramp':
             img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
             img = pygame.transform.rotate(img, -tile_data['orientation'])
 
@@ -72,22 +83,36 @@ def load_tilemap(name):
                 )
 
             tiles.append(tile)
-        
-        elif tile_data['tileset'] == 'flags':
-            flags[tile_data['tile']] = tile_data['position']
 
         else:
-            img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
-            img = pygame.transform.rotate(img, -tile_data['orientation'])
+            if tile_data['tile'] in tile_classes.keys():
+                img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
+                img = pygame.transform.rotate(img, -tile_data['orientation'])
 
-            tile = tile_classes[tile_data['tile']](
-                tile_data['position'],
-                img,
-                None,
-                tile_data['strata']
-            )
+                tile = tile_classes[tile_data['tile']](
+                    tile_data['position'],
+                    img,
+                    None,
+                    tile_data['strata']
+                )
 
-            tiles.append(tile)
+                tiles.append(tile)
+
+            elif tile_data['tile'] in interactable_classes.keys():
+                img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
+                img = pygame.transform.rotate(img, -tile_data['orientation'])
+
+                interactable = interactable_classes[tile_data['tile']](
+                    tile_data['position'],
+                    img,
+                    None,
+                    tile_data['strata']
+                )
+
+                tiles.append(interactable)
+
+            else:
+                print(f'[LOAD_TILEMAP] Cannot resolve tile type: {tile_data["tile"]}')
 
     return {
         'surface': surface,

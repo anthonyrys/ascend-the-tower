@@ -14,10 +14,8 @@ class Sandbox(GameScene):
         super().__init__(scene_handler, mouse, sprites)
 
         self.ui_elements.extend([
-            TextBox((10, 130), '3: draw regular cards', size=.5),
-            TextBox((10, 160), '4: draw stat cards', size=.5),
-            TextBox((10, 190), '5: spawn enemy', size=.5),
-            TextBox((10, 220), '0: fullscreen', size=.5)
+            TextBox((10, 130), '3: spawn enemy', size=.5),
+            TextBox((10, 160), '0: fullscreen', size=.5)
         ])
 
         self.add_sprites(self.tiles)
@@ -31,46 +29,6 @@ class Sandbox(GameScene):
             return
         
         if event.key == pygame.K_3:
-            cards, text = self.generate_standard_cards()
-
-            self.in_menu = True
-            self.paused = True
-
-            self.scene_fx['&dim']['bezier'] = presets['ease_out']
-            self.scene_fx['&dim']['type'] = 'in'
-
-            self.scene_fx['&dim']['amount'] = .75
-            self.scene_fx['&dim']['frames'][1] = 30
-            
-            self.scene_fx['&dim']['threshold'] = 1
-
-            for frame in self.ui_elements:
-                frame.image.set_alpha(100)
-
-            self.add_sprites(cards)
-            self.add_sprites(text)
-
-        elif event.key == pygame.K_4:
-            cards, text = self.generate_stat_cards()
-
-            self.in_menu = True
-            self.paused = True
-
-            self.scene_fx['&dim']['bezier'] = presets['ease_out']
-            self.scene_fx['&dim']['type'] = 'in'
-
-            self.scene_fx['&dim']['amount'] = .75
-            self.scene_fx['&dim']['frames'][1] = 30
-            
-            self.scene_fx['&dim']['threshold'] = 1
-
-            for frame in self.ui_elements:
-                frame.image.set_alpha(100)
-
-            self.add_sprites(cards)
-            self.add_sprites(text)
-
-        elif event.key == pygame.K_5:
             enemy = random.choice([RockGolem, StoneSentry, GraniteElemental])(self.mouse.entity_pos, 6)
             self.add_sprites(enemy)
 

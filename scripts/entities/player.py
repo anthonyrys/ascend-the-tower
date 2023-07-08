@@ -220,7 +220,7 @@ class Player(GameEntity):
         if 'offset' in info:
             offset = info['offset']
         
-        img = TextBox((0, 0), info['amount'], color=color, size=1.0).image.copy()
+        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=color)
         particle = Image((125 + offset[0], 50 + offset[1]), img, 5, 255)
         particle.set_goal(
             50, 
@@ -261,7 +261,7 @@ class Player(GameEntity):
         self.img_info['pulse_frames_max'] = 30
         self.img_info['pulse_frame_color'] = ENEMY_COLOR
 
-        img = TextBox((0, 0), info['amount'], color=UI_HEALTH_COLOR, size=1.0).image.copy()
+        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=UI_HEALTH_COLOR)
         particle = Image((50, 50), img, 5, 255)
         particle.set_goal(
             50, 

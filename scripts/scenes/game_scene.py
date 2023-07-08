@@ -6,6 +6,7 @@ from scripts.core_systems.abilities import get_all_abilities
 from scripts.entities.entity import Entity
 from scripts.entities.player import Player
 from scripts.entities.particle_fx import Circle
+from scripts.entities.interactables import StandardCardInteractable
 
 from scripts.scenes.scene import Scene
 
@@ -66,6 +67,8 @@ class GameScene(Scene):
         self.card_info = {
             'overflow': [],
 
+            'enemy_death_counter': 0,
+
             'stat_text': None,
             'standard_text': None,
 
@@ -115,7 +118,12 @@ class GameScene(Scene):
         ...
 
     def on_enemy_death(self, enemy):
-        ...
+        self.card_info['enemy_death_counter'] += 1
+        
+        spawn_card = round(math.pow(self.card_info['enemy_death_counter'], 2.86))
+        if spawn_card >= random.randint(1, 100):
+            self.card_info['enemy_death_counter'] = 0
+            self.add_sprites(StandardCardInteractable(enemy.center_position, 9))
 
     def on_player_death(self):
         self.player.overrides['death'] = True
@@ -165,7 +173,7 @@ class GameScene(Scene):
 
         self.entity_surface = tilemap['surface']
         self.tiles = tilemap['tiles']
-        self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn']
+        self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
 
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
@@ -478,7 +486,7 @@ class GameScene(Scene):
 
         for element in remove_list:
             self.delay_timers.remove(element)
-        
+
         self.camera_offset = self.camera.update(dt)
 
         display_list = self.apply_scene_fx(dt)
