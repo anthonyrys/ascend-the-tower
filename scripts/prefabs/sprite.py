@@ -26,7 +26,7 @@ class Sprite(pygame.sprite.Sprite):
             self.image = img
             self.original_image = img
 
-        if alpha:
+        if alpha is not None:
             self.image.set_alpha(alpha)
 
         self.rect = self.image.get_bounding_rect()

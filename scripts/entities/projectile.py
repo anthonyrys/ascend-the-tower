@@ -91,7 +91,7 @@ class ProjectileStandard(Projectile):
         if self.info:
             if self.info['collision'] == 'pixel':
                 for sprite in scene.get_sprites(self.info['collisions']):
-                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
+                    if get_distance(self, sprite) > 100:
                         continue
 
                     if sprite.sprite_id == 'player' and self.prev_player_position:
@@ -107,7 +107,7 @@ class ProjectileStandard(Projectile):
 
             if self.info['collision'] == 'rect':
                 for sprite in scene.get_sprites(self.info['collisions']):
-                    if get_distance(self, sprite) > 100 and sprite.secondary_sprite_id != 'floor':
+                    if get_distance(self, sprite) > 100:
                         continue
 
                     if sprite.sprite_id == 'player' and self.prev_player_position:

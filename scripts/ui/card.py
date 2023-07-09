@@ -1,4 +1,4 @@
-from scripts import SCREEN_DIMENSIONS
+from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR
 
 from scripts.services.spritesheet_loader import load_spritesheet
 
@@ -96,6 +96,7 @@ class Card(Frame):
 
             'frames': 5,
             'bezier': presets['ease_out'],
+            'color': (255, 255, 255)
         }
 
         self.hover_rect.width = self.rect.width
@@ -156,7 +157,7 @@ class Card(Frame):
             self.bezier_info['alpha']['f'][0] += 1 * dt
 
         if self.hovering:
-            create_outline_edge(self, (255, 255, 255), scene.ui_surface, 3)
+            create_outline_edge(self, self.hover_info['color'], scene.ui_surface, 3)
 
         super().display(scene, dt)
 
@@ -252,13 +253,14 @@ class StatCard(Card):
 
         super().__init__(position, self.create_card(), 3, spawn)
         self.secondary_sprite_id = 'stat_card'
-    
+        
+        self.hover_info['color'] = PLAYER_COLOR
         self.hover_texts = {}
 
-        self.hover_texts['name'] = TextBox((0, self.original_rect.bottom + 50), self.stat['name'], color=(255, 255, 255))
+        self.hover_texts['name'] = TextBox((0, self.original_rect.bottom + 50), self.stat['name'], color=PLAYER_COLOR)
         self.hover_texts['name'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['name'].image.get_width() * .5)
 
-        self.hover_texts['description'] = TextBox((0, self.original_rect.bottom + 110), self.stat['description'], size=.5, color=(255, 255, 255))
+        self.hover_texts['description'] = TextBox((0, self.original_rect.bottom + 110), self.stat['description'], size=.5, color=PLAYER_COLOR)
         self.hover_texts['description'].rect.x = (SCREEN_DIMENSIONS[0] * .5) - (self.hover_texts['description'].image.get_width() * .5)
 
     def create_card(self):

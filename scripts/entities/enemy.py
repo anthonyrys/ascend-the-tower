@@ -759,3 +759,8 @@ class GraniteElemental(FloaterEnemy):
 
         self.set_images(scene, dt)
         super().display(scene, dt)
+
+
+ENEMIES = {
+    1: [RockGolem, StoneSentry, GraniteElemental]
+}

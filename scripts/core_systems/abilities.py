@@ -429,10 +429,8 @@ class PrimaryAttack(Ability):
         self.character.rect.x += round(self.velocity[0] * dt)
         self.character.rect.y += round(self.velocity[1] * dt)
 
-        pos = self.character.center_position
-        particles = []
-
-        for _ in range(1):
+        if dt != 0:
+            pos = self.character.center_position
             cir = Circle(pos, self.ability_info['color'], 6, 0)
             cir.set_goal(
                         75, 
@@ -448,9 +446,7 @@ class PrimaryAttack(Ability):
             cir.glow['size'] = 2
             cir.glow['intensity'] = .2
 
-            particles.append(cir)
-
-        scene.add_sprites(particles)
+            scene.add_sprites(cir)
 
 class RainOfArrows(Ability):
     ABILITY_ID = 'rain_of_arrows'

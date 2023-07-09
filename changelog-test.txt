@@ -24,30 +24,57 @@ v0.5.1-test.1
         Inputs interact keybind
 
 v0.5.1-test.2
+    [ADD]
+        Tilemap cards-interactable image file
+
+        Interactable file
+            ^ Get_all_interactables function
+            ^ Interactable baseclass
+            ^ StandardCardInteractable and StatCardInteractable classes
+
+        GameScene on_enemy_death functionality
+
+        Interactables to load_tilemap function
+
+    [CHANGE]
+        Tilemap funcs tileset to 1c
+
+        Load_tilemap function flags dictionary values to dynamic lists
+
+        WheelOfFortune display_text function to call create_text_line
+        Enemy on_damaged function to call create_text_line
+        Player on_damaged and on_healed function to call create_text_line
+            ^ Previously initialized TextBox object
+
+        Textbox create_text_line function to convert text argument to str
+
+    [REMOVE]
+        Sandbox generate_standard_cards keybinding and ui
+        Sandbox generate_stat_cards keybinding and ui
+
+v0.5.1-test.3
 [ADD]
-    Tilemap cards-interactable image file
+    ENEMIES dictonary to enemy file
 
-    Interactable file
-        ^ Get_all_interactables function
-        ^ Interactable baseclass
-        ^ StandardCardInteractable and StatCardInteractable classes
+    Particle effect for Card Interactables
 
-    GameScene on_enemy_death functionality
+    Enemy spawning via Tilemap flags
 
-    Interactables to load_tilemap function
+    Color value to Card hover_info dictionary
 
 [CHANGE]
-    Tilemap funcs tileset to 1c
+    Stat card text color to PLAYER COLOR from (255, 255, 255)
+    Stat card hover color to PLAYER COLOR from (255, 255, 255)
 
-    Load_tilemap function flags dictionary values to dynamic lists
+[FIX]
+    Lag issues for larger tiled maps
 
-    WheelOfFortune display_text function to call create_text_line
-    Enemy on_damaged function to call create_text_line
-    Player on_damaged and on_healed function to call create_text_line
-        ^ Previously initialized TextBox object
+    PrimaryAttack particles not being affected by dt
 
-    Textbox create_text_line function to convert text argument to str
+    Card Interactables being able to spawn inside tiles
+    Card Interactables prompting cards selection when unavaliable
+
+    Sprite class not applying alpha correctly
 
 [REMOVE]
-    Sandbox generate_standard_cards keybinding and ui
-    Sandbox generate_stat_cards keybinding and ui
+    Sandbox spawn_enemy keybinding and ui

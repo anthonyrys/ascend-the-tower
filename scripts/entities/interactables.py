@@ -1,4 +1,7 @@
+from scripts import PLAYER_COLOR
+
 from scripts.entities.entity import Entity
+from scripts.entities.particle_fx import Circle
 
 from scripts.services import load_spritesheet
 
@@ -17,7 +20,7 @@ def get_all_interactables():
     return interactable_list
 
 class Interactable(Entity):
-    def __init__(self, position, img, dimensions, strata, alpha=255):
+    def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'interactable'
 
@@ -43,7 +46,7 @@ class Interactable(Entity):
         super().display(scene, dt)
 
 class StandardCardInteractable(Interactable):
-    def __init__(self, position, strata, alpha=255):
+    def __init__(self, position, strata, alpha=0):
         image = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
         super().__init__(position, image, None, strata, alpha)
         self.secondary_sprite_id = 'standard_card_interactable'
@@ -56,17 +59,21 @@ class StandardCardInteractable(Interactable):
 
         self.sin_count = 0
 
-        bezier = [[0, 0], [.5, 1.5], [1, 0], [1, 0]]
-        rand = random.randint(-100, 100)
-        
-        self.set_x_bezier(position[0] + rand * 2, 75, [*bezier, 0])
-        self.set_y_bezier(position[1] - abs(rand), 75, [*bezier, 1])
-
         self.delay_timers.append([30, self.set_interactable, []])
 
     def on_interact(self, scene, sprite):
         cards, text = scene.generate_standard_cards()
 
+        particle = Circle([0, 0], (255, 255, 255), 0, 5, self)
+        particle.set_goal(15, position=[0, 0], radius=40, width=1, alpha=0)
+        particle.set_beziers(alpha=[*presets['rest'], 0])
+
+        scene.add_sprites(particle)
+
+        if not cards or not text:
+            scene.del_sprites(self)
+            return
+        
         scene.in_menu = True
         scene.paused = True
 
@@ -93,8 +100,8 @@ class StandardCardInteractable(Interactable):
         super().display(scene, dt)
 
 class StatCardInteractable(Interactable):
-    def __init__(self, position, img, dimensions, strata=None):
-        super().__init__(position, img, dimensions, strata)
+    def __init__(self, position, img, dimensions, strata=None, alpha=255):
+        super().__init__(position, img, dimensions, strata, alpha)
         self.secondary_sprite_id = 'stat_card_interactable'
 
         self.focus_sprites = 'player'
@@ -125,6 +132,12 @@ class StatCardInteractable(Interactable):
         scene.add_sprites(text)
 
         scene.del_sprites(self)
+
+        particle = Circle([0, 0], PLAYER_COLOR, 0, 5, self)
+        particle.set_goal(15, position=[0, 0], radius=40, width=1, alpha=0)
+        particle.set_beziers(alpha=[*presets['rest'], 0])
+
+        scene.add_sprites(particle)
 
     def display(self, scene, dt):
         self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
