@@ -279,6 +279,24 @@ class GameScene(Scene):
             if flag.split('_')[0] + flag.split('_')[1] == 'enemyspawn':
                 self.enemy_info['spawn_positions'][int(flag.split('_')[2])] = tilemap['flags'][flag]
 
+    def load_card_event(self, cards, flavor_text):    
+        self.in_menu = True
+        self.paused = True
+
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
+        self.scene_fx['&dim']['type'] = 'in'
+
+        self.scene_fx['&dim']['amount'] = .75
+        self.scene_fx['&dim']['frames'][1] = 30
+            
+        self.scene_fx['&dim']['threshold'] = 1
+
+        for frame in self.ui_elements:
+            frame.set_alpha_bezier(0, 30, presets['ease_out'])
+
+        self.add_sprites(cards)
+        self.add_sprites(flavor_text)
+
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
             if card == selected_card:
@@ -315,7 +333,7 @@ class GameScene(Scene):
         self.scene_fx['&dim']['frames'][1] = 30
 
         for frame in self.ui_elements:
-            frame.image.set_alpha(255)
+            frame.set_alpha_bezier(255, 30, presets['ease_out'])
 
         return True
     
@@ -402,7 +420,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
@@ -451,7 +469,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
@@ -491,7 +509,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:

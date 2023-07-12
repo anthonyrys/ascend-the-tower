@@ -10593,36 +10593,6 @@
         64,
         64
       ],
-      "index": 1,
-      "orientation": 0,
-      "position": [
-        8000,
-        3328
-      ],
-      "strata": 0,
-      "tile": "enemy_spawn_1",
-      "tileset": "flags"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "index": 3,
-      "orientation": 0,
-      "position": [
-        5952,
-        3840
-      ],
-      "strata": 0,
-      "tile": "enemy_spawn_3",
-      "tileset": "flags"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
       "index": 2,
       "orientation": 0,
       "position": [
@@ -10638,10 +10608,25 @@
         64,
         64
       ],
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        7936,
+        3328
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_3",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
       "index": 2,
       "orientation": 0,
       "position": [
-        8256,
+        5952,
         3840
       ],
       "strata": 0,

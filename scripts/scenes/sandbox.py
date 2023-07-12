@@ -1,13 +1,8 @@
-from scripts.entities.enemy import RockGolem, StoneSentry, GraniteElemental
-
 from scripts.scenes.game_scene import GameScene
 
 from scripts.ui.text_box import TextBox
 
-from scripts.utils.bezier import presets
-
 import pygame
-import random
 
 class Sandbox(GameScene):
     def __init__(self, scene_handler, mouse, sprites=None):

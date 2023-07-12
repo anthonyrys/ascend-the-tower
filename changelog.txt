@@ -450,73 +450,100 @@ v0.5.0
         Issue where Block collisions fail at larger lag spikes
 
 v0.5.1
-[ADD]
-    Tilemap cards-interactable image file
+    [ADD]
+        Tilemap cards-interactable image file
     
-    Interactable file
-        ^ Get_all_interactables function
-        ^ Interactable baseclass
-        ^ StandardCardInteractable and StatCardInteractable classes
+        Interactable file
+            ^ Get_all_interactables function
+            ^ Interactable baseclass
+            ^ StandardCardInteractable and StatCardInteractable classes
 
-    Particle effect for Card Interactables
+        Particle effect for Card Interactables
 
-    ENEMIES dictionary to enemy file
+        ENEMIES dictionary to enemy file
 
-    GameScene on_enemy_death functionality
+        GameScene on_enemy_death functionality
 
-    Enemy spawning via Tilemap flags
-    Interactables to load_tilemap function
+        Enemy spawning via Tilemap flags
+        Interactables to load_tilemap function
 
-    Color value to Card hover_info dictionary
+        Color value to Card hover_info dictionary
 
-    Bezier file
+        Bezier file
 
-[REWORK]
-    Easings functions into bezier curve points
+    [REWORK]
+        Easings functions into bezier curve points
 
-[CHANGE]
-    Tilemap funcs tileset to 1c
+    [CHANGE]
+        Tilemap funcs tileset to 1c
     
-    PrimaryAttack trail to particles
+        PrimaryAttack trail to particles
 
-    Sprite file to prefabs directory from utils directory
+        Sprite file to prefabs directory from utils directory
 
-    Load_tilemap function flags dictionary values to dynamic lists
+        Load_tilemap function flags dictionary values to dynamic lists
 
-    WheelOfFortune display_text function to call create_text_line
-    Enemy on_damaged function to call create_text_line
-    Player on_damaged and on_healed function to call create_text_line
-        ^ Previously initialized TextBox object
+        WheelOfFortune display_text function to call create_text_line
+        Enemy on_damaged function to call create_text_line
+        Player on_damaged and on_healed function to call create_text_line
+            ^ Previously initialized TextBox object
 
-    Textbox create_text_line function to convert text argument to str
+        Textbox create_text_line function to convert text argument to str
 
-    Stat card text color to PLAYER COLOR from (255, 255, 255)
-    Stat card hover color to PLAYER COLOR from (255, 255, 255)
+        Stat card text color to PLAYER COLOR from (255, 255, 255)
+        Stat card hover color to PLAYER COLOR from (255, 255, 255)
 
-[INCREASE]
-    PrimaryAttack particle size to 1.75 from 1.5
+    [INCREASE]
+        PrimaryAttack particle size to 1.75 from 1.5
 
-[REMOVE]
-    Arena-crystal image file
+    [REMOVE]
+        Arena-crystal image file
 
-    Player interact_info variable
-    Player get_interactable variable
+        Player interact_info variable
+        Player get_interactable variable
 
-    Sandbox generate_standard_cards keybinding and ui
-    Sandbox generate_stat_cards keybinding and ui
+        Sandbox generate_standard_cards keybinding and ui
+        Sandbox generate_stat_cards keybinding and ui
 
-    Sandbox spawn_enemy keybinding and ui
+        Sandbox spawn_enemy keybinding and ui
 
-    Easing file
+        Easing file
 
-    Inputs interact keybind
+        Inputs interact keybind
 
-[FIX]
-    Lag issues for larger tiled maps
+    [FIX]
+        Lag issues for larger tiled maps
 
-    PrimaryAttack particles not being affected by dt
+        PrimaryAttack particles not being affected by dt
 
-    Card Interactables being able to spawn inside tiles
-    Card Interactables prompting cards selection when unavaliable
+        Card Interactables being able to spawn inside tiles
+        Card Interactables prompting cards selection when unavaliable
 
-    Sprite class not applying alpha correctly
+        Sprite class not applying alpha correctly
+
+v0.5.2
+    v0.5.2-test.1
+        [ADD]
+            GameScene load_card_event function
+
+        [CHANGE]
+            Tilemap Enemy spawning positions
+
+            Grelemental enemy image file name to elemental
+            Rgolem enemy image file name to golem
+            Stentry enemy image file name to sentry
+
+            RockGolem enemy name to Golem
+                ^ RockGolem secondary_sprite_id to golem from rgolem
+            StoneSentry enemy name to Sentry
+                ^ StoneSentry secondary_sprite_id to sentry from stentry
+            GraniteElemental enemy name to Elemental
+                ^ GraniteElemental secondary_sprite_id to elemental from grelemental
+
+            StandardCardInteractable and StatCardInteractable to call GameScene load_card_event function
+
+            GameScene flavor_text y transition duration to 30 frames from 45
+            GameScene ui_elements to completely fade out during load_card_event function
+
+        [REMOVE]
+            Changelog-test file

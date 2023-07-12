@@ -229,10 +229,10 @@ class FloaterEnemy(Enemy):
         self.ai = FloaterAi(self)
 
 
-class RockGolem(HumanoidEnemy):
+class Golem(HumanoidEnemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((40, 80)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'rgolem'
+        self.secondary_sprite_id = 'golem'
 
         self.rect_offset = [self.rect.width / 2, 0]
 
@@ -367,10 +367,10 @@ class RockGolem(HumanoidEnemy):
         self.set_images(scene, dt)
         super().display(scene, dt)
 
-class StoneSentry(FlyerEnemy):
+class Sentry(FlyerEnemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'stentry'
+        self.secondary_sprite_id = 'sentry'
 
         self.default_movement_info = {
             'direction': 0,
@@ -494,7 +494,7 @@ class StoneSentry(FlyerEnemy):
         self.apply_afterimages(scene, dt)
         super().display(scene, dt)
 
-class GraniteElemental(FloaterEnemy):
+class Elemental(FloaterEnemy):
     class Blast(Ability):
         def __init__(self, character):
             super().__init__(character)
@@ -602,7 +602,7 @@ class GraniteElemental(FloaterEnemy):
 
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'grelemental'
+        self.secondary_sprite_id = 'elemental'
 
         self.image.fill((0, 0, 0, 0))
         img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
@@ -762,5 +762,5 @@ class GraniteElemental(FloaterEnemy):
 
 
 ENEMIES = {
-    1: [RockGolem, StoneSentry, GraniteElemental]
+    1: [Golem, Sentry, Elemental]
 }
