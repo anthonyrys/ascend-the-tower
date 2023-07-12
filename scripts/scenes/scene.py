@@ -79,7 +79,7 @@ class Scene:
         return display_order
         
     def display(self, screen, clock, dt):
-        fps_surface = TextBox.create_text_line('default', str(round(clock.get_fps())))
+        fps_surface = TextBox.create_text_line('default', round(clock.get_fps()))
         fps_position = [SCREEN_DIMENSIONS[0] - 5, 5]
 
         screen.blit(fps_surface, fps_surface.get_rect(topright=fps_position))

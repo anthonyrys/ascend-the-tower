@@ -1,11 +1,14 @@
-from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR
+from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR, ENEMY_COLOR
 
 from scripts.core_systems.talents import get_all_talents
 from scripts.core_systems.abilities import get_all_abilities
 
+from scripts.entities.enemy import ENEMIES
 from scripts.entities.entity import Entity
+from scripts.entities.tiles import Tile
 from scripts.entities.player import Player
 from scripts.entities.particle_fx import Circle
+from scripts.entities.interactables import StandardCardInteractable
 
 from scripts.scenes.scene import Scene
 
@@ -14,14 +17,13 @@ from scripts.services import load_tilemap
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_sprite_colors
+from scripts.utils import get_sprite_colors, get_distance
 from scripts.utils.camera import BoxCamera
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import random
 import math
-import os
 
 class GameScene(Scene):
     def __init__(self, scene_handler, mouse, sprites=None):
@@ -38,7 +40,7 @@ class GameScene(Scene):
                 'type': None, 
                 'amount': 1.0,
                 'frames': [0, 0],
-                'easing': 'ease_out_quint',
+                'bezier': presets['ease_out'],
                 'threshold': 0
             },
 
@@ -46,12 +48,12 @@ class GameScene(Scene):
                 'type': None, 
                 'amount': 0.0,
                 'frames': [0, 0],
-                'easing': 'ease_out_quint'
+                'bezier': presets['ease_out']
             }
         }
 
         self.scene_fx['&dim']['type'] = 'out'
-        self.scene_fx['&dim']['easing'] = 'ease_out_cubic'
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['frames'][0] = 45
         self.scene_fx['&dim']['frames'][1] = 45
 
@@ -100,10 +102,20 @@ class GameScene(Scene):
             ]
         }
 
+        self.enemy_info = {
+            'enemies': [0, 3],
+
+            'card_death_counter': 0,
+
+            'spawn_cooldown': [120, 120],
+            'spawn_positions': {},
+            'spawn_distance': 750
+        }
+
         self.load_tilemap()
 
     def on_scene_end(self):
-        self.scene_fx['&dim']['easing'] = 'ease_out_quint'
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['type'] = 'in'
         self.scene_fx['&dim']['amount'] = 1
         self.scene_fx['&dim']['frames'][1] = 30
@@ -112,15 +124,43 @@ class GameScene(Scene):
         self.delay_timers.append([90, self.scene_handler.set_new_scene, [self.__class__, {}]])
 
     def on_enemy_spawn(self):
-        ...
+        self.enemy_info['enemies'][0] += 1
 
     def on_enemy_death(self, enemy):
-        ...
+        self.enemy_info['card_death_counter'] += 1
+        self.enemy_info['enemies'][0] -= 1
+
+        spawn_card = round(math.pow(self.enemy_info['card_death_counter'], 2.86))
+        if spawn_card < random.randint(1, 100):
+            return
+        
+        self.enemy_info['card_death_counter'] = 0
+
+        position = [
+            enemy.center_position[0],
+            enemy.center_position[1] - random.randint(25, 50)
+        ]
+
+        card = StandardCardInteractable(enemy.center_position, 9)
+
+        collide_tiles = True
+        while collide_tiles:
+            collide_tiles = []
+            for tile in self.get_sprites('tile'):
+                if tile.rect.collidepoint(position):
+                    position[1] -= tile.rect.height * 2
+                    collide_tiles.append(tile)
+
+        card.set_x_bezier(position[0] + random.randint(-100, 100) * 2, 75, [[0, 0], [.5, 1.5], [1, 0], [1, 0], 0])
+        card.set_y_bezier(position[1], 75, [[0, 0], [2.65, 0.6], [1.1, 0.45], [1, 0], 0])
+        card.set_alpha_bezier(255, 30, [*presets['rest'], 0])
+
+        self.add_sprites(card)
 
     def on_player_death(self):
         self.player.overrides['death'] = True
 
-        self.scene_fx['entity_zoom']['easing'] = 'ease_in_quint'
+        self.scene_fx['entity_zoom']['bezier'] = presets['ease_in']
         self.scene_fx['entity_zoom']['type'] = 'out'
         self.scene_fx['entity_zoom']['frames'][0] = 45
         self.scene_fx['entity_zoom']['frames'][1] = 45
@@ -139,7 +179,7 @@ class GameScene(Scene):
                         width=0
                     )
             cir.set_gravity(5)
-            cir.set_easings(radius='ease_out_sine')
+            cir.set_beziers(radius=presets['ease_out'])
 
             particles.append(cir)
 
@@ -160,27 +200,98 @@ class GameScene(Scene):
         
         self.add_sprites(particles)
 
+    def register_enemy_flags(self, dt):
+        if not self.enemy_info['spawn_positions'] or self.enemy_info['enemies'][0] >= self.enemy_info['enemies'][1]:
+            return
+
+        if self.enemy_info['spawn_cooldown'][0] > 0:
+            self.enemy_info['spawn_cooldown'][0] -= 1 * dt
+                        
+        if self.enemy_info['spawn_cooldown'][0] > 0:
+            return
+
+        elgible_spawns = {}
+        for spawn_type, pos_list in self.enemy_info['spawn_positions'].items():
+            for position in pos_list:
+                if get_distance(self.player.center_position, position) > self.enemy_info['spawn_distance']:
+                    continue
+                
+                if spawn_type not in elgible_spawns:
+                    elgible_spawns[spawn_type] = []
+
+                elgible_spawns[spawn_type].append(position)
+
+        if not elgible_spawns:
+            return
+        
+        positions = []
+        for i, v in elgible_spawns.items():
+            for p in v:
+                positions.append([i, p, get_distance(self.player.center_position, p)])
+
+        min_value = min([p[2] for p in positions])
+        
+        for position in positions:
+            if position[2] != min_value:
+                continue
+
+            self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
+
+            enemies = ENEMIES[1][0:position[0]]
+
+            enemy_position = [position[1][0] + random.randint(-50, 50), position[1][1] + random.randint(-50, 50)]
+            enemy = random.choice(enemies)(enemy_position, 6)
+
+            particle_position = [enemy_position[0] + enemy.image.get_width(), enemy_position[1] + enemy.image.get_height()]
+            particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
+            particle.set_goal(30, radius=0, width=1, alpha=0)
+
+            particles = []
+            for _ in range(6):
+                cir = Circle(particle_position, ENEMY_COLOR, random.randint(8, 10), 0)
+                cir.set_goal(
+                            75, 
+                            position=(particle_position[0] + random.randint(-75, 75), particle_position[1] + random.randint(-75, 75)), 
+                            radius=0, 
+                            width=0
+                        )
+
+                particles.append(cir)
+
+            self.add_sprites(particle)
+
+            self.on_enemy_spawn()
+            self.delay_timers.append([30, self.add_sprites, [enemy], 1])
+            self.delay_timers.append([30, self.add_sprites, [particles], 1])
+
     def load_tilemap(self):
         tilemap = load_tilemap('floor-1')
 
         self.entity_surface = tilemap['surface']
         self.tiles = tilemap['tiles']
-        self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn']
+        self.flags = tilemap['flags']
+
+        self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
+        for flag in tilemap['flags']:
+            if not flag.split('_'):
+                continue
+
+            if flag.split('_')[0] + flag.split('_')[1] == 'enemyspawn':
+                self.enemy_info['spawn_positions'][int(flag.split('_')[2])] = tilemap['flags'][flag]
 
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
             if card == selected_card:
-                card.set_position_tween([card.rect.x, SCREEN_DIMENSIONS[1] * 1.1], 20, 'ease_out_quint')
-
+                card.set_y_bezier(SCREEN_DIMENSIONS[1] * 1.1, 20, presets['ease_out'])
             else:
-                card.set_position_tween([card.rect.x, 0 - card.rect.height * 1.1], 20, 'ease_out_quint')
+                card.set_y_bezier(0 - card.rect.height * 1.1, 20, presets['ease_out'])
 
             card.set_flag('del')
 
             card.on_del_sprite(self, 20)
 
-        flavor_text.set_position_tween((flavor_text.rect.x, 0), 30, 'ease_out_quint')
-        flavor_text.set_alpha_tween(0, 25, 'ease_out_sine')
+        flavor_text.set_y_bezier(0, 30, presets['ease_out'])
+        flavor_text.set_alpha_bezier(0, 25, [*presets['rest'], 0])
 
         flavor_text.on_del_sprite(self, 25)
 
@@ -199,7 +310,7 @@ class GameScene(Scene):
         self.paused = False
 
         self.scene_fx['&dim']['type'] = 'out'
-        self.scene_fx['&dim']['easing'] = 'ease_in_quint'
+        self.scene_fx['&dim']['bezier'] = presets['ease_in']
         self.scene_fx['&dim']['frames'][0] = 30
         self.scene_fx['&dim']['frames'][1] = 30
 
@@ -212,7 +323,7 @@ class GameScene(Scene):
         def on_select(selected_card, cards, flavor_text):
             if selected_card.draw.DRAW_TYPE == 'TALENT':
                 self.player.talents.append(selected_card.draw(self, self.player))
-                print(f'selected talent card: {selected_card.draw.DESCRIPTION["name"]}')
+                # print(f'selected talent card: {selected_card.draw.DESCRIPTION["name"]}')
                     
             elif selected_card.draw.DRAW_TYPE == 'ABILITY':
                 added = False
@@ -225,7 +336,7 @@ class GameScene(Scene):
                 if not added:
                     self.card_info['overflow'].insert(0, [self.generate_ability_fail_cards, [selected_card]])
 
-                print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
+                # print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
 
             self.remove_cards(selected_card, cards, flavor_text)
 
@@ -291,8 +402,8 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -312,7 +423,7 @@ class GameScene(Scene):
                 
                 break
 
-            print(f'replaced ability card: {selected_card.draw.DESCRIPTION["name"]} -> {previous_selected_card.draw.DESCRIPTION["name"]}')
+            # print(f'replaced ability card: {selected_card.draw.DESCRIPTION["name"]} -> {previous_selected_card.draw.DESCRIPTION["name"]}')
 
             self.remove_cards(selected_card, cards, flavor_text)
 
@@ -340,8 +451,8 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -352,7 +463,7 @@ class GameScene(Scene):
 
     def generate_stat_cards(self):
         def on_select(selected_card, cards, flavor_text):
-            print(f'selected stat card: {selected_card.stat["name"]}')
+            # print(f'selected stat card: {selected_card.stat["name"]}')
             
             for i in range(len(selected_card.stat['stat'])):
                 self.player.set_stat(selected_card.stat['stat'][i], selected_card.stat['value'][i], True)
@@ -375,13 +486,13 @@ class GameScene(Scene):
             cards.append(StatCard((x + (i * 200), y), stat, spawn='y'))
             i += 1
 
-        flavor_text = TextBox((0, 0), 'you feel yourself become stronger..', color=(255, 255, 255))
+        flavor_text = TextBox((0, 0), 'you feel yourself become stronger..', color=PLAYER_COLOR)
 
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_position_tween(((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5), y - 150), 45, 'ease_out_quint')
-        flavor_text.set_alpha_tween(255, 45, 'ease_out_sine')
+        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
             card.cards = cards
@@ -401,12 +512,12 @@ class GameScene(Scene):
             zoom = 1.0
             
             if self.scene_fx['entity_zoom']['type'] == 'in':
-                zoom += self.scene_fx['entity_zoom']['amount'] * getattr(Easings, self.scene_fx['entity_zoom']['easing'])(abs_prog)
+                zoom += self.scene_fx['entity_zoom']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['entity_zoom']['bezier'])
                 if self.scene_fx['entity_zoom']['frames'][0] < self.scene_fx['entity_zoom']['frames'][1]:
                     self.scene_fx['entity_zoom']['frames'][0] += 1
 
             elif self.scene_fx['entity_zoom']['type'] == 'out':
-                zoom += self.scene_fx['entity_zoom']['amount'] * getattr(Easings, self.scene_fx['entity_zoom']['easing'])(abs_prog)
+                zoom += self.scene_fx['entity_zoom']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['entity_zoom']['bezier'])
                 if self.scene_fx['entity_zoom']['frames'][0] > 0:
                     self.scene_fx['entity_zoom']['frames'][0] -= 1
                 else:
@@ -422,12 +533,12 @@ class GameScene(Scene):
             dim_display.fill((0, 0, 0))
 
             if self.scene_fx['&dim']['type'] == 'in':
-                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * getattr(Easings, self.scene_fx['&dim']['easing'])(abs_prog)))
+                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['&dim']['bezier'])))
                 if self.scene_fx['&dim']['frames'][0] < self.scene_fx['&dim']['frames'][1]:
                     self.scene_fx['&dim']['frames'][0] += 1
 
             elif self.scene_fx['&dim']['type'] == 'out':
-                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * getattr(Easings, self.scene_fx['&dim']['easing'])(abs_prog)))
+                dim_display.set_alpha(255 * (self.scene_fx['&dim']['amount'] * get_bezier_point(abs_prog, *self.scene_fx['&dim']['bezier'])))
                 if self.scene_fx['&dim']['frames'][0] > 0:
                     self.scene_fx['&dim']['frames'][0] -= 1
                 else:
@@ -448,8 +559,8 @@ class GameScene(Scene):
             entity_dt = 0
         
         entity_view = pygame.Rect(
-            self.camera_offset[0] - self.view.width * .5, self.camera_offset[1] - self.view.height * .5, 
-            self.view.width * 2, self.view.height * 2
+            self.camera_offset[0] - self.view.width * .25, self.camera_offset[1] - self.view.height * .25, 
+            self.view.width * 1.5, self.view.height * 1.5
         )
 
         self.background_surface.fill((0, 0, 0, 255), entity_view)
@@ -463,6 +574,10 @@ class GameScene(Scene):
                     continue
 
                 if isinstance(sprite, Entity):
+                    if isinstance(sprite, Tile):
+                        if not entity_view.colliderect(sprite.rect):
+                            continue
+
                     sprite.display(self, entity_dt)
                     continue
 
@@ -471,7 +586,11 @@ class GameScene(Scene):
         remove_list = []
         for i in range(len(self.delay_timers)):
             if self.delay_timers[i][0] > 0:
-                self.delay_timers[i][0] -= 1
+                if len(self.delay_timers[i]) == 4:
+                    if self.delay_timers[i][3] == 1:
+                        self.delay_timers[i][0] -= 1 * entity_dt
+                else:
+                    self.delay_timers[i][0] -= 1
 
                 if self.delay_timers[i][0] <= 0 and self.delay_timers[i][1]:
                     self.delay_timers[i][1](*self.delay_timers[i][2])
@@ -479,7 +598,9 @@ class GameScene(Scene):
 
         for element in remove_list:
             self.delay_timers.remove(element)
-        
+
+        self.register_enemy_flags(entity_dt)
+
         self.camera_offset = self.camera.update(dt)
 
         display_list = self.apply_scene_fx(dt)

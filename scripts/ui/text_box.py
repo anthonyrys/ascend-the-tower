@@ -7,7 +7,7 @@ import pygame
 class TextBox(Frame):
     @staticmethod
     def create_text_line(font, text, size=.5, color=(255, 255, 255)):
-        text = text.lower()
+        text = str(text).lower()
         
         surf_size = [0, 0]
         imgs = []

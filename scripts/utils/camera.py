@@ -1,6 +1,6 @@
 from scripts import SCREEN_DIMENSIONS
 
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import random
@@ -50,7 +50,7 @@ class BoxCamera(CameraTemplate):
         camera_shake = [0, 0]
         if self.camera_shake_info['frames'] > 0:
             abs_prog = self.camera_shake_info['frames'] / self.camera_shake_info['max_frames']
-            intensity = round((self.camera_shake_info['intensity']) * Easings.ease_in_sine(abs_prog))
+            intensity = round((self.camera_shake_info['intensity']) * get_bezier_point(abs_prog, *presets['rest'], 0))
 
             camera_shake[0] = random.randint(-intensity, intensity)
             camera_shake[1] = random.randint(-intensity, intensity)
@@ -78,8 +78,8 @@ class BoxCamera(CameraTemplate):
             abs_prog = self.camera_tween_info['frames'] / self.camera_tween_info['max_frames']
 
             tweened_offset = [
-                self.camera_tween_info['start_pos'][0] + ((offset[0] - self.camera_tween_info['start_pos'][0]) * Easings.ease_out_quint(abs_prog)),
-                self.camera_tween_info['start_pos'][1] + ((offset[1] - self.camera_tween_info['start_pos'][1]) * Easings.ease_out_quint(abs_prog)),
+                self.camera_tween_info['start_pos'][0] + ((offset[0] - self.camera_tween_info['start_pos'][0]) * get_bezier_point(abs_prog, *presets['ease_out'])),
+                self.camera_tween_info['start_pos'][1] + ((offset[1] - self.camera_tween_info['start_pos'][1]) * get_bezier_point(abs_prog, *presets['ease_out']))
             ]
 
             self.camera_tween_info['frames'] += 1 * dt

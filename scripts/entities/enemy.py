@@ -15,6 +15,7 @@ from scripts.ui.info_bar import EnemyBar
 from scripts.ui.text_box import TextBox
 
 from scripts.utils import get_sprite_colors, check_pixel_collision, get_distance, check_line_collision
+from scripts.utils.bezier import presets
 
 import pygame
 import random
@@ -70,7 +71,7 @@ class Enemy(GameEntity):
                         width=0
                     )
             cir.set_gravity(7)
-            cir.set_easings(radius='ease_out_sine')
+            cir.set_beziers(radius=presets['ease_out'])
 
             particles.append(cir)
 
@@ -111,7 +112,7 @@ class Enemy(GameEntity):
                         )
                 
                 cir.set_gravity(5)
-                cir.set_easings(radius='ease_out_sine')
+                cir.set_beziers(radius=presets['ease_out'])
 
                 particles.append(cir)
             
@@ -129,10 +130,10 @@ class Enemy(GameEntity):
            color = CRIT_COLOR
            size = .6
             
-        img = TextBox((0, 0), info['amount'], color=color, size=size).image.copy()
+        img = TextBox.create_text_line('default', info['amount'], size=size, color=color)
 
         particle = Image(self.rect.center, img, 6, 255)
-        particle.set_easings(alpha='ease_in_quint')
+        particle.set_beziers(radius=presets['ease_in'])
     
         particle.set_goal(
             30, 
@@ -742,7 +743,7 @@ class GraniteElemental(FloaterEnemy):
             )
 
             particle.set_goal(20, position=[0, 0], radius=0, width=3, alpha=0)
-            particle.set_easings(radius='ease_in_sine', alpha='ease_in_cubic')
+            particle.set_beziers(radius=[*presets['rest'], 0], alpha=presets['ease_in'])
             scene.add_sprites(particle)
 
             self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
@@ -758,3 +759,8 @@ class GraniteElemental(FloaterEnemy):
 
         self.set_images(scene, dt)
         super().display(scene, dt)
+
+
+ENEMIES = {
+    1: [RockGolem, StoneSentry, GraniteElemental]
+}

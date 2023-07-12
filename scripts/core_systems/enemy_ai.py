@@ -92,7 +92,7 @@ class FloaterAi(AiTemplate):
             self.sprite.rect.top - self.sprite.image.get_height()
         ]
 
-        tiles = scene.get_sprites('tile')
+        tiles = [t for t in scene.get_sprites('tile') if get_distance(t, self.sprite) <= 100]
 
         if check_line_collision(self.sprite.rect.center, pos_a, tiles) or check_line_collision(self.sprite.rect.center, pos_b, tiles):
             self.sprite.velocity[1] -= jp if self.sprite.velocity[1] > -max_ms else 0

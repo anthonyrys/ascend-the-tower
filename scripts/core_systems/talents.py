@@ -11,7 +11,7 @@ from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
 
 from scripts.utils import get_distance, get_closest_sprite
-from scripts.utils.easings import Easings
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import inspect
@@ -332,7 +332,7 @@ class Temperance(Talent):
 
 			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
 				self.glow['active'] = True
-				self.set_alpha_tween(255, 5, 'ease_out_sine')
+				self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 
 			super().display(scene, dt)
 
@@ -419,9 +419,9 @@ class WheelOfFortune(Talent):
 		self.talent_info['cooldown_timer'] = 300
 
 	def display_text(self, scene, stat):
-		img = TextBox((0, 0), '+ ' + self.talent_info['names'][stat], color=HEAL_COLOR, size=.5).image.copy()
+		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=HEAL_COLOR)
 		particle = Image(self.player.rect.center, img, 6, 255)
-		particle.set_easings(alpha='ease_in_quint')
+		particle.set_beziers(alpha=presets['ease_in'])
 		particle.set_goal(
 			60, 
 			position=(self.player.rect.centerx, particle.rect.centery + random.randint(-100, -50)),
@@ -909,7 +909,7 @@ class EvasiveManeuvers(Talent):
 		)
 
 		particle.set_goal(12, position=[0, 0], radius=60, width=1, alpha=0)
-		particle.set_easings(alpha='ease_in_sine')
+		particle.set_beziers(alpha=[*presets['rest'], 0])
 		
 		scene.add_sprites(particle)
 
@@ -972,8 +972,8 @@ class Reprisal(Talent):
 			self.direction_info = {
 				'previous_direction': self.player.movement_info['direction'],
 				'offset': 25,
-				'easing_offset': [0, 25],
-				'easing': getattr(Easings, 'ease_out_cubic'),
+				'b_offset': [0, 25],
+				'bezier': presets['ease_out'],
 				'frames': [0, 0]
 			}
 
@@ -1024,15 +1024,15 @@ class Reprisal(Talent):
 		def set_position(self, dt):
 			if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
 				self.direction_info['previous_direction'] = self.player.movement_info['direction']
-				self.direction_info['easing_offset'] = [self.direction_info['offset'], 25 * self.player.movement_info['direction']]
+				self.direction_info['b_offset'] = [self.direction_info['offset'], 25 * self.player.movement_info['direction']]
 				self.direction_info['frames'][1] = 10
 
 			if self.direction_info['frames'][1] != 0:
 				abs_prog = self.direction_info['frames'][0] / self.direction_info['frames'][1]
 
 				self.direction_info['offset'] = (
-					self.direction_info['easing_offset'][0] + 
-					((self.direction_info['easing_offset'][1] - self.direction_info['easing_offset'][0]) * self.direction_info['easing'](abs_prog))
+					self.direction_info['b_offset'][0] + 
+					((self.direction_info['b_offset'][1] - self.direction_info['b_offset'][0]) * get_bezier_point(abs_prog, *self.direction_info['bezier']))
 				)
 
 				self.direction_info['frames'][0] += 1 * dt
@@ -1132,7 +1132,7 @@ class Reprisal(Talent):
 			)
 
 			particle.set_goal(12, position=[0, 0], radius=25, width=1, alpha=0)
-			particle.set_easings(alpha='ease_in_sine')
+			particle.set_beziers(alpha=[*presets['rest'], 0])
 			
 			scene.add_sprites(particle)
 
@@ -1150,7 +1150,7 @@ class Reprisal(Talent):
 				)
 
 				particle.set_goal(12, radius=25, width=1, alpha=0)
-				particle.set_easings(alpha='ease_in_sine')
+				particle.set_beziers(alpha=[*presets['rest'], 0])
 				
 				scene.add_sprites(particle)
 

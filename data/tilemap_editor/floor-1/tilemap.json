@@ -1,5 +1,6 @@
 {
   "config": {
+    "grid_placing": true,
     "images": {
       "1a": {
         "path": "imgs\\1a.png",
@@ -14,21 +15,33 @@
           "ramp_right"
         ]
       },
-      "flags": {
-        "path": "imgs\\flags.png",
-        "tiles": "player_spawn"
-      },
-      "funcs": {
-        "path": "imgs\\funcs.png",
+      "1c": {
+        "path": "imgs\\1c.png",
         "tiles": [
           "killbrick"
+        ]
+      },
+      "cards-interactable": {
+        "path": "imgs\\cards-interactable.png",
+        "tiles": [
+          "standardcardinteractable",
+          "statcardinteractable"
+        ]
+      },
+      "flags": {
+        "path": "imgs\\flags.png",
+        "tiles": [
+          "player_spawn",
+          "enemy_spawn_1",
+          "enemy_spawn_2",
+          "enemy_spawn_3"
         ]
       }
     },
     "name": "floor-1",
     "offset": [
-      -6627,
-      -3237
+      -7582,
+      -3347
     ],
     "strata_alpha": true,
     "tile": {
@@ -3673,7 +3686,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3688,7 +3701,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3703,7 +3716,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3718,7 +3731,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3733,7 +3746,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3748,7 +3761,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3763,7 +3776,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3778,7 +3791,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3793,7 +3806,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3808,7 +3821,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3823,7 +3836,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3838,7 +3851,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3853,7 +3866,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3868,7 +3881,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3883,7 +3896,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3898,7 +3911,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3913,7 +3926,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3928,7 +3941,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3943,7 +3956,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3958,7 +3971,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3973,7 +3986,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -3988,7 +4001,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4003,7 +4016,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4018,7 +4031,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4033,7 +4046,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4048,7 +4061,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4063,7 +4076,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4078,7 +4091,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4093,7 +4106,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4108,7 +4121,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4123,7 +4136,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4138,7 +4151,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4153,7 +4166,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4168,7 +4181,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4183,7 +4196,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4198,7 +4211,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4213,7 +4226,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4228,7 +4241,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4243,7 +4256,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4258,7 +4271,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4273,7 +4286,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4288,7 +4301,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4303,7 +4316,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4318,7 +4331,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4333,7 +4346,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4348,7 +4361,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4363,7 +4376,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4378,7 +4391,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4393,7 +4406,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4408,7 +4421,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4423,7 +4436,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4438,7 +4451,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4453,7 +4466,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4468,7 +4481,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4483,7 +4496,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4498,7 +4511,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4513,7 +4526,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4528,7 +4541,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4543,7 +4556,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4558,7 +4571,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4573,7 +4586,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4588,7 +4601,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4603,7 +4616,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4618,7 +4631,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4633,7 +4646,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4648,7 +4661,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4663,7 +4676,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4678,7 +4691,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4693,7 +4706,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4708,7 +4721,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4723,7 +4736,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4738,7 +4751,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4753,7 +4766,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4768,7 +4781,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4783,7 +4796,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4798,7 +4811,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4813,7 +4826,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4828,7 +4841,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4843,7 +4856,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4858,7 +4871,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4873,7 +4886,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4888,7 +4901,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4903,7 +4916,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4918,7 +4931,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4933,7 +4946,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4948,7 +4961,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4963,7 +4976,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4978,7 +4991,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -4993,7 +5006,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5008,7 +5021,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5023,7 +5036,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5038,7 +5051,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5053,7 +5066,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5068,7 +5081,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5083,7 +5096,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5098,7 +5111,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5113,7 +5126,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5128,7 +5141,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5143,7 +5156,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5158,7 +5171,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5173,7 +5186,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5188,7 +5201,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5203,7 +5216,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5218,7 +5231,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5233,7 +5246,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5248,7 +5261,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5263,7 +5276,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5278,7 +5291,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5293,7 +5306,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5308,7 +5321,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5323,7 +5336,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5338,7 +5351,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5353,7 +5366,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5368,7 +5381,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5383,7 +5396,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5398,7 +5411,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5413,7 +5426,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5428,7 +5441,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5443,7 +5456,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5458,7 +5471,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5473,7 +5486,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5488,7 +5501,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5503,7 +5516,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5518,7 +5531,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5533,7 +5546,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5548,7 +5561,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5563,7 +5576,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5578,7 +5591,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5593,7 +5606,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5608,7 +5621,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5623,7 +5636,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5638,7 +5651,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5653,7 +5666,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5668,7 +5681,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5683,7 +5696,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5698,7 +5711,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5713,7 +5726,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5728,7 +5741,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5743,7 +5756,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5758,7 +5771,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5773,7 +5786,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5788,7 +5801,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5803,7 +5816,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5818,7 +5831,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5833,7 +5846,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5848,7 +5861,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5863,7 +5876,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5878,7 +5891,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5893,7 +5906,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5908,7 +5921,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5923,7 +5936,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5938,7 +5951,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5953,7 +5966,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5968,7 +5981,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5983,7 +5996,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -5998,7 +6011,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6013,7 +6026,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6028,7 +6041,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6043,7 +6056,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6058,7 +6071,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6073,7 +6086,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6088,7 +6101,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6103,7 +6116,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6118,7 +6131,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6133,7 +6146,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6148,7 +6161,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6163,7 +6176,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6178,7 +6191,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6193,7 +6206,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6208,7 +6221,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6223,7 +6236,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6238,7 +6251,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6253,7 +6266,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6268,7 +6281,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6283,7 +6296,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6298,7 +6311,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6313,7 +6326,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6328,7 +6341,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6343,7 +6356,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6358,7 +6371,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6373,7 +6386,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6388,7 +6401,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6403,7 +6416,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6418,7 +6431,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6433,7 +6446,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6448,7 +6461,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6463,7 +6476,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6478,7 +6491,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6493,7 +6506,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6508,7 +6521,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6523,7 +6536,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6538,7 +6551,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6553,7 +6566,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6568,7 +6581,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6583,7 +6596,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6598,7 +6611,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6613,7 +6626,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6628,7 +6641,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6643,7 +6656,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6658,7 +6671,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6673,7 +6686,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6688,7 +6701,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6703,7 +6716,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6718,7 +6731,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6733,7 +6746,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6748,7 +6761,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6763,7 +6776,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6778,7 +6791,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6793,7 +6806,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6808,7 +6821,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6823,7 +6836,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6838,7 +6851,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6853,7 +6866,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6868,7 +6881,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6883,7 +6896,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6898,7 +6911,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6913,7 +6926,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6928,7 +6941,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6943,7 +6956,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6958,7 +6971,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6973,7 +6986,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6988,7 +7001,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7003,7 +7016,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7018,7 +7031,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7033,7 +7046,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7048,7 +7061,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7063,7 +7076,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7078,7 +7091,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7093,7 +7106,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7108,7 +7121,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7123,7 +7136,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7138,7 +7151,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7153,7 +7166,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7168,7 +7181,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7183,7 +7196,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7198,7 +7211,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7213,7 +7226,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7228,7 +7241,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7243,7 +7256,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7258,7 +7271,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7273,7 +7286,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7288,7 +7301,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7303,7 +7316,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7318,7 +7331,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7333,7 +7346,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7348,7 +7361,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7363,7 +7376,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7378,7 +7391,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7393,7 +7406,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7408,7 +7421,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7423,7 +7436,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7438,7 +7451,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7453,7 +7466,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7468,7 +7481,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7483,7 +7496,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7498,7 +7511,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7513,7 +7526,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7528,7 +7541,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7543,7 +7556,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7558,7 +7571,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7573,7 +7586,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7588,7 +7601,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7603,7 +7616,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7618,7 +7631,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7633,7 +7646,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7648,7 +7661,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7663,7 +7676,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7678,7 +7691,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7693,7 +7706,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7708,7 +7721,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7723,7 +7736,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7738,7 +7751,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7753,7 +7766,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7768,7 +7781,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7783,7 +7796,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7798,7 +7811,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7813,7 +7826,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7828,7 +7841,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7843,7 +7856,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7858,7 +7871,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7873,7 +7886,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7888,7 +7901,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7903,7 +7916,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7918,7 +7931,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7933,7 +7946,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7948,7 +7961,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7963,7 +7976,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7978,7 +7991,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7993,7 +8006,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8008,7 +8021,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8023,7 +8036,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8038,7 +8051,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8053,7 +8066,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8068,7 +8081,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8083,7 +8096,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8098,7 +8111,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8113,7 +8126,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8128,7 +8141,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8143,7 +8156,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8158,7 +8171,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8173,7 +8186,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8188,7 +8201,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8203,7 +8216,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8218,7 +8231,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8233,7 +8246,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8248,7 +8261,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8263,7 +8276,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8278,7 +8291,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8293,7 +8306,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8308,7 +8321,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8323,7 +8336,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8338,7 +8351,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8353,7 +8366,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8368,7 +8381,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8383,7 +8396,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8398,7 +8411,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8413,7 +8426,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8428,7 +8441,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8443,7 +8456,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8458,7 +8471,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8473,7 +8486,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8488,7 +8501,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8503,7 +8516,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8518,7 +8531,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8533,7 +8546,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8548,7 +8561,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8563,7 +8576,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8578,7 +8591,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8593,7 +8606,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8608,7 +8621,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8623,7 +8636,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8638,7 +8651,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8653,7 +8666,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8668,7 +8681,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8683,7 +8696,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8698,7 +8711,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8713,7 +8726,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8728,7 +8741,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8743,7 +8756,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8758,7 +8771,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8773,7 +8786,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8788,7 +8801,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8803,7 +8816,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8818,7 +8831,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8833,7 +8846,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8848,7 +8861,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8863,7 +8876,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8878,7 +8891,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8893,7 +8906,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8908,7 +8921,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8923,7 +8936,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8938,7 +8951,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8953,7 +8966,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8968,7 +8981,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8983,7 +8996,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8998,7 +9011,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9013,7 +9026,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9028,7 +9041,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9043,7 +9056,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9058,7 +9071,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9073,7 +9086,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9088,7 +9101,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9103,7 +9116,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9118,7 +9131,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9133,7 +9146,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9148,7 +9161,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9163,7 +9176,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9178,7 +9191,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9193,7 +9206,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9208,7 +9221,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9223,7 +9236,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9238,7 +9251,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9253,7 +9266,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9268,7 +9281,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9283,7 +9296,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9298,7 +9311,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9313,7 +9326,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9328,7 +9341,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9343,7 +9356,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9358,7 +9371,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9373,7 +9386,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9388,7 +9401,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9403,7 +9416,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9418,7 +9431,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9433,7 +9446,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9448,7 +9461,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9463,7 +9476,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9478,7 +9491,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9493,7 +9506,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9508,7 +9521,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9523,7 +9536,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9538,7 +9551,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9553,7 +9566,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9568,7 +9581,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9583,7 +9596,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9598,7 +9611,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9613,7 +9626,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9628,7 +9641,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9643,7 +9656,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9658,7 +9671,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9673,7 +9686,7 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -9688,7 +9701,952 @@
       ],
       "strata": 0,
       "tile": "killbrick",
-      "tileset": "funcs"
+      "tileset": "1c"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        5842,
+        4024
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        6873,
+        3460
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        7433,
+        3708
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        8381,
+        3448
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 0,
+      "orientation": 180,
+      "position": [
+        6656,
+        3456
+      ],
+      "strata": 5,
+      "tile": "ramp_left",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6592,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6528,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6464,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6400,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6336,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6272,
+        3456
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 3,
+      "orientation": 180,
+      "position": [
+        6208,
+        3456
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 0,
+      "orientation": 270,
+      "position": [
+        6144,
+        3392
+      ],
+      "strata": 5,
+      "tile": "ramp_left",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 270,
+      "position": [
+        6144,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        6144,
+        3264
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 6,
+      "orientation": 0,
+      "position": [
+        6208,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        6208,
+        3264
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        6272,
+        3264
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        6336,
+        3264
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 90,
+      "position": [
+        6656,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        6656,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        6592,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        6528,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        6464,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        6400,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 6,
+      "orientation": 180,
+      "position": [
+        6336,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6208,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6272,
+        3328
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6272,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6336,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6400,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6464,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6528,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 180,
+      "position": [
+        6592,
+        3392
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        6445,
+        3263
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        8128,
+        4032
+      ],
+      "strata": 5,
+      "tile": "ramp_left",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        8128,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 3,
+      "orientation": 180,
+      "position": [
+        8192,
+        4160
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 180,
+      "position": [
+        8256,
+        4160
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 180,
+      "position": [
+        8320,
+        4160
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        8384,
+        4160
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 180,
+      "position": [
+        8448,
+        4160
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 90,
+      "position": [
+        8512,
+        4160
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 90,
+      "position": [
+        8576,
+        4096
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        8576,
+        4032
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8512,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8448,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8384,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8320,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8256,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8192,
+        4032
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 5,
+      "orientation": 90,
+      "position": [
+        8192,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 5,
+      "orientation": 0,
+      "position": [
+        8512,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 0,
+      "position": [
+        8448,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 0,
+      "position": [
+        8384,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 0,
+      "position": [
+        8320,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 9,
+      "orientation": 0,
+      "position": [
+        8256,
+        4096
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        28,
+        36
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        8417,
+        3953
+      ],
+      "strata": 0,
+      "tile": "statcardinteractable",
+      "tileset": "cards-interactable"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        6592,
+        3648
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_1",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        8000,
+        3328
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_1",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        5952,
+        3840
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_3",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        6272,
+        3072
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_2",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        8256,
+        3840
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_2",
+      "tileset": "flags"
     }
   ]
 }
