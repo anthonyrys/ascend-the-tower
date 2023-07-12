@@ -53,28 +53,31 @@ v0.5.1-test.2
         Sandbox generate_stat_cards keybinding and ui
 
 v0.5.1-test.3
-[ADD]
-    ENEMIES dictonary to enemy file
+    [ADD]
+        ENEMIES dictonary to enemy file
 
-    Particle effect for Card Interactables
+        Particle effect for Card Interactables
 
-    Enemy spawning via Tilemap flags
+        Enemy spawning via Tilemap flags
 
-    Color value to Card hover_info dictionary
+        Color value to Card hover_info dictionary
 
-[CHANGE]
-    Stat card text color to PLAYER COLOR from (255, 255, 255)
-    Stat card hover color to PLAYER COLOR from (255, 255, 255)
+    [CHANGE]
+        Stat card text color to PLAYER COLOR from (255, 255, 255)
+        Stat card hover color to PLAYER COLOR from (255, 255, 255)
 
-[FIX]
-    Lag issues for larger tiled maps
+    [FIX]
+        Lag issues for larger tiled maps
 
-    PrimaryAttack particles not being affected by dt
+        PrimaryAttack particles not being affected by dt
 
-    Card Interactables being able to spawn inside tiles
-    Card Interactables prompting cards selection when unavaliable
+        Card Interactables being able to spawn inside tiles
+        Card Interactables prompting cards selection when unavaliable
 
-    Sprite class not applying alpha correctly
+        Sprite class not applying alpha correctly
 
-[REMOVE]
-    Sandbox spawn_enemy keybinding and ui
+    [REMOVE]
+        Sandbox spawn_enemy keybinding and ui
+
+v0.5.1-main
+...
