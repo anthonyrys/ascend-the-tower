@@ -99,7 +99,7 @@ class OnFire(Debuff):
         self.tick_rate = [0, round(duration * tick_rate)]
         self.per_damage = round(value * tick_rate)
 
-        self.particle_color = (255, 88, 34)
+        self.particle_color = (255, 144, 98)
         self.particle_rate = [0, 1]
         self.particle_size = size
 

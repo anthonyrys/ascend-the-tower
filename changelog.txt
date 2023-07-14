@@ -547,3 +547,23 @@ v0.5.2
 
         [REMOVE]
             Changelog-test file
+
+    v0.5.2-test.2
+        [REWORK]
+            FloaterAi behavior
+
+        [CHANGE]
+            Elemental enemy image file
+
+            OnFire particle color to (255, 144, 98) from (255, 88, 34)
+
+            Elemental enemy img_info variable and set_images function
+            Elemental enemy max_health to 30 from 100
+
+            Elemental activation_frames to 120 from 60
+            
+            Elemental Blast amount to 3 from 1
+            Elemental Blast collisions to only Player
+
+        [REMOVE]
+            Elemental enemy activation_frames particle

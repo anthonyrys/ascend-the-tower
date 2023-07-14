@@ -561,7 +561,7 @@ class Elemental(FloaterEnemy):
 
             proj_info = {
                 'collision': 'pixel',
-                'collisions': ['player', 'tile'],
+                'collisions': ['player'],
                 'collision_function': {
                     'player': self.collision_player,
                     'default': self.collision_default
@@ -601,13 +601,11 @@ class Elemental(FloaterEnemy):
             scene.add_sprites(proj)
 
     def __init__(self, position, strata, level=1):
-        super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
+        super().__init__(position, pygame.Surface((40, 40)).convert_alpha(), None, strata, None)
         self.secondary_sprite_id = 'elemental'
 
-        self.image.fill((0, 0, 0, 0))
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
-        img = pygame.transform.scale(img, (img.get_width() * 2, img.get_height() * 2))
-        self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+        self.glow['active'] = True
+        self.glow['intensity'] = .25
 
         self.default_movement_info = {
             'direction': 0,
@@ -616,7 +614,7 @@ class Elemental(FloaterEnemy):
             'friction_frames': 0,
 
             'per_frame_movespeed': .5,
-            'max_movespeed': 4,
+            'max_movespeed': 10,
 
             'jump_power': 1,
             'jumps': 0,
@@ -626,8 +624,8 @@ class Elemental(FloaterEnemy):
         self.movement_info = self.default_movement_info.copy()
 
         self.default_combat_info = {
-            'max_health': 100,
-            'health': 100,
+            'max_health': 30,
+            'health': 30,
             
             'health_regen_amount': 0,
             'health_regen_tick': 0,
@@ -663,22 +661,18 @@ class Elemental(FloaterEnemy):
             'damage_frames': 0,
             'damage_frames_max': 0,
 
-            'sin_count': 0,
-            'sin_amplifier': .01,
+            'color': (255, 144, 98),
+            'secondary_color': (255, 158, 107),
+            'particle_rate': [0, 1],
 
-            'size': 10,
-            'color': (230, 100, 30),
-            'secondary_color': (255, 40, 0),
-
-            'radius': 65,
-            'angle': 0,
-            'position': [0, 0],
-
-            'angle_speed': 3
+            'imgs': [],
+            'img_frames': 0
         }
 
+        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'), scale=2)
+
         self.ability_info = {
-            'activation_frames': [0, 60],
+            'activation_frames': [0, 120],
             'activation_cancel': False
         }
 
@@ -691,34 +685,37 @@ class Elemental(FloaterEnemy):
         self.ability_info['activation_cancel'] = True
 
     def set_images(self, scene, dt):
-        self.img_info['sin_count'] += 1 * dt
+        self.img_info['img_frames'] += (1 * .3) * dt
+        if self.img_info['img_frames'] >= len(self.img_info['imgs']) - 1:
+            self.img_info['img_frames'] = 0
 
-        self.img_info['angle'] += self.img_info['angle_speed'] * dt
+        self.image.fill((0, 0, 0, 0))
+        self.image.blit(
+            self.img_info['imgs'][round(self.img_info['img_frames'])], 
+            self.img_info['imgs'][round(self.img_info['img_frames'])].get_rect(center=self.image.get_rect().center)
+        )
 
-        a = (self.img_info['angle'] - 90) * math.pi / 180
-        x = self.img_info['radius'] * math.cos(a)
-        y = self.img_info['radius'] * math.sin(a)
+        self.glow['size'] = 1 + round(abs(.2 * math.cos(scene.frame_count * .02)), 1)
 
-        pos = [
-            self.center_position[0] + x,
-            self.center_position[1] + y
-        ]
+        self.img_info['particle_rate'][0] += 1 * dt
+        if self.img_info['particle_rate'][0] < self.img_info['particle_rate'][1]:
+            return
+        
+        self.img_info['particle_rate'][0] = 0
 
-        self.img_info['position'] = pos
+        pos = self.center_position
+        pos[0] += random.randint(-20, 20)
+        pos[1] += random.randint(-20, 20)
 
-        pygame.draw.circle(scene.entity_surface, self.img_info['color'], pos, self.img_info['size'])
+        particle = Circle(pos, self.img_info['color'], 7, 0)
+        particle.strata = self.strata -1
+        particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
 
-        for i in range(7):
-            ab = ((self.img_info['angle'] - self.img_info['angle_speed'] * (i + 2)) - 90) * math.pi / 180
-            xb = self.img_info['radius'] * math.cos(ab)
-            yb = self.img_info['radius'] * math.sin(ab)
+        particle.glow['active'] = True
+        particle.glow['size'] = 2
+        particle.glow['intensity'] = .25
 
-            posb = [
-                self.center_position[0] + xb,
-                self.center_position[1] + yb
-            ]
-
-            pygame.draw.circle(scene.entity_surface, self.img_info['color'], posb, (self.img_info['size'] - (i + 1)))
+        scene.add_sprites(particle)
 
     def display(self, scene, dt):
         if scene.paused:
@@ -734,22 +731,11 @@ class Elemental(FloaterEnemy):
         if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
             self.ability_info['activation_cancel'] = False
             self.ability_info['activation_frames'][0] = 0
-            particle = Circle(
-                [0, 0],
-                self.img_info['color'],
-                65,
-                3,
-                self
-            )
-
-            particle.set_goal(20, position=[0, 0], radius=0, width=3, alpha=0)
-            particle.set_beziers(radius=[*presets['rest'], 0], alpha=presets['ease_in'])
-            scene.add_sprites(particle)
-
             self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
+            self.delay_timers.append([35, random.choice(self.abilities).call, [scene]])
+            self.delay_timers.append([45, random.choice(self.abilities).call, [scene]])
 
         self.ai.update(scene, dt, scene.player)
-        self.apply_gravity(dt, .05)
 
         if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
             self.velocity[0] = 0
