@@ -237,12 +237,10 @@ class GameScene(Scene):
 
             self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
 
-            enemies = ENEMIES[1][0:position[0]]
-
             enemy_position = [position[1][0] + random.randint(-50, 50), position[1][1] + random.randint(-50, 50)]
-            enemy = random.choice(enemies)(enemy_position, 6)
+            enemy = ENEMIES[1][position[0] - 1](enemy_position, 6)
 
-            particle_position = [enemy_position[0] + enemy.image.get_width(), enemy_position[1] + enemy.image.get_height()]
+            particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
             particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
             particle.set_goal(30, radius=0, width=1, alpha=0)
 

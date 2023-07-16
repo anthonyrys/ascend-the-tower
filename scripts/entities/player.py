@@ -33,7 +33,7 @@ class Player(GameEntity):
 
             self.glow['active'] = True
             self.glow['size'] = 1.2
-            self.glow['intensity'] = .4
+            self.glow['intensity'] = .5
 
             self.sin_amplifier = 1
             self.sin_frequency = .05

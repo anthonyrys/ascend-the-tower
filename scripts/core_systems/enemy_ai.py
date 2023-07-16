@@ -90,6 +90,12 @@ class FloaterAi(AiTemplate):
         max_ms = self.sprite.movement_info['max_movespeed']
         ms = self.sprite.movement_info['per_frame_movespeed']
 
+        distance = get_distance(self.sprite.true_position, self.destination)
+        if distance <= 250:
+            ms *= .5
+        elif distance > 500:
+            ms *= 2
+
         if self.sprite.rect.x < self.destination[0]:
             self.sprite.velocity[0] += ms if self.sprite.velocity[0] < max_ms else 0
         elif self.sprite.rect.x > self.destination[0]:

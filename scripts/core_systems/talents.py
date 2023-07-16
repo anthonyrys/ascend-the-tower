@@ -885,6 +885,13 @@ class EvasiveManeuvers(Talent):
 
 		return card_info
 	
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'shadowstep'):
+			return False
+		
+		return True
+
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
@@ -941,7 +948,7 @@ class Reprisal(Talent):
 			img.set_colorkey((0, 0, 0))
 			pygame.draw.circle(img, self.color, img.get_rect().center, 7)
 
-			super().__init__(player.center_position, img, None, player.strata - 1)
+			super().__init__(player.center_position, img, None, player.strata + 1)
 
 			self.player = player
 			self.active = False
@@ -950,7 +957,7 @@ class Reprisal(Talent):
 				'max_distance': 600,
 				'damage_multiplier': .35,
 				'cooldown': [0, 20],
-				'speed': 15,
+				'speed': 20,
 				'size': 7,
 
 				'projectile_info': {
@@ -1073,13 +1080,11 @@ class Reprisal(Talent):
 				vel = [direction[0] * multiplier, direction[1] * multiplier]
 
 				proj = ProjectileStandard(
-					self.center_position, self.color, self.combat_info['size'], self.strata + 1,
+					self.center_position, self.color, self.combat_info['size'], self.strata,
 					self.combat_info['projectile_info'],
 					velocity=vel,
 					duration=90,
-					settings={
-						'trail': True
-                	}
+					settings={'player': True}
 				)
 
 				scene.add_sprites(proj)
@@ -1211,4 +1216,34 @@ class ChaosTheory(Talent):
 
 		if ability and round(random.uniform(0, 1), 2) <= self.talent_info['chance']:
 			ability[0].call(scene, ignore_cooldown=True)
-	
+
+class Shadowstep(Talent):
+	TALENT_ID = 'Shadowstep'
+	TALENT_CALLS = ['on_@dash']
+
+	DESCRIPTION = {
+		'name': 'Shadowstep',
+		'description': '???'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'shadowstep',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['speed'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'evasive_maneuvers'):
+			return False
+		
+		return True

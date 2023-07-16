@@ -14,7 +14,7 @@ from scripts.services import load_spritesheet
 from scripts.ui.info_bar import EnemyBar
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_sprite_colors, check_pixel_collision, get_distance, check_line_collision
+from scripts.utils import get_sprite_colors, check_pixel_collision, check_line_collision
 from scripts.utils.bezier import presets
 
 import pygame
@@ -499,12 +499,14 @@ class Elemental(FloaterEnemy):
         def __init__(self, character):
             super().__init__(character)
         
-            self.ability_info['damage_multiplier'] = .6
+            self.ability_info['damage_multiplier'] = .5
             self.ability_info['speed'] = 15
 
             self.ability_info['signature'] = f'{self.character.secondary_sprite_id}_blast'
             self.ability_info['duration'] = 30
-            self.ability_info['status_effect_multiplier'] = .25
+            self.ability_info['status_effect_multiplier'] = .5
+
+            self.ability_info['particle_rate'] = [0, 1]
 
         def collision_default(self, scene, projectile, sprite):
             particles = []
@@ -532,9 +534,12 @@ class Elemental(FloaterEnemy):
 
         def collision_player(self, scene, projectile, sprite):
             self.collision_default(scene, projectile, sprite)
-            register_damage(scene, self.character, sprite, {
+            registered = register_damage(scene, self.character, sprite, {
                 'type': 'magical', 
                 'amount': self.character.combat_info['base_damage'] * self.ability_info['damage_multiplier']})
+
+            if not registered:
+                return
 
             has_debuff = get_debuff(sprite, self.ability_info['signature'])
 
@@ -545,7 +550,28 @@ class Elemental(FloaterEnemy):
             damage = self.character.combat_info['base_damage'] * self.ability_info['status_effect_multiplier']
             debuff = OnFire(self.character, sprite, self.ability_info['signature'], damage, self.ability_info['duration'], size=5)
             sprite.debuffs.append(debuff)
+        
+        def projectile_display(self, projectile, scene, dt):
+            self.ability_info['particle_rate'][0] += 1 * dt
+            if self.ability_info['particle_rate'][0] < self.ability_info['particle_rate'][1]:
+                return
             
+            self.ability_info['particle_rate'][0] = 0
+
+            pos = projectile.center_position
+            pos[0] += random.randint(-20, 20)
+            pos[1] += random.randint(-10, 0)
+
+            particle = Circle(pos, self.character.img_info['tertiary_color'], 5, 0)
+            particle.strata = projectile.strata - 1
+            particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
+
+            particle.glow['active'] = True
+            particle.glow['size'] = 2
+            particle.glow['intensity'] = .25
+
+            scene.add_sprites(particle)
+
         def call(self, scene, keybind=None):
             if self.character.ability_info['activation_cancel']:
                 return
@@ -573,10 +599,12 @@ class Elemental(FloaterEnemy):
                 proj_info,
                 velocity=vel,
                 duration=90,
-                settings={
-                    'trail': True
-                }
+                settings={'display': self.projectile_display}
             )
+
+            proj.glow['active'] = True
+            proj.glow['size'] = 1.5
+            proj.glow['intensity'] = .25
 
             particles = []
             for _ in range(5):
@@ -663,6 +691,8 @@ class Elemental(FloaterEnemy):
 
             'color': (255, 144, 98),
             'secondary_color': (255, 158, 107),
+            'tertiary_color': (255, 172, 107),
+
             'particle_rate': [0, 1],
 
             'imgs': [],
@@ -672,7 +702,7 @@ class Elemental(FloaterEnemy):
         self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'), scale=2)
 
         self.ability_info = {
-            'activation_frames': [0, 120],
+            'activation_frames': [0, 90],
             'activation_cancel': False
         }
 
@@ -695,7 +725,7 @@ class Elemental(FloaterEnemy):
             self.img_info['imgs'][round(self.img_info['img_frames'])].get_rect(center=self.image.get_rect().center)
         )
 
-        self.glow['size'] = 1 + round(abs(.2 * math.cos(scene.frame_count * .02)), 1)
+        self.glow['size'] = 1 + round(abs(.2 * math.cos((scene.frame_count * dt) * .02)), 1)
 
         self.img_info['particle_rate'][0] += 1 * dt
         if self.img_info['particle_rate'][0] < self.img_info['particle_rate'][1]:
@@ -705,10 +735,10 @@ class Elemental(FloaterEnemy):
 
         pos = self.center_position
         pos[0] += random.randint(-20, 20)
-        pos[1] += random.randint(-20, 20)
+        pos[1] += random.randint(-10, 0)
 
-        particle = Circle(pos, self.img_info['color'], 7, 0)
-        particle.strata = self.strata -1
+        particle = Circle(pos, get_sprite_colors(self)[0], 7, 0)
+        particle.strata = self.strata - 1
         particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
 
         particle.glow['active'] = True
@@ -731,9 +761,7 @@ class Elemental(FloaterEnemy):
         if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
             self.ability_info['activation_cancel'] = False
             self.ability_info['activation_frames'][0] = 0
-            self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
-            self.delay_timers.append([35, random.choice(self.abilities).call, [scene]])
-            self.delay_timers.append([45, random.choice(self.abilities).call, [scene]])
+            self.delay_timers.append([30, random.choice(self.abilities).call, [scene]])
 
         self.ai.update(scene, dt, scene.player)
 

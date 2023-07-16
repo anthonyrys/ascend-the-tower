@@ -567,3 +567,46 @@ v0.5.2
 
         [REMOVE]
             Elemental enemy activation_frames particle
+
+    v0.5.2-test.3
+        [ADD]
+            FloaterAi distance calculations for entity movespeed
+
+            Elemental Blast projectile_display function
+            Elemental enemy img_info tertiary_color value
+
+            Projectile display value to settings
+            Projectile visual outlines
+
+            Sandbox generate_standard_cards keybinding and ui
+            Sandbox generate_stat_cards keybinding and ui
+
+        [CHANGE]
+            Reprisal talent strata to +1 from -1 relative to Player
+            Reprisal projectile strata to match talent strata
+
+            Elemental enemy image particle color to be random
+
+            GameScene enemy tiles to spawn one enemy instead of a range
+
+        [INCREASE]
+            Reprisal projectile speed to 20 from 15
+
+            Elemental Blast status_effect_multiplier to .5 from .25
+
+            Player Halo glow intensity to .5 from .4
+
+        [DECREASE]
+            Elemental Blast damage_multipler to .5 from .6
+            Elemental Blast amount to 1 from 3
+
+            Elemental enemy activation_frames to 90 from 120
+
+        [REMOVE]
+            Trail value from Projectile base class
+
+        [FIX]
+            Issue where Elemental Blast OnFire debuff would ignore immunities
+            Issue where Elemental enemy glow pattern was not affected by dt
+
+            Issue where enemy spawn particles was not properly aligned
