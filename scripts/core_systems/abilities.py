@@ -1,6 +1,6 @@
 from scripts import PLAYER_COLOR
 
-from scripts.core_systems.talents import call_talents
+from scripts.core_systems.talents import call_talents, get_talent
 from scripts.core_systems.combat_handler import register_damage
 
 from scripts.entities.projectile import ProjectileStandard
@@ -91,6 +91,7 @@ class Dash(Ability):
 
         self.ability_info['cooldown_timer'] = 30
         self.ability_info['velocity'] = character.movement_info['max_movespeed'] * 3
+        self.ability_info['current_keybind'] = None
 
         self.keybind_info['double_tap'] = True
         self.keybind_info['keybinds'] = ['left', 'right']
@@ -105,9 +106,13 @@ class Dash(Ability):
         
         if any(list(self.character.overrides.values())):
             return
-
+        
+        self.ability_info['current_keybind'] = keybind
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         super().call(scene, keybind)
+
+        if get_talent(self.character, 'shadowstep'):
+            return
 
         if keybind == 'left':
             self.character.velocity[0] = -self.ability_info['velocity']

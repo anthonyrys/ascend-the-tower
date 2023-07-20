@@ -100,7 +100,7 @@ class OnFire(Debuff):
         self.per_damage = round(value * tick_rate)
 
         self.particle_color = (255, 144, 98)
-        self.particle_rate = [0, 1]
+        self.particle_rate = [0, 3]
         self.particle_size = size
 
     def update(self, scene, dt):
@@ -111,8 +111,8 @@ class OnFire(Debuff):
             self.particle_rate[0] = 0
 
             pos = self.entity.center_position
-            pos[0] += random.randint(-20, 20)
-            pos[1] += random.randint(-20, 20)
+            pos[0] += random.randint(-5, 5)
+            pos[1] += random.randint(-15, 0)
 
             particle = Circle(pos, self.particle_color, self.particle_size, 0)
             particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)

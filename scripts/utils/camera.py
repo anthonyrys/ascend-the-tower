@@ -31,7 +31,7 @@ class CameraTemplate:
     def set_camera_tween(self, frames):
         self.camera_tween_info['frames'] = 0
         self.camera_tween_info['max_frames'] = frames
-        self.camera_tween_info['start_pos'] = (self.box.topleft[0] - self.box_dimensions[0], self.box.topleft[1] - self.box_dimensions[1])
+        self.camera_tween_info['start_pos'] = self.offset
 
 class BoxCamera(CameraTemplate):
     def __init__(self, focus):

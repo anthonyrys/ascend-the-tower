@@ -141,7 +141,7 @@ class GameScene(Scene):
             enemy.center_position[1] - random.randint(25, 50)
         ]
 
-        card = StandardCardInteractable(enemy.center_position, 9)
+        card = StandardCardInteractable(enemy.center_position, None, None, 9, 0)
 
         collide_tiles = True
         while collide_tiles:

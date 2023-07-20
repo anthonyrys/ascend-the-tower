@@ -506,7 +506,7 @@ class Elemental(FloaterEnemy):
             self.ability_info['duration'] = 30
             self.ability_info['status_effect_multiplier'] = .5
 
-            self.ability_info['particle_rate'] = [0, 1]
+            self.ability_info['particle_rate'] = [0, 2]
 
         def collision_default(self, scene, projectile, sprite):
             particles = []
@@ -564,7 +564,7 @@ class Elemental(FloaterEnemy):
 
             particle = Circle(pos, self.character.img_info['tertiary_color'], 5, 0)
             particle.strata = projectile.strata - 1
-            particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
+            particle.set_goal(30, position=[pos[0] + random.randint(-25, 25), pos[1] + random.randint(-25, 0)], radius=0, width=0)
 
             particle.glow['active'] = True
             particle.glow['size'] = 2
@@ -634,6 +634,7 @@ class Elemental(FloaterEnemy):
 
         self.glow['active'] = True
         self.glow['intensity'] = .25
+        self.glow['size'] = 1.15
 
         self.default_movement_info = {
             'direction': 0,
@@ -693,7 +694,7 @@ class Elemental(FloaterEnemy):
             'secondary_color': (255, 158, 107),
             'tertiary_color': (255, 172, 107),
 
-            'particle_rate': [0, 1],
+            'particle_rate': [0, 4],
 
             'imgs': [],
             'img_frames': 0
@@ -725,7 +726,17 @@ class Elemental(FloaterEnemy):
             self.img_info['imgs'][round(self.img_info['img_frames'])].get_rect(center=self.image.get_rect().center)
         )
 
-        self.glow['size'] = 1 + round(abs(.2 * math.cos((scene.frame_count * dt) * .02)), 1)
+        if self.img_info['damage_frames'] <= 0:
+            direction = [
+                scene.player.center_position[0] - self.center_position[0],
+                scene.player.center_position[1] - self.center_position[1]
+            ]
+            multiplier = 6 / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+            vel = [direction[0] * multiplier, direction[1] * multiplier]
+
+            position = [self.image.get_rect().centerx + vel[0], self.image.get_rect().centery + vel[1] + 3]
+            pygame.draw.circle(self.image, (0, 0, 0, 0), [position[0] + 6, position[1]], 4)
+            pygame.draw.circle(self.image, (0, 0, 0, 0), [position[0] - 6, position[1]], 4)
 
         self.img_info['particle_rate'][0] += 1 * dt
         if self.img_info['particle_rate'][0] < self.img_info['particle_rate'][1]:
@@ -735,7 +746,7 @@ class Elemental(FloaterEnemy):
 
         pos = self.center_position
         pos[0] += random.randint(-20, 20)
-        pos[1] += random.randint(-10, 0)
+        pos[1] += random.randint(-20, -10)
 
         particle = Circle(pos, get_sprite_colors(self)[0], 7, 0)
         particle.strata = self.strata - 1

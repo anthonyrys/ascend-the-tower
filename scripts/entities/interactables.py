@@ -46,9 +46,11 @@ class Interactable(Entity):
         super().display(scene, dt)
 
 class StandardCardInteractable(Interactable):
-    def __init__(self, position, strata, alpha=0):
-        image = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
-        super().__init__(position, image, None, strata, alpha)
+    def __init__(self, position, img, dimensions, strata=None, alpha=255):
+        if img is None:
+            img = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
+
+        super().__init__(position, img, dimensions, strata, alpha)
         self.secondary_sprite_id = 'standard_card_interactable'
         self.interactable = False
 

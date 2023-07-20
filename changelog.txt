@@ -610,3 +610,37 @@ v0.5.2
             Issue where Elemental enemy glow pattern was not affected by dt
 
             Issue where enemy spawn particles was not properly aligned
+
+    v0.5.2-test.4
+        [ADD]
+            Additional tilemap tiles
+
+            Shadowstep talent icon
+            FromTheShadows talent icon
+            
+            Dash ability_info current_keybind value
+
+            Shadowstep talent
+            FromTheShadows talent
+
+            Player pulse_frame_bezier img_info value
+
+            Elemental enemy eye visuals
+
+        [CHANGE]
+            Elemental enemy glow to be static rather than a sine wave
+
+            StandardCardInteractable class __init__ parameters to be consistent with StatCardInteractable
+
+        [DECREASE]
+            OnFire particle_rate to 0/3 from 0/1
+            OnFire particle randomized position range
+
+            Elemental Blast projectile particle randomized position range
+            Elemental Blast projectile particle duration to 30 from 60
+
+            Elemental Blast projectile particle_rate to 0/2 from 0/1
+            Elemental enemy particle_rate to 0/4 from 0/1
+
+        [FIX]
+            Issue where CameraTemplate would not transition correctly between tweens
