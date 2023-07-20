@@ -1,3 +1,5 @@
+from scripts import ENEMY_COLOR
+
 from scripts.entities.particle_fx import Image
 from scripts.entities.entity import Entity
 
@@ -13,7 +15,13 @@ class Projectile(Entity):
 
             surf = pygame.Surface((dimensions * 2, dimensions * 2)).convert_alpha()
             surf.set_colorkey((0, 0, 0))
-            pygame.draw.circle(surf, img, surf.get_rect().center, dimensions)
+
+            if 'player' in settings:
+                pygame.draw.circle(surf, (255, 255, 255), surf.get_rect().center, dimensions)
+            else:
+                pygame.draw.circle(surf, ENEMY_COLOR, surf.get_rect().center, dimensions)
+
+            pygame.draw.circle(surf, img, surf.get_rect().center, dimensions * .75)
 
             img = surf
             dimensions = None
@@ -64,20 +72,14 @@ class Projectile(Entity):
         self.rect.x += round(self.velocity[0] * dt, 1)
         self.rect.y += round(self.velocity[1] * dt, 1)
 
-        if 'trail' in self.settings:
-            for i in range(self.radius):
-                cir_pos = [
-                    self.rect.centerx - (round(self.velocity[0]) * (.25 * (i + 1))),
-                    self.rect.centery - (round(self.velocity[1]) * (.25 * (i + 1)))
-                ]
-
-                pygame.draw.circle(scene.entity_surface, self.color, cir_pos, (self.radius - (i + 1)))
-
         self.prev_player_position = scene.player.rect.center
         self.duration -= 1 * dt
 
         if 'afterimages' in self.settings:
             self.apply_afterimages(scene, dt)
+
+        if 'display' in self.settings:
+            self.settings['display'](self, scene, dt)
 
         super().display(scene, dt)
 

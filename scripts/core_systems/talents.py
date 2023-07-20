@@ -10,7 +10,7 @@ from scripts.entities.projectile import ProjectileStandard
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_distance, get_closest_sprite
+from scripts.utils import get_distance, get_closest_sprite, check_line_collision
 from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
@@ -87,7 +87,7 @@ class Talent:
 
 	def call(self, call, scene, info=None):
 		# print(f'{self.TALENT_ID}::call({call})')
-		...
+		call_talents(scene, self.player, {f'on_{self.TALENT_ID}': self})
 
 	def reset(self):
 		...
@@ -225,7 +225,7 @@ class StingLikeABee(Talent):
 
 	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Hitting an enemy with your primary attack allows you to use it again while airborne.'
+		'description': 'Your primary attack is usuable while airborne an additional time.'
 	}
 
 	@staticmethod
@@ -253,10 +253,7 @@ class StingLikeABee(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-	def call(self, call, scene, info):
-		super().call(call, scene, info)
-
-		info.can_call = True
+		player.abilities['primary'].max_charges += 1
 
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
@@ -330,7 +327,7 @@ class Temperance(Talent):
 				self.glow['active'] = False
 				self.image.set_alpha(55)
 
-			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.charges and not self.glow['active']:
 				self.glow['active'] = True
 				self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 
@@ -885,6 +882,13 @@ class EvasiveManeuvers(Talent):
 
 		return card_info
 	
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'shadowstep'):
+			return False
+		
+		return True
+
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
@@ -941,7 +945,7 @@ class Reprisal(Talent):
 			img.set_colorkey((0, 0, 0))
 			pygame.draw.circle(img, self.color, img.get_rect().center, 7)
 
-			super().__init__(player.center_position, img, None, player.strata - 1)
+			super().__init__(player.center_position, img, None, player.strata + 1)
 
 			self.player = player
 			self.active = False
@@ -950,7 +954,7 @@ class Reprisal(Talent):
 				'max_distance': 600,
 				'damage_multiplier': .35,
 				'cooldown': [0, 20],
-				'speed': 15,
+				'speed': 20,
 				'size': 7,
 
 				'projectile_info': {
@@ -1073,13 +1077,11 @@ class Reprisal(Talent):
 				vel = [direction[0] * multiplier, direction[1] * multiplier]
 
 				proj = ProjectileStandard(
-					self.center_position, self.color, self.combat_info['size'], self.strata + 1,
+					self.center_position, self.color, self.combat_info['size'], self.strata,
 					self.combat_info['projectile_info'],
 					velocity=vel,
 					duration=90,
-					settings={
-						'trail': True
-                	}
+					settings={'player': True}
 				)
 
 				scene.add_sprites(proj)
@@ -1211,4 +1213,208 @@ class ChaosTheory(Talent):
 
 		if ability and round(random.uniform(0, 1), 2) <= self.talent_info['chance']:
 			ability[0].call(scene, ignore_cooldown=True)
+
+class Shadowstep(Talent):
+	TALENT_ID = 'shadowstep'
+	TALENT_CALLS = ['on_@dash']
+
+	DESCRIPTION = {
+		'name': 'Shadowstep',
+		'description': 'Your dash is replaced with a step through the shadows.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'shadowstep',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['speed'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'evasive_maneuvers'):
+			return False
+		
+		return True
 	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['dash_distance'] = 350
+		self.talent_info['min_dash_distance'] = 100
+		self.talent_info['gravity_frames'] = 5
+
+		self.talent_info['dash_color'] = (120, 80, 140)
+
+		self.player.abilities['dash'].ability_info['cooldown_timer'] *= 1.5
+
+	def call(self, call, scene, info):
+		self.talent_info['position'] = 0
+
+		if info.ability_info['current_keybind'] == 'left':
+			direction = -1
+		elif info.ability_info['current_keybind'] == 'right':
+			direction = 1
+
+		position = self.player.center_position[0] + (self.talent_info['dash_distance'] * direction)
+		collision = check_line_collision(
+			self.player.center_position, 
+			[position, self.player.rect.centery], 
+			[t for t in scene.get_sprites('tile') if get_distance(self.player, t) <= self.talent_info['dash_distance'] * 2]
+		)
+
+		if collision:
+			sprite = get_closest_sprite(self.player, [c[0] for c in collision])
+			if get_distance(self.player, sprite) <= self.talent_info['min_dash_distance']:
+				return
+			
+			for col in collision:
+				if col[0] == sprite:
+					position = col[1][0][0] - (self.talent_info['min_dash_distance'] * direction)
+
+		self.talent_info['position'] = position
+
+		super().call(call, scene, info)
+		
+		img = pygame.mask.from_surface(self.player.image.copy()).to_surface(
+			setcolor=self.talent_info['dash_color'],
+			unsetcolor=(0, 0, 0, 0)
+		)
+
+		image = Image(
+			self.player.rect.center,
+			img,
+			0,
+			155
+		)
+		
+		image.set_goal(20, alpha=0)
+		image.set_beziers(alpha=[*presets['rest'], 0])
+
+		self.player.rect.centerx = position
+		self.player.set_gravity(self.talent_info['gravity_frames'], 1, 5)
+		self.player.velocity[1] = 0
+		
+		self.player.img_info['pulse_frames'] = 30
+		self.player.img_info['pulse_frames_max'] = 30
+		self.player.img_info['pulse_frame_color'] = self.talent_info['dash_color']
+		self.player.img_info['pulse_frame_bezier'] = [[0, 0], [0, 0], [0, 0], [1, 0], 0]
+		
+		cir = Circle(
+			[0, 0],
+			self.talent_info['dash_color'],
+			0,
+			5,
+			self.player
+		)
+
+		cir.set_goal(12, position=[0, 0], radius=60, width=1, alpha=0)
+		cir.set_beziers(alpha=[*presets['rest'], 0])
+
+		scene.add_sprites(image, cir)
+		scene.camera.set_camera_tween(30)
+
+class FromTheShadows(Talent):	
+	TALENT_ID = 'from_the_shadows'
+	TALENT_CALLS = ['on_shadowstep']
+
+	DESCRIPTION = {
+		'name': 'From the Shadows',
+		'description': 'Deal damage to enemies in the path of your shadowstep.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'from-the-shadows',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['other']
+			]
+		}
+
+		return card_info
+
+	@staticmethod
+	def check_draw_condition(player):
+		if get_talent(player, 'shadowstep'):
+			return True
+		
+		return False
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['hitbox_range'] = [2, 20] 
+
+		self.talent_info['damage_type'] = 'magical'
+		self.talent_info['damage_multiplier'] = .75
+		self.talent_info['damage_color'] = (120, 80, 140)
+
+	def call(self, call, scene, info):
+		collision = check_line_collision(
+			self.player.center_position, 
+			[info.talent_info['position'], self.player.rect.centery], 
+			scene.get_sprites('enemy')
+		)
+
+		for i in range(self.talent_info['hitbox_range'][0]):
+			offset = (self.talent_info['hitbox_range'][1] * (i + 1))
+		
+			for c in check_line_collision(
+				[self.player.center_position[0], self.player.center_position[1] + offset], 
+				[info.talent_info['position'], self.player.rect.centery + offset], 
+				scene.get_sprites('enemy')
+			):
+				collision.append(c)
+
+			for c in check_line_collision(
+				[self.player.center_position[0], self.player.center_position[1] - offset], 
+				[info.talent_info['position'], self.player.rect.centery - offset], 
+				scene.get_sprites('enemy')
+			):
+				collision.append(c)
+
+		if not collision:
+			return
+		
+		super().call(call, scene, info)
+
+		enemies = [*set([e[0] for e in collision])]
+		
+		if enemies:
+			scene.set_dt_multiplier(.5, 10)
+
+		particles = []
+		for enemy in enemies:
+			register_damage(
+				scene,
+				self.player,
+				enemy,
+				{'type': self.talent_info['damage_type'], 'amount': self.player.combat_info['base_damage'] * self.talent_info['damage_multiplier']}
+			)
+
+			pos = enemy.center_position
+			for _ in range(4):
+				cir = Circle(pos, self.talent_info['damage_color'], random.randint(6, 8), 0)
+				cir.set_goal(
+							75, 
+							position=(pos[0] + random.randint(-75, 75), pos[1] + random.randint(-75, 75)), 
+							radius=0, 
+							width=0
+						)
+
+				particles.append(cir)
+
+			scene.add_sprites(particles)    

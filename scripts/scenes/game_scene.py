@@ -107,7 +107,7 @@ class GameScene(Scene):
 
             'card_death_counter': 0,
 
-            'spawn_cooldown': [120, 120],
+            'spawn_cooldown': [105, 105],
             'spawn_positions': {},
             'spawn_distance': 750
         }
@@ -141,7 +141,7 @@ class GameScene(Scene):
             enemy.center_position[1] - random.randint(25, 50)
         ]
 
-        card = StandardCardInteractable(enemy.center_position, 9)
+        card = StandardCardInteractable(enemy.center_position, None, None, 9, 0)
 
         collide_tiles = True
         while collide_tiles:
@@ -237,12 +237,10 @@ class GameScene(Scene):
 
             self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
 
-            enemies = ENEMIES[1][0:position[0]]
-
             enemy_position = [position[1][0] + random.randint(-50, 50), position[1][1] + random.randint(-50, 50)]
-            enemy = random.choice(enemies)(enemy_position, 6)
+            enemy = ENEMIES[1][position[0] - 1](enemy_position, 6)
 
-            particle_position = [enemy_position[0] + enemy.image.get_width(), enemy_position[1] + enemy.image.get_height()]
+            particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
             particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
             particle.set_goal(30, radius=0, width=1, alpha=0)
 
@@ -278,6 +276,24 @@ class GameScene(Scene):
 
             if flag.split('_')[0] + flag.split('_')[1] == 'enemyspawn':
                 self.enemy_info['spawn_positions'][int(flag.split('_')[2])] = tilemap['flags'][flag]
+
+    def load_card_event(self, cards, flavor_text):    
+        self.in_menu = True
+        self.paused = True
+
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
+        self.scene_fx['&dim']['type'] = 'in'
+
+        self.scene_fx['&dim']['amount'] = .75
+        self.scene_fx['&dim']['frames'][1] = 30
+            
+        self.scene_fx['&dim']['threshold'] = 1
+
+        for frame in self.ui_elements:
+            frame.set_alpha_bezier(0, 30, presets['ease_out'])
+
+        self.add_sprites(cards)
+        self.add_sprites(flavor_text)
 
     def remove_cards(self, selected_card, cards, flavor_text):
         for card in cards:
@@ -315,7 +331,7 @@ class GameScene(Scene):
         self.scene_fx['&dim']['frames'][1] = 30
 
         for frame in self.ui_elements:
-            frame.image.set_alpha(255)
+            frame.set_alpha_bezier(255, 30, presets['ease_out'])
 
         return True
     
@@ -402,7 +418,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
@@ -451,7 +467,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:
@@ -491,7 +507,7 @@ class GameScene(Scene):
         flavor_text.rect.x = ((SCREEN_DIMENSIONS[0] * .5) - (flavor_text.image.get_width() * .5))
         flavor_text.image.set_alpha(0)
 
-        flavor_text.set_y_bezier(y - 150, 45, presets['ease_out'])
+        flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
         for card in cards:

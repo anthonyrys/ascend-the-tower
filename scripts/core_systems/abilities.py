@@ -1,6 +1,6 @@
 from scripts import PLAYER_COLOR
 
-from scripts.core_systems.talents import call_talents
+from scripts.core_systems.talents import call_talents, get_talent
 from scripts.core_systems.combat_handler import register_damage
 
 from scripts.entities.projectile import ProjectileStandard
@@ -91,6 +91,7 @@ class Dash(Ability):
 
         self.ability_info['cooldown_timer'] = 30
         self.ability_info['velocity'] = character.movement_info['max_movespeed'] * 3
+        self.ability_info['current_keybind'] = None
 
         self.keybind_info['double_tap'] = True
         self.keybind_info['keybinds'] = ['left', 'right']
@@ -105,9 +106,13 @@ class Dash(Ability):
         
         if any(list(self.character.overrides.values())):
             return
-
+        
+        self.ability_info['current_keybind'] = keybind
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         super().call(scene, keybind)
+
+        if get_talent(self.character, 'shadowstep'):
+            return
 
         if keybind == 'left':
             self.character.velocity[0] = -self.ability_info['velocity']
@@ -128,7 +133,8 @@ class PrimaryAttack(Ability):
         self.state = 'inactive'
         self.collision_state = None
 
-        self.can_call = False
+        self.charges = 0
+        self.max_charges = 1
 
         self.velocity = []
         self.start = []
@@ -224,7 +230,7 @@ class PrimaryAttack(Ability):
         scene.add_sprites(particles)   
 
     def call(self, scene, keybind=None): 
-        if self.ability_info['cooldown'] > 0 or not self.can_call:
+        if self.ability_info['cooldown'] > 0 or self.charges <= 0:
             return
         
         if any(list(self.character.overrides.values())):
@@ -245,7 +251,7 @@ class PrimaryAttack(Ability):
         
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['damage'] = self.character.combat_info['base_damage']
-        self.can_call = False
+        self.charges -= 1
 
         super().call(scene, keybind)
 
@@ -330,7 +336,7 @@ class PrimaryAttack(Ability):
     def update(self, scene, dt):
         if self.state != 'active':
             if self.character.collide_points['bottom']:
-                self.can_call = True
+                self.charges = self.max_charges
         
             super().update(scene, dt)
             return

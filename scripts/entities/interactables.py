@@ -46,9 +46,11 @@ class Interactable(Entity):
         super().display(scene, dt)
 
 class StandardCardInteractable(Interactable):
-    def __init__(self, position, strata, alpha=0):
-        image = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
-        super().__init__(position, image, None, strata, alpha)
+    def __init__(self, position, img, dimensions, strata=None, alpha=255):
+        if img is None:
+            img = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
+
+        super().__init__(position, img, dimensions, strata, alpha)
         self.secondary_sprite_id = 'standard_card_interactable'
         self.interactable = False
 
@@ -70,26 +72,8 @@ class StandardCardInteractable(Interactable):
 
         scene.add_sprites(particle)
 
-        if not cards or not text:
-            scene.del_sprites(self)
-            return
-        
-        scene.in_menu = True
-        scene.paused = True
-
-        scene.scene_fx['&dim']['bezier'] = presets['ease_out']
-        scene.scene_fx['&dim']['type'] = 'in'
-
-        scene.scene_fx['&dim']['amount'] = .75
-        scene.scene_fx['&dim']['frames'][1] = 30
-            
-        scene.scene_fx['&dim']['threshold'] = 1
-
-        for frame in scene.ui_elements:
-            frame.image.set_alpha(100)
-
-        scene.add_sprites(cards)
-        scene.add_sprites(text)
+        if cards and text:
+            scene.load_card_event(cards, text)
 
         scene.del_sprites(self)
 
@@ -114,30 +98,16 @@ class StatCardInteractable(Interactable):
     def on_interact(self, scene, sprite):
         cards, text = scene.generate_stat_cards()
 
-        scene.in_menu = True
-        scene.paused = True
-
-        scene.scene_fx['&dim']['bezier'] = presets['ease_out']
-        scene.scene_fx['&dim']['type'] = 'in'
-
-        scene.scene_fx['&dim']['amount'] = .75
-        scene.scene_fx['&dim']['frames'][1] = 30
-        
-        scene.scene_fx['&dim']['threshold'] = 1
-
-        for frame in scene.ui_elements:
-            frame.image.set_alpha(100)
-
-        scene.add_sprites(cards)
-        scene.add_sprites(text)
-
-        scene.del_sprites(self)
-
         particle = Circle([0, 0], PLAYER_COLOR, 0, 5, self)
         particle.set_goal(15, position=[0, 0], radius=40, width=1, alpha=0)
         particle.set_beziers(alpha=[*presets['rest'], 0])
 
         scene.add_sprites(particle)
+
+        if cards and text:
+            scene.load_card_event(cards, text)
+
+        scene.del_sprites(self)
 
     def display(self, scene, dt):
         self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))

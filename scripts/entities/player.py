@@ -14,7 +14,7 @@ from scripts.ui.info_bar import HealthBar
 from scripts.ui.hotbar import Hotbar
 
 from scripts.utils.inputs import Inputs
-from scripts.utils.bezier import presets
+from scripts.utils.bezier import presets, get_bezier_point
 
 
 import pygame
@@ -33,7 +33,7 @@ class Player(GameEntity):
 
             self.glow['active'] = True
             self.glow['size'] = 1.2
-            self.glow['intensity'] = .4
+            self.glow['intensity'] = .5
 
             self.sin_amplifier = 1
             self.sin_frequency = .05
@@ -51,7 +51,7 @@ class Player(GameEntity):
                 self.glow['active'] = False
                 self.image.set_alpha(55)
 
-            elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+            elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.charges and not self.glow['active']:
                 self.glow['active'] = True
                 self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 
@@ -93,6 +93,7 @@ class Player(GameEntity):
             'pulse_frames': 0,
             'pulse_frames_max': 0,
             'pulse_frame_color': (),
+            'pulse_frame_bezier': [*presets['rest'], 0],
 
             'afterimage_frames': [0, 1]
         }
@@ -260,6 +261,7 @@ class Player(GameEntity):
         self.img_info['pulse_frames'] = 30
         self.img_info['pulse_frames_max'] = 30
         self.img_info['pulse_frame_color'] = ENEMY_COLOR
+        self.img_info['pulse_frame_bezier'] = [*presets['rest'], 0]
 
         img = TextBox.create_text_line('default', info['amount'], size=1.0, color=UI_HEALTH_COLOR)
         particle = Image((50, 50), img, 5, 255)
@@ -502,7 +504,7 @@ class Player(GameEntity):
                 unsetcolor=(0, 0, 0, 0)
             )
 
-            img.set_alpha(255 * (self.img_info['pulse_frames'] / self.img_info['pulse_frames_max'])) 
+            img.set_alpha(255 * get_bezier_point((self.img_info['pulse_frames'] / self.img_info['pulse_frames_max']), *self.img_info['pulse_frame_bezier'])) 
             scene.entity_surface.blit(img, (self.rect.x - self.rect_offset[0], self.rect.y - self.rect_offset[1]))
 
             self.img_info['pulse_frames'] -= 1 * dt

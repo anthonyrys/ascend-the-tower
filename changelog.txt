@@ -450,73 +450,219 @@ v0.5.0
         Issue where Block collisions fail at larger lag spikes
 
 v0.5.1
-[ADD]
-    Tilemap cards-interactable image file
+    [ADD]
+        Tilemap cards-interactable image file
     
-    Interactable file
-        ^ Get_all_interactables function
-        ^ Interactable baseclass
-        ^ StandardCardInteractable and StatCardInteractable classes
+        Interactable file
+            ^ Get_all_interactables function
+            ^ Interactable baseclass
+            ^ StandardCardInteractable and StatCardInteractable classes
 
-    Particle effect for Card Interactables
+        Particle effect for Card Interactables
 
-    ENEMIES dictionary to enemy file
+        ENEMIES dictionary to enemy file
 
-    GameScene on_enemy_death functionality
+        GameScene on_enemy_death functionality
 
-    Enemy spawning via Tilemap flags
-    Interactables to load_tilemap function
+        Enemy spawning via Tilemap flags
+        Interactables to load_tilemap function
 
-    Color value to Card hover_info dictionary
+        Color value to Card hover_info dictionary
 
-    Bezier file
+        Bezier file
 
-[REWORK]
-    Easings functions into bezier curve points
+    [REWORK]
+        Easings functions into bezier curve points
 
-[CHANGE]
-    Tilemap funcs tileset to 1c
+    [CHANGE]
+        Tilemap funcs tileset to 1c
     
-    PrimaryAttack trail to particles
+        PrimaryAttack trail to particles
 
-    Sprite file to prefabs directory from utils directory
+        Sprite file to prefabs directory from utils directory
 
-    Load_tilemap function flags dictionary values to dynamic lists
+        Load_tilemap function flags dictionary values to dynamic lists
 
-    WheelOfFortune display_text function to call create_text_line
-    Enemy on_damaged function to call create_text_line
-    Player on_damaged and on_healed function to call create_text_line
-        ^ Previously initialized TextBox object
+        WheelOfFortune display_text function to call create_text_line
+        Enemy on_damaged function to call create_text_line
+        Player on_damaged and on_healed function to call create_text_line
+            ^ Previously initialized TextBox object
 
-    Textbox create_text_line function to convert text argument to str
+        Textbox create_text_line function to convert text argument to str
 
-    Stat card text color to PLAYER COLOR from (255, 255, 255)
-    Stat card hover color to PLAYER COLOR from (255, 255, 255)
+        Stat card text color to PLAYER COLOR from (255, 255, 255)
+        Stat card hover color to PLAYER COLOR from (255, 255, 255)
 
-[INCREASE]
-    PrimaryAttack particle size to 1.75 from 1.5
+    [INCREASE]
+        PrimaryAttack particle size to 1.75 from 1.5
 
-[REMOVE]
-    Arena-crystal image file
+    [REMOVE]
+        Arena-crystal image file
 
-    Player interact_info variable
-    Player get_interactable variable
+        Player interact_info variable
+        Player get_interactable variable
 
-    Sandbox generate_standard_cards keybinding and ui
-    Sandbox generate_stat_cards keybinding and ui
+        Sandbox generate_standard_cards keybinding and ui
+        Sandbox generate_stat_cards keybinding and ui
 
-    Sandbox spawn_enemy keybinding and ui
+        Sandbox spawn_enemy keybinding and ui
 
-    Easing file
+        Easing file
 
-    Inputs interact keybind
+        Inputs interact keybind
 
-[FIX]
-    Lag issues for larger tiled maps
+    [FIX]
+        Lag issues for larger tiled maps
 
-    PrimaryAttack particles not being affected by dt
+        PrimaryAttack particles not being affected by dt
 
-    Card Interactables being able to spawn inside tiles
-    Card Interactables prompting cards selection when unavaliable
+        Card Interactables being able to spawn inside tiles
+        Card Interactables prompting cards selection when unavaliable
 
-    Sprite class not applying alpha correctly
+        Sprite class not applying alpha correctly
+
+v0.5.2
+    v0.5.2-test.1
+        [ADD]
+            GameScene load_card_event function
+
+        [CHANGE]
+            Tilemap Enemy spawning positions
+
+            Grelemental enemy image file name to elemental
+            Rgolem enemy image file name to golem
+            Stentry enemy image file name to sentry
+
+            RockGolem enemy name to Golem
+                ^ RockGolem secondary_sprite_id to golem from rgolem
+            StoneSentry enemy name to Sentry
+                ^ StoneSentry secondary_sprite_id to sentry from stentry
+            GraniteElemental enemy name to Elemental
+                ^ GraniteElemental secondary_sprite_id to elemental from grelemental
+
+            StandardCardInteractable and StatCardInteractable to call GameScene load_card_event function
+
+            GameScene flavor_text y transition duration to 30 frames from 45
+            GameScene ui_elements to completely fade out during load_card_event function
+
+        [REMOVE]
+            Changelog-test file
+
+    v0.5.2-test.2
+        [REWORK]
+            FloaterAi behavior
+
+        [CHANGE]
+            Elemental enemy image file
+
+            OnFire particle color to (255, 144, 98) from (255, 88, 34)
+
+            Elemental enemy img_info variable and set_images function
+            Elemental enemy max_health to 30 from 100
+
+            Elemental activation_frames to 120 from 60
+            
+            Elemental Blast amount to 3 from 1
+            Elemental Blast collisions to only Player
+
+        [REMOVE]
+            Elemental enemy activation_frames particle
+
+    v0.5.2-test.3
+        [ADD]
+            FloaterAi distance calculations for entity movespeed
+
+            Elemental Blast projectile_display function
+            Elemental enemy img_info tertiary_color value
+
+            Projectile display value to settings
+            Projectile visual outlines
+
+            Sandbox generate_standard_cards keybinding and ui
+            Sandbox generate_stat_cards keybinding and ui
+
+        [CHANGE]
+            Reprisal talent strata to +1 from -1 relative to Player
+            Reprisal projectile strata to match talent strata
+
+            Elemental enemy image particle color to be random
+
+            GameScene enemy tiles to spawn one enemy instead of a range
+
+        [INCREASE]
+            Reprisal projectile speed to 20 from 15
+
+            Elemental Blast status_effect_multiplier to .5 from .25
+
+            Player Halo glow intensity to .5 from .4
+
+        [DECREASE]
+            Elemental Blast damage_multipler to .5 from .6
+            Elemental Blast amount to 1 from 3
+
+            Elemental enemy activation_frames to 90 from 120
+
+        [REMOVE]
+            Trail value from Projectile base class
+
+        [FIX]
+            Issue where Elemental Blast OnFire debuff would ignore immunities
+            Issue where Elemental enemy glow pattern was not affected by dt
+
+            Issue where enemy spawn particles was not properly aligned
+
+    v0.5.2-test.4
+        [ADD]
+            Additional tilemap tiles
+
+            Shadowstep talent icon
+            FromTheShadows talent icon
+            
+            Dash ability_info current_keybind value
+
+            Shadowstep talent
+            FromTheShadows talent
+
+            Player pulse_frame_bezier img_info value
+
+            Elemental enemy eye visuals
+
+        [CHANGE]
+            Elemental enemy glow to be static rather than a sine wave
+
+            StandardCardInteractable class __init__ parameters to be consistent with StatCardInteractable
+
+        [DECREASE]
+            OnFire particle_rate to 0/3 from 0/1
+            OnFire particle randomized position range
+
+            Elemental Blast projectile particle randomized position range
+            Elemental Blast projectile particle duration to 30 from 60
+
+            Elemental Blast projectile particle_rate to 0/2 from 0/1
+            Elemental enemy particle_rate to 0/4 from 0/1
+
+        [FIX]
+            Issue where CameraTemplate would not transition correctly between tweens
+
+    v0.5.2-test.5
+        [CHANGE]
+            Shadowstep talent icon
+
+            PrimaryAbility can_call variable to charges
+
+            StingLikeABee talent functionality
+                ^ Now allows player to use PrimaryAbility an additonal time while airborne
+            StingLikeABee talent description
+
+            FromTheShadows talent description slightly
+            FromTheShadows talent damage_percentage value to damage_multiplier
+
+        [DECREASE]
+            FromTheShadows talent damage_multiplier to .75 from 1
+
+    v0.5.2-main
+        [CHANGE]
+            Tilemap tiles
+
+            GameScene spawn_cooldown timer to 105 frames from 120

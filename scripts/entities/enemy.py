@@ -14,7 +14,7 @@ from scripts.services import load_spritesheet
 from scripts.ui.info_bar import EnemyBar
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_sprite_colors, check_pixel_collision, get_distance, check_line_collision
+from scripts.utils import get_sprite_colors, check_pixel_collision, check_line_collision
 from scripts.utils.bezier import presets
 
 import pygame
@@ -229,10 +229,10 @@ class FloaterEnemy(Enemy):
         self.ai = FloaterAi(self)
 
 
-class RockGolem(HumanoidEnemy):
+class Golem(HumanoidEnemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((40, 80)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'rgolem'
+        self.secondary_sprite_id = 'golem'
 
         self.rect_offset = [self.rect.width / 2, 0]
 
@@ -367,10 +367,10 @@ class RockGolem(HumanoidEnemy):
         self.set_images(scene, dt)
         super().display(scene, dt)
 
-class StoneSentry(FlyerEnemy):
+class Sentry(FlyerEnemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'stentry'
+        self.secondary_sprite_id = 'sentry'
 
         self.default_movement_info = {
             'direction': 0,
@@ -494,17 +494,19 @@ class StoneSentry(FlyerEnemy):
         self.apply_afterimages(scene, dt)
         super().display(scene, dt)
 
-class GraniteElemental(FloaterEnemy):
+class Elemental(FloaterEnemy):
     class Blast(Ability):
         def __init__(self, character):
             super().__init__(character)
         
-            self.ability_info['damage_multiplier'] = .6
+            self.ability_info['damage_multiplier'] = .5
             self.ability_info['speed'] = 15
 
             self.ability_info['signature'] = f'{self.character.secondary_sprite_id}_blast'
             self.ability_info['duration'] = 30
-            self.ability_info['status_effect_multiplier'] = .25
+            self.ability_info['status_effect_multiplier'] = .5
+
+            self.ability_info['particle_rate'] = [0, 2]
 
         def collision_default(self, scene, projectile, sprite):
             particles = []
@@ -532,9 +534,12 @@ class GraniteElemental(FloaterEnemy):
 
         def collision_player(self, scene, projectile, sprite):
             self.collision_default(scene, projectile, sprite)
-            register_damage(scene, self.character, sprite, {
+            registered = register_damage(scene, self.character, sprite, {
                 'type': 'magical', 
                 'amount': self.character.combat_info['base_damage'] * self.ability_info['damage_multiplier']})
+
+            if not registered:
+                return
 
             has_debuff = get_debuff(sprite, self.ability_info['signature'])
 
@@ -545,7 +550,28 @@ class GraniteElemental(FloaterEnemy):
             damage = self.character.combat_info['base_damage'] * self.ability_info['status_effect_multiplier']
             debuff = OnFire(self.character, sprite, self.ability_info['signature'], damage, self.ability_info['duration'], size=5)
             sprite.debuffs.append(debuff)
+        
+        def projectile_display(self, projectile, scene, dt):
+            self.ability_info['particle_rate'][0] += 1 * dt
+            if self.ability_info['particle_rate'][0] < self.ability_info['particle_rate'][1]:
+                return
             
+            self.ability_info['particle_rate'][0] = 0
+
+            pos = projectile.center_position
+            pos[0] += random.randint(-20, 20)
+            pos[1] += random.randint(-10, 0)
+
+            particle = Circle(pos, self.character.img_info['tertiary_color'], 5, 0)
+            particle.strata = projectile.strata - 1
+            particle.set_goal(30, position=[pos[0] + random.randint(-25, 25), pos[1] + random.randint(-25, 0)], radius=0, width=0)
+
+            particle.glow['active'] = True
+            particle.glow['size'] = 2
+            particle.glow['intensity'] = .25
+
+            scene.add_sprites(particle)
+
         def call(self, scene, keybind=None):
             if self.character.ability_info['activation_cancel']:
                 return
@@ -561,7 +587,7 @@ class GraniteElemental(FloaterEnemy):
 
             proj_info = {
                 'collision': 'pixel',
-                'collisions': ['player', 'tile'],
+                'collisions': ['player'],
                 'collision_function': {
                     'player': self.collision_player,
                     'default': self.collision_default
@@ -573,10 +599,12 @@ class GraniteElemental(FloaterEnemy):
                 proj_info,
                 velocity=vel,
                 duration=90,
-                settings={
-                    'trail': True
-                }
+                settings={'display': self.projectile_display}
             )
+
+            proj.glow['active'] = True
+            proj.glow['size'] = 1.5
+            proj.glow['intensity'] = .25
 
             particles = []
             for _ in range(5):
@@ -601,13 +629,12 @@ class GraniteElemental(FloaterEnemy):
             scene.add_sprites(proj)
 
     def __init__(self, position, strata, level=1):
-        super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
-        self.secondary_sprite_id = 'grelemental'
+        super().__init__(position, pygame.Surface((40, 40)).convert_alpha(), None, strata, None)
+        self.secondary_sprite_id = 'elemental'
 
-        self.image.fill((0, 0, 0, 0))
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png')).convert_alpha()
-        img = pygame.transform.scale(img, (img.get_width() * 2, img.get_height() * 2))
-        self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+        self.glow['active'] = True
+        self.glow['intensity'] = .25
+        self.glow['size'] = 1.15
 
         self.default_movement_info = {
             'direction': 0,
@@ -616,7 +643,7 @@ class GraniteElemental(FloaterEnemy):
             'friction_frames': 0,
 
             'per_frame_movespeed': .5,
-            'max_movespeed': 4,
+            'max_movespeed': 10,
 
             'jump_power': 1,
             'jumps': 0,
@@ -626,8 +653,8 @@ class GraniteElemental(FloaterEnemy):
         self.movement_info = self.default_movement_info.copy()
 
         self.default_combat_info = {
-            'max_health': 100,
-            'health': 100,
+            'max_health': 30,
+            'health': 30,
             
             'health_regen_amount': 0,
             'health_regen_tick': 0,
@@ -663,22 +690,20 @@ class GraniteElemental(FloaterEnemy):
             'damage_frames': 0,
             'damage_frames_max': 0,
 
-            'sin_count': 0,
-            'sin_amplifier': .01,
+            'color': (255, 144, 98),
+            'secondary_color': (255, 158, 107),
+            'tertiary_color': (255, 172, 107),
 
-            'size': 10,
-            'color': (230, 100, 30),
-            'secondary_color': (255, 40, 0),
+            'particle_rate': [0, 4],
 
-            'radius': 65,
-            'angle': 0,
-            'position': [0, 0],
-
-            'angle_speed': 3
+            'imgs': [],
+            'img_frames': 0
         }
 
+        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'), scale=2)
+
         self.ability_info = {
-            'activation_frames': [0, 60],
+            'activation_frames': [0, 90],
             'activation_cancel': False
         }
 
@@ -691,34 +716,47 @@ class GraniteElemental(FloaterEnemy):
         self.ability_info['activation_cancel'] = True
 
     def set_images(self, scene, dt):
-        self.img_info['sin_count'] += 1 * dt
+        self.img_info['img_frames'] += (1 * .3) * dt
+        if self.img_info['img_frames'] >= len(self.img_info['imgs']) - 1:
+            self.img_info['img_frames'] = 0
 
-        self.img_info['angle'] += self.img_info['angle_speed'] * dt
+        self.image.fill((0, 0, 0, 0))
+        self.image.blit(
+            self.img_info['imgs'][round(self.img_info['img_frames'])], 
+            self.img_info['imgs'][round(self.img_info['img_frames'])].get_rect(center=self.image.get_rect().center)
+        )
 
-        a = (self.img_info['angle'] - 90) * math.pi / 180
-        x = self.img_info['radius'] * math.cos(a)
-        y = self.img_info['radius'] * math.sin(a)
-
-        pos = [
-            self.center_position[0] + x,
-            self.center_position[1] + y
-        ]
-
-        self.img_info['position'] = pos
-
-        pygame.draw.circle(scene.entity_surface, self.img_info['color'], pos, self.img_info['size'])
-
-        for i in range(7):
-            ab = ((self.img_info['angle'] - self.img_info['angle_speed'] * (i + 2)) - 90) * math.pi / 180
-            xb = self.img_info['radius'] * math.cos(ab)
-            yb = self.img_info['radius'] * math.sin(ab)
-
-            posb = [
-                self.center_position[0] + xb,
-                self.center_position[1] + yb
+        if self.img_info['damage_frames'] <= 0:
+            direction = [
+                scene.player.center_position[0] - self.center_position[0],
+                scene.player.center_position[1] - self.center_position[1]
             ]
+            multiplier = 6 / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+            vel = [direction[0] * multiplier, direction[1] * multiplier]
 
-            pygame.draw.circle(scene.entity_surface, self.img_info['color'], posb, (self.img_info['size'] - (i + 1)))
+            position = [self.image.get_rect().centerx + vel[0], self.image.get_rect().centery + vel[1] + 3]
+            pygame.draw.circle(self.image, (0, 0, 0, 0), [position[0] + 6, position[1]], 4)
+            pygame.draw.circle(self.image, (0, 0, 0, 0), [position[0] - 6, position[1]], 4)
+
+        self.img_info['particle_rate'][0] += 1 * dt
+        if self.img_info['particle_rate'][0] < self.img_info['particle_rate'][1]:
+            return
+        
+        self.img_info['particle_rate'][0] = 0
+
+        pos = self.center_position
+        pos[0] += random.randint(-20, 20)
+        pos[1] += random.randint(-20, -10)
+
+        particle = Circle(pos, get_sprite_colors(self)[0], 7, 0)
+        particle.strata = self.strata - 1
+        particle.set_goal(60, position=[pos[0] + random.randint(-50, 50), pos[1] + random.randint(-75, 0)], radius=0, width=0)
+
+        particle.glow['active'] = True
+        particle.glow['size'] = 2
+        particle.glow['intensity'] = .25
+
+        scene.add_sprites(particle)
 
     def display(self, scene, dt):
         if scene.paused:
@@ -734,22 +772,9 @@ class GraniteElemental(FloaterEnemy):
         if self.ability_info['activation_frames'][0] >= self.ability_info['activation_frames'][1]:
             self.ability_info['activation_cancel'] = False
             self.ability_info['activation_frames'][0] = 0
-            particle = Circle(
-                [0, 0],
-                self.img_info['color'],
-                65,
-                3,
-                self
-            )
-
-            particle.set_goal(20, position=[0, 0], radius=0, width=3, alpha=0)
-            particle.set_beziers(radius=[*presets['rest'], 0], alpha=presets['ease_in'])
-            scene.add_sprites(particle)
-
-            self.delay_timers.append([25, random.choice(self.abilities).call, [scene]])
+            self.delay_timers.append([30, random.choice(self.abilities).call, [scene]])
 
         self.ai.update(scene, dt, scene.player)
-        self.apply_gravity(dt, .05)
 
         if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
             self.velocity[0] = 0
@@ -762,5 +787,5 @@ class GraniteElemental(FloaterEnemy):
 
 
 ENEMIES = {
-    1: [RockGolem, StoneSentry, GraniteElemental]
+    1: [Golem, Sentry, Elemental]
 }
