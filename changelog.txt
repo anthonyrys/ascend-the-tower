@@ -644,3 +644,19 @@ v0.5.2
 
         [FIX]
             Issue where CameraTemplate would not transition correctly between tweens
+
+    v0.5.2-test.5
+        [CHANGE]
+            Shadowstep talent icon
+
+            PrimaryAbility can_call variable to charges
+
+            StingLikeABee talent functionality
+                ^ Now allows player to use PrimaryAbility an additonal time while airborne
+            StingLikeABee talent description
+
+            FromTheShadows talent description slightly
+            FromTheShadows talent damage_percentage value to damage_multiplier
+
+        [DECREASE]
+            FromTheShadows talent damage_multiplier to .75 from 1

@@ -225,7 +225,7 @@ class StingLikeABee(Talent):
 
 	DESCRIPTION = {
 		'name': 'Sting Like A Bee',
-		'description': 'Hitting an enemy with your primary attack allows you to use it again while airborne.'
+		'description': 'Your primary attack is usuable while airborne an additional time.'
 	}
 
 	@staticmethod
@@ -253,10 +253,7 @@ class StingLikeABee(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-	def call(self, call, scene, info):
-		super().call(call, scene, info)
-
-		info.can_call = True
+		player.abilities['primary'].max_charges += 1
 
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
@@ -330,7 +327,7 @@ class Temperance(Talent):
 				self.glow['active'] = False
 				self.image.set_alpha(55)
 
-			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+			elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.charges and not self.glow['active']:
 				self.glow['active'] = True
 				self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 
@@ -1331,7 +1328,7 @@ class FromTheShadows(Talent):
 
 	DESCRIPTION = {
 		'name': 'From the Shadows',
-		'description': 'You deal damage to enemies in the path of your shadowstep.'
+		'description': 'Deal damage to enemies in the path of your shadowstep.'
 	}
 
 	@staticmethod
@@ -1362,7 +1359,7 @@ class FromTheShadows(Talent):
 		self.talent_info['hitbox_range'] = [2, 20] 
 
 		self.talent_info['damage_type'] = 'magical'
-		self.talent_info['damage_percentage'] = 1
+		self.talent_info['damage_multiplier'] = .75
 		self.talent_info['damage_color'] = (120, 80, 140)
 
 	def call(self, call, scene, info):
@@ -1405,7 +1402,7 @@ class FromTheShadows(Talent):
 				scene,
 				self.player,
 				enemy,
-				{'type': self.talent_info['damage_type'], 'amount': self.player.combat_info['base_damage'] * self.talent_info['damage_percentage']}
+				{'type': self.talent_info['damage_type'], 'amount': self.player.combat_info['base_damage'] * self.talent_info['damage_multiplier']}
 			)
 
 			pos = enemy.center_position

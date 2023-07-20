@@ -51,7 +51,7 @@ class Player(GameEntity):
                 self.glow['active'] = False
                 self.image.set_alpha(55)
 
-            elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.can_call and not self.glow['active']:
+            elif primary_ability.ability_info['cooldown'] <= 0 and primary_ability.charges and not self.glow['active']:
                 self.glow['active'] = True
                 self.set_alpha_bezier(255, 5, [*presets['rest'], 0])
 

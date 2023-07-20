@@ -1,5 +1,5 @@
 TITLE = 'Ascend The Tower'
-VERSION = '0.5.2-test.4'
+VERSION = '0.5.2-test.5'
 
 FRAME_RATE = 30
 

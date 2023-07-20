@@ -133,7 +133,8 @@ class PrimaryAttack(Ability):
         self.state = 'inactive'
         self.collision_state = None
 
-        self.can_call = False
+        self.charges = 0
+        self.max_charges = 1
 
         self.velocity = []
         self.start = []
@@ -229,7 +230,7 @@ class PrimaryAttack(Ability):
         scene.add_sprites(particles)   
 
     def call(self, scene, keybind=None): 
-        if self.ability_info['cooldown'] > 0 or not self.can_call:
+        if self.ability_info['cooldown'] > 0 or self.charges <= 0:
             return
         
         if any(list(self.character.overrides.values())):
@@ -250,7 +251,7 @@ class PrimaryAttack(Ability):
         
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['damage'] = self.character.combat_info['base_damage']
-        self.can_call = False
+        self.charges -= 1
 
         super().call(scene, keybind)
 
@@ -335,7 +336,7 @@ class PrimaryAttack(Ability):
     def update(self, scene, dt):
         if self.state != 'active':
             if self.character.collide_points['bottom']:
-                self.can_call = True
+                self.charges = self.max_charges
         
             super().update(scene, dt)
             return
