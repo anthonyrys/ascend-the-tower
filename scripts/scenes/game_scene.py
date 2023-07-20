@@ -107,7 +107,7 @@ class GameScene(Scene):
 
             'card_death_counter': 0,
 
-            'spawn_cooldown': [120, 120],
+            'spawn_cooldown': [105, 105],
             'spawn_positions': {},
             'spawn_distance': 750
         }

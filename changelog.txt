@@ -660,3 +660,9 @@ v0.5.2
 
         [DECREASE]
             FromTheShadows talent damage_multiplier to .75 from 1
+
+    v0.5.2-main
+        [CHANGE]
+            Tilemap tiles
+
+            GameScene spawn_cooldown timer to 105 frames from 120
