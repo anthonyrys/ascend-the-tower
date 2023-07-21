@@ -1,4 +1,4 @@
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 
 from scripts.services import load_spritesheet
 

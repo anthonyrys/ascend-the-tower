@@ -1,7 +1,7 @@
 from scripts import ENEMY_COLOR
 
-from scripts.entities.particle_fx import Image
-from scripts.entities.entity import Entity
+from scripts.visual_fx.particle import Image
+from scripts.prefabs.entity import Entity
 
 from scripts.utils import check_pixel_collision, check_line_collision, get_distance
 

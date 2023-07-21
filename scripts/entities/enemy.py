@@ -6,7 +6,7 @@ from scripts.core_systems.enemy_ai import HumanoidAi, FlyerAi, FloaterAi
 from scripts.core_systems.status_effects import OnFire, get_debuff
 
 from scripts.entities.game_entity import GameEntity
-from scripts.entities.particle_fx import Circle, Image
+from scripts.visual_fx.particle import Circle, Image
 from scripts.entities.projectile import ProjectileStandard
 
 from scripts.services import load_spritesheet
