@@ -19,6 +19,8 @@ if __name__ == '__main__':
     
     from scripts.scenes.scene_handler import SceneHandler
     
+    from scripts.services.sfx_manager import Sfx
+
     from scripts.utils.fonts import Fonts
     from scripts.utils.inputs import Inputs
 
@@ -26,6 +28,7 @@ if __name__ == '__main__':
     import sys
     
     pygame.init()
+    pygame.mixer.init()
 
     pygame.display.set_caption(f'{TITLE} [{VERSION}]')
     pygame.mouse.set_visible(False)
@@ -34,10 +37,14 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     
     # Initializes custom classes for the game
+    Sfx.init()
+
     Fonts.init()
     Inputs.init()
 
     main(screen, clock, SceneHandler(screen, clock))
     
     pygame.quit()
+    pygame.mixer.quit()
+
     sys.exit()

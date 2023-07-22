@@ -666,3 +666,18 @@ v0.5.2
             Tilemap tiles
 
             GameScene spawn_cooldown timer to 105 frames from 120
+
+v0.5.3
+    v0.5.3-test.1
+        [ADD]
+            Sfx_manager file
+
+        [CHANGE]
+            Entity particle_fx file to visual_fx particle file
+
+            Entity entity file to Prefabs entity file
+            Ui frame file to Prefabs frame file
+
+    v0.5.3-main
+        [ADD]
+            Sfx_manager init and play functions

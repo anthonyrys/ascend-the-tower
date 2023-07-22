@@ -1,4 +1,4 @@
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 
 from scripts.utils.fonts import Fonts
 

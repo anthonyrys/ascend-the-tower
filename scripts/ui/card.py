@@ -3,7 +3,7 @@ from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR
 from scripts.services.spritesheet_loader import load_spritesheet
 
 from scripts.ui.text_box import TextBox
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 
 from scripts.utils import create_outline_edge
 from scripts.utils.bezier import presets, get_bezier_point

@@ -1,4 +1,4 @@
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 from scripts.ui.text_box import TextBox 
 from scripts.ui.card import Card
 

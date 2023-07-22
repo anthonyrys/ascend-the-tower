@@ -1,7 +1,7 @@
 from scripts import UI_HEALTH_COLOR
 
 from scripts.ui.text_box import TextBox 
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 
 from scripts.utils.bezier import presets, get_bezier_point
 

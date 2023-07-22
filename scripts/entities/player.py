@@ -3,11 +3,12 @@ from scripts import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 from scripts.entities.game_entity import GameEntity
-from scripts.entities.particle_fx import Circle, Image
+from scripts.visual_fx.particle import Circle, Image
 
 from scripts.services import load_spritesheet
+from scripts.services.sfx_manager import Sfx
 
 from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar

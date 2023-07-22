@@ -1,6 +1,6 @@
 from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_heal
 
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 
 from scripts.utils import get_distance
 

@@ -4,10 +4,10 @@ from scripts.core_systems.talents import get_all_talents
 from scripts.core_systems.abilities import get_all_abilities
 
 from scripts.entities.enemy import ENEMIES
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 from scripts.entities.tiles import Tile
 from scripts.entities.player import Player
-from scripts.entities.particle_fx import Circle
+from scripts.visual_fx.particle import Circle
 from scripts.entities.interactables import StandardCardInteractable
 
 from scripts.scenes.scene import Scene
