@@ -677,3 +677,7 @@ v0.5.3
 
             Entity entity file to Prefabs entity file
             Ui frame file to Prefabs frame file
+
+    v0.5.3-main
+        [ADD]
+            Sfx_manager init and play functions
