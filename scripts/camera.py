@@ -1,6 +1,6 @@
 from scripts import SCREEN_DIMENSIONS
 
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import random

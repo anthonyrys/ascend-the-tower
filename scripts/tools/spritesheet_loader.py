@@ -2,7 +2,7 @@ import pygame
 import json
 import os
 
-config = json.load(open(os.path.join('data', 'config.json')))
+config = json.load(open(os.path.join('resources', 'data', 'config.json')))
 spritesheet_stop_code = tuple(config['spritesheet_stop_code'])
 
 def load_spritesheet(pngpath, frames=None, colorkey=(0, 0, 0), scale=1.0):

@@ -1,6 +1,6 @@
-from scripts.prefabs.frame import Frame
+from scripts.ui.frame import Frame
 
-from scripts.utils.fonts import Fonts
+from scripts.tools.fonts import Fonts
 
 import pygame
 

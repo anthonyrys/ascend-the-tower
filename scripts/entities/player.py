@@ -3,29 +3,29 @@ from scripts import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
-from scripts.prefabs.entity import Entity
-from scripts.entities.game_entity import GameEntity
+from scripts.entities.entity import Entity
+from scripts.entities.physics_entity import PhysicsEntity
 from scripts.visual_fx.particle import Circle, Image
 
-from scripts.services import load_spritesheet
-from scripts.services.sfx_manager import Sfx
+from scripts.tools.spritesheet_loader import load_spritesheet
+from scripts.tools.sfx_manager import Sfx
 
 from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar
 from scripts.ui.hotbar import Hotbar
 
-from scripts.utils.inputs import Inputs
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.inputs import Inputs
+from scripts.tools.bezier import presets, get_bezier_point
 
 
 import pygame
 import math
 import os
 
-class Player(GameEntity):
+class Player(PhysicsEntity):
     class Halo(Entity):
         def __init__(self, strata):
-            img = pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha()
+            img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'player', 'halo.png')).convert_alpha()
             img_scale = 1.5
             img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
             img.set_colorkey((0, 0, 0))
@@ -100,7 +100,7 @@ class Player(GameEntity):
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
-            self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
+            self.img_info['imgs'][name] = load_spritesheet(os.path.join('resources', 'images', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
             self.img_info['frames'][name] = 0
             self.img_info['frames_raw'][name] = 0
 

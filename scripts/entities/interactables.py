@@ -1,11 +1,11 @@
 from scripts import PLAYER_COLOR
 
-from scripts.prefabs.entity import Entity
+from scripts.entities.entity import Entity
 from scripts.visual_fx.particle import Circle
 
-from scripts.services import load_spritesheet
+from scripts.tools.spritesheet_loader import load_spritesheet
 
-from scripts.utils.bezier import presets
+from scripts.tools.bezier import presets
 
 import pygame
 import random
@@ -48,7 +48,7 @@ class Interactable(Entity):
 class StandardCardInteractable(Interactable):
     def __init__(self, position, img, dimensions, strata=None, alpha=255):
         if img is None:
-            img = load_spritesheet(os.path.join('imgs', 'entities', 'interactables', 'card.png'), scale=2)[0]
+            img = load_spritesheet(os.path.join('resources', 'images', 'entities', 'interactables', 'card.png'), scale=2)[0]
 
         super().__init__(position, img, dimensions, strata, alpha)
         self.secondary_sprite_id = 'standard_card_interactable'

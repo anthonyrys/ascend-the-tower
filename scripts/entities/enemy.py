@@ -5,24 +5,24 @@ from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigatio
 from scripts.core_systems.enemy_ai import HumanoidAi, FlyerAi, FloaterAi
 from scripts.core_systems.status_effects import OnFire, get_debuff
 
-from scripts.entities.game_entity import GameEntity
+from scripts.entities.physics_entity import PhysicsEntity
 from scripts.visual_fx.particle import Circle, Image
 from scripts.entities.projectile import ProjectileStandard
 
-from scripts.services import load_spritesheet
+from scripts.tools.spritesheet_loader import load_spritesheet
 
 from scripts.ui.info_bar import EnemyBar
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_sprite_colors, check_pixel_collision, check_line_collision
-from scripts.utils.bezier import presets
+from scripts.tools import get_sprite_colors, check_pixel_collision, check_line_collision
+from scripts.tools.bezier import presets
 
 import pygame
 import random
 import math
 import os
 
-class Enemy(GameEntity):
+class Enemy(PhysicsEntity):
     def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'enemy'
@@ -307,7 +307,7 @@ class Golem(HumanoidEnemy):
         
         for name in ['idle', 'run', 'jump', 'fall']:
             self.img_info['imgs'][name] = load_spritesheet(
-                os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}-{name}.png'), self.img_info['frame_info'][name]
+                os.path.join('resources', 'images', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}-{name}.png'), self.img_info['frame_info'][name]
             )
 
             self.img_info['frames'][name] = 0
@@ -432,7 +432,7 @@ class Sentry(FlyerEnemy):
             'imgs': []
         }
 
-        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
+        self.img_info['imgs'] = load_spritesheet(os.path.join('resources', 'images', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
     
     def set_images(self, scene, dt):
         self.image.fill((0, 0, 0, 0))
@@ -700,7 +700,7 @@ class Elemental(FloaterEnemy):
             'img_frames': 0
         }
 
-        self.img_info['imgs'] = load_spritesheet(os.path.join('imgs', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'), scale=2)
+        self.img_info['imgs'] = load_spritesheet(os.path.join('resources', 'images', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'), scale=2)
 
         self.ability_info = {
             'activation_frames': [0, 90],

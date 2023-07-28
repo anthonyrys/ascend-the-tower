@@ -8,8 +8,8 @@ from scripts.visual_fx.particle import Circle
 
 from scripts.ui.card import Card
 
-from scripts.utils import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
-from scripts.utils.bezier import presets
+from scripts.tools import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
+from scripts.tools.bezier import presets
 
 import pygame
 import random
@@ -481,7 +481,7 @@ class RainOfArrows(Ability):
         super().__init__(character)
 
         IMG_SCALE = 1.5
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'rain-of-arrows.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'projectiles', 'rain-of-arrows.png')).convert_alpha()
         img.set_colorkey((0, 0, 0))
 
         self.ability_info['active'] = False
@@ -723,7 +723,7 @@ class HolyJavelin(Ability):
         super().__init__(character)
 
         IMG_SCALE = 2.5
-        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'holy-javelin.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'projectiles', 'holy-javelin.png')).convert_alpha()
 
         self.ability_info['cooldown_timer'] = 250
 

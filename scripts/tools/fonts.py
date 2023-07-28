@@ -1,9 +1,9 @@
-from scripts.services import load_spritesheet
+from scripts.tools.spritesheet_loader import load_spritesheet
 
 import os
 
 class Fonts:
-    FONT_PATH = os.path.join('imgs', 'ui', 'fonts')
+    FONT_PATH = os.path.join('resources', 'images', 'ui', 'fonts')
 
     FONT_KEYS = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',

@@ -4,28 +4,28 @@ from scripts.core_systems.talents import get_all_talents
 from scripts.core_systems.abilities import get_all_abilities
 
 from scripts.entities.enemy import ENEMIES
-from scripts.prefabs.entity import Entity
+from scripts.entities.entity import Entity
 from scripts.entities.tiles import Tile
 from scripts.entities.player import Player
 from scripts.visual_fx.particle import Circle
 from scripts.entities.interactables import StandardCardInteractable
 
-from scripts.scenes.scene import Scene
+from scripts.scene import Scene
 
-from scripts.services import load_tilemap
+from scripts.tilemap_loader import load_tilemap
 
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_sprite_colors, get_distance
-from scripts.utils.camera import BoxCamera
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools import get_sprite_colors, get_distance
+from scripts.camera import BoxCamera
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import random
 import math
 
-class GameScene(Scene):
+class GameLoop(Scene):
     def __init__(self, scene_handler, mouse, sprites=None):
         super().__init__(scene_handler, mouse, sprites)
 
@@ -54,8 +54,8 @@ class GameScene(Scene):
 
         self.scene_fx['&dim']['type'] = 'out'
         self.scene_fx['&dim']['bezier'] = presets['ease_out']
-        self.scene_fx['&dim']['frames'][0] = 45
-        self.scene_fx['&dim']['frames'][1] = 45
+        self.scene_fx['&dim']['frames'][0] = 60
+        self.scene_fx['&dim']['frames'][1] = 60
 
         self.player = Player((0, 0), 4)
 
@@ -114,6 +114,36 @@ class GameScene(Scene):
 
         self.load_tilemap()
 
+        self.ui_elements.extend([
+            TextBox((10, 130), '3: draw regular cards', size=.5),
+            TextBox((10, 160), '4: draw stat cards', size=.5),
+            TextBox((10, 190), '0: fullscreen', size=.5)
+        ])
+
+        for frame in self.ui_elements:
+            frame.image.set_alpha(0)
+            self.delay_timers.append([60, frame.set_alpha_bezier, [255, 60, presets['ease_out']]])
+
+        self.add_sprites(self.tiles)
+        self.add_sprites(self.ui_elements)
+        self.add_sprites(self.player)
+    
+    def on_key_down(self, event):
+        super().on_key_down(event)
+        
+        if self.paused:
+            return
+        
+        if event.key == pygame.K_3:
+            cards, text = self.generate_standard_cards()
+            if cards and text:
+                self.load_card_event(cards, text)
+
+        elif event.key == pygame.K_4:
+            cards, text = self.generate_stat_cards()
+            if cards and text:
+                self.load_card_event(cards, text)
+
     def on_scene_end(self):
         self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['type'] = 'in'
@@ -158,6 +188,8 @@ class GameScene(Scene):
         self.add_sprites(card)
 
     def on_player_death(self):
+        self.delay_timers.append([90, self.on_scene_end, []])
+
         self.player.overrides['death'] = True
 
         self.scene_fx['entity_zoom']['bezier'] = presets['ease_in']
@@ -198,6 +230,9 @@ class GameScene(Scene):
 
             particles.append(cir)
         
+        for frame in self.ui_elements:
+            frame.set_alpha_bezier(0, 30, presets['ease_out'])
+
         self.add_sprites(particles)
 
     def register_enemy_flags(self, dt):

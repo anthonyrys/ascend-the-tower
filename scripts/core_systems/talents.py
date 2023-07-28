@@ -3,15 +3,15 @@ from scripts import HEAL_COLOR, PLAYER_COLOR
 from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
 
-from scripts.prefabs.entity import Entity
+from scripts.entities.entity import Entity
 from scripts.visual_fx.particle import Image, Circle
 from scripts.entities.projectile import ProjectileStandard
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_distance, get_closest_sprite, check_line_collision
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools import get_distance, get_closest_sprite, check_line_collision
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import inspect
@@ -299,7 +299,7 @@ class Marksman(Talent):
 class Temperance(Talent):
 	class TemperanceHalo(Entity):
 		def __init__(self, strata):
-			img = pygame.image.load(os.path.join('imgs', 'entities', 'visuals', 'temperance.png')).convert_alpha()
+			img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'visuals', 'temperance.png')).convert_alpha()
 			img_scale = 1.5
 
 			img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()

@@ -1,4 +1,4 @@
-from scripts.prefabs.sprite import Sprite
+from scripts.sprite import Sprite
 
 class Entity(Sprite):
     def __init__(self, position, img, dimensions, strata, alpha=None):

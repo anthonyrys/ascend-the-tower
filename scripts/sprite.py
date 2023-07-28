@@ -1,4 +1,4 @@
-from scripts.utils.bezier import get_bezier_point
+from scripts.tools.bezier import get_bezier_point
 
 import pygame
 

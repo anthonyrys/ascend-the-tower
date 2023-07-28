@@ -1,13 +1,13 @@
-from scripts.prefabs.frame import Frame
+from scripts.ui.frame import Frame
 
-from scripts.utils import check_pixel_collision
+from scripts.tools import check_pixel_collision
 
 import pygame
 import os
 
 class Mouse(pygame.sprite.Sprite):
     def __init__(self):
-        self.image = pygame.image.load(os.path.join('imgs', 'ui', 'mouse.png')).convert_alpha()
+        self.image = pygame.image.load(os.path.join('resources', 'images', 'ui', 'mouse.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (32, 32))
 
         self.rect = self.image.get_rect()

@@ -1,4 +1,4 @@
-from scripts.utils import get_distance
+from scripts.tools import get_distance
 
 import pygame
 import random

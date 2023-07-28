@@ -1,6 +1,6 @@
-from scripts.prefabs.entity import Entity
+from scripts.entities.entity import Entity
 
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.bezier import presets, get_bezier_point
 import pygame
 
 class Particle(Entity):

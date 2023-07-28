@@ -681,3 +681,12 @@ v0.5.3
     v0.5.3-main
         [ADD]
             Sfx_manager init and play functions
+
+v0.6.0
+    v0.6.0-test.1
+        [ADD]
+            Ui fading out upon Player death
+            Ui fading in on Scene start
+
+        [REWORK]
+            Project layout

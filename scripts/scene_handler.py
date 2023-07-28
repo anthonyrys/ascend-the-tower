@@ -4,12 +4,12 @@ from scripts import (
     FRAME_RATE
 )
 
-from scripts.scenes.sandbox import Sandbox
+from scripts.game_loop import GameLoop
 
 from scripts.ui.card import Card
 from scripts.ui.mouse import Mouse
 
-from scripts.utils.inputs import Inputs
+from scripts.tools.inputs import Inputs
 
 import pygame
 import time
@@ -22,7 +22,7 @@ class SceneHandler:
 
         self.mouse = Mouse()
 
-        self.current_scene = Sandbox(self, self.mouse)
+        self.current_scene = GameLoop(self, self.mouse)
         self.stored_scenes = []
 
         self.last_time = time.time()

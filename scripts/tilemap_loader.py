@@ -1,4 +1,4 @@
-from scripts.services import load_spritesheet
+from scripts.tools.spritesheet_loader import load_spritesheet
 
 from scripts.entities.tiles import Block, Ramp, get_all_tiles
 from scripts.entities.interactables import get_all_interactables
@@ -7,7 +7,7 @@ import pygame
 import json
 import os
 
-TILEMAP_FOLDER_PATH = os.path.join('data', 'tilemap_editor')
+TILEMAP_FOLDER_PATH = os.path.join('resources', 'data', 'tilemap_editor')
 
 def load_tilemap(name):
     path = os.path.join(TILEMAP_FOLDER_PATH, name)
