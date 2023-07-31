@@ -52,12 +52,8 @@ class GameLoop(Scene):
             }
         }
 
-        self.scene_fx['&dim']['type'] = 'out'
-        self.scene_fx['&dim']['bezier'] = presets['ease_out']
-        self.scene_fx['&dim']['frames'][0] = 60
-        self.scene_fx['&dim']['frames'][1] = 60
-
-        self.player = Player((0, 0), 4)
+        self.player = Player((0, 0), 5)
+        self.tiles = None
 
         self.camera = BoxCamera(self.player)
         self.camera_offset = [0, 0]
@@ -112,7 +108,9 @@ class GameLoop(Scene):
             'spawn_distance': 750
         }
 
-        self.load_tilemap()
+        self.player_info = {
+            'last_ground_position': [0, 0]
+        }
 
         self.ui_elements.extend([
             TextBox((10, 130), '3: draw regular cards', size=.5),
@@ -120,14 +118,12 @@ class GameLoop(Scene):
             TextBox((10, 190), '0: fullscreen', size=.5)
         ])
 
-        for frame in self.ui_elements:
-            frame.image.set_alpha(0)
-            self.delay_timers.append([60, frame.set_alpha_bezier, [255, 60, presets['ease_out']]])
-
-        self.add_sprites(self.tiles)
         self.add_sprites(self.ui_elements)
         self.add_sprites(self.player)
     
+        self.load_tilemap()
+        self.load_intro()
+
     def on_key_down(self, event):
         super().on_key_down(event)
         
@@ -235,6 +231,49 @@ class GameLoop(Scene):
 
         self.add_sprites(particles)
 
+    def on_floor_clear(self):
+        self.player.overrides['inactive-all'] = True
+        self.player.velocity = [0, 0]
+
+        particles = []
+        pos = self.player.center_position
+        for _ in range(6):
+            cir = Circle(pos, PLAYER_COLOR, random.randint(5, 7), 0)
+            cir.set_goal(
+                        75, 
+                        position=(pos[0] + random.randint(-75, 75), pos[1] + random.randint(-75, 75)), 
+                        radius=0, 
+                        width=0
+                    )
+            
+            cir.glow['active'] = True
+
+            particles.append(cir)
+
+        player_particle = Circle(pos, PLAYER_COLOR, 8, 0)
+        player_particle.set_goal(90, position=[pos[0], pos[1] - 500], radius=8, width=0)
+        player_particle.set_beziers(position=[[0, 0], [-.25, 1], [0, 1], [1, 0], 0])
+
+        player_particle.glow['active'] = True
+        player_particle.glow['size'] = 1.5
+        player_particle.glow['intensity'] = .4
+
+        self.add_sprites(particles)
+        self.add_sprites(player_particle)
+
+        self.scene_fx['&dim']['type'] = 'in'
+        self.scene_fx['&dim']['amount'] = 1
+        self.scene_fx['&dim']['threshold'] = 0
+        self.scene_fx['&dim']['bezier'] = presets['ease_in']
+        self.scene_fx['&dim']['frames'][0] = 0
+        self.scene_fx['&dim']['frames'][1] = 75
+
+        for frame in self.ui_elements:
+            frame.set_alpha_bezier(0, 75, presets['ease_in'])
+
+        self.delay_timers.append([120, self.load_tilemap, []])
+        self.delay_timers.append([120, self.load_intro, []])
+
     def register_enemy_flags(self, dt):
         if not self.enemy_info['spawn_positions'] or self.enemy_info['enemies'][0] >= self.enemy_info['enemies'][1]:
             return
@@ -297,13 +336,32 @@ class GameLoop(Scene):
             self.delay_timers.append([30, self.add_sprites, [enemy], 1])
             self.delay_timers.append([30, self.add_sprites, [particles], 1])
 
+    def register_player_flags(self):
+        if not self.entity_surface:
+            return
+        
+        if self.player.collide_points['bottom']:
+            self.player_info['last_ground_position'] = self.player.true_position
+
+        if self.player.rect.y >= self.entity_surface.get_height() - 250:
+            self.player.rect.x = self.player_info['last_ground_position'][0]
+            self.player.rect.y = self.player_info['last_ground_position'][1] - 25
+
+            self.player.velocity = [0, 0]
+            self.camera.box.center = self.player.true_position
+            self.camera.set_camera_tween(30)
+
     def load_tilemap(self):
+        if self.tiles:
+            self.del_sprites(self.tiles)
+
         tilemap = load_tilemap('floor-1')
 
         self.entity_surface = tilemap['surface']
         self.tiles = tilemap['tiles']
         self.flags = tilemap['flags']
 
+        self.player.overrides['inactive-all'] = True
         self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
         for flag in tilemap['flags']:
             if not flag.split('_'):
@@ -311,6 +369,54 @@ class GameLoop(Scene):
 
             if flag.split('_')[0] + flag.split('_')[1] == 'enemyspawn':
                 self.enemy_info['spawn_positions'][int(flag.split('_')[2])] = tilemap['flags'][flag]
+
+        self.add_sprites(self.tiles)
+
+    def load_intro(self):
+        particles = []
+        pos = self.player.center_position
+        for _ in range(6):
+            cir = Circle(pos, PLAYER_COLOR, random.randint(5, 7), 0)
+            cir.set_goal(
+                        75, 
+                        position=(pos[0] + random.randint(-75, 75), pos[1] + random.randint(-75, 75)), 
+                        radius=0, 
+                        width=0
+                    )
+            
+            cir.glow['active'] = True
+
+            particles.append(cir)
+
+        player_particle = Circle([pos[0], pos[1] + 300], PLAYER_COLOR, 8, 0)
+        player_particle.set_goal(60, position=pos, radius=8, width=0)
+        player_particle.set_beziers(position=[[0, 0], [1.25, .25], [1.25, 0], [1, 0], 0])
+        player_particle.glow['active'] = True
+        player_particle.glow['size'] = 1.5
+        player_particle.glow['intensity'] = .4
+
+        floor_text = TextBox((0, 0), 'Floor 1')
+        floor_text.rect.x = (SCREEN_DIMENSIONS[0] / 2) - (floor_text.image.get_width() / 2)
+        floor_text.rect.y = 100
+
+        self.delay_timers.append([10, self.add_sprites, [player_particle]])
+        self.delay_timers.append([70, self.add_sprites, [particles]])
+
+        self.delay_timers.append([90, floor_text.set_alpha_bezier, [0, 45, presets['ease_out']]])
+        self.delay_timers.append([90, floor_text.set_y_bezier, [50, 45, presets['ease_out']]])
+
+        self.delay_timers.append([70, self.player.set_override, ['inactive-all', False]])
+
+        for frame in self.ui_elements:
+            self.delay_timers.append([90, frame.set_alpha_bezier, [255, 60, presets['ease_out']]]) 
+
+        self.scene_fx['&dim']['type'] = 'out'
+        self.scene_fx['&dim']['bezier'] = presets['ease_out']
+        self.scene_fx['&dim']['frames'][0] = 60
+        self.scene_fx['&dim']['frames'][1] = 60
+
+        self.camera.box.center = pos
+        self.add_sprites(floor_text)
 
     def load_card_event(self, cards, flavor_text):    
         self.in_menu = True
@@ -651,6 +757,7 @@ class GameLoop(Scene):
             self.delay_timers.remove(element)
 
         self.register_enemy_flags(entity_dt)
+        self.register_player_flags()
 
         self.camera_offset = self.camera.update(dt)
 

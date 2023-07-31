@@ -2,6 +2,7 @@ from scripts.tools.spritesheet_loader import load_spritesheet
 
 from scripts.entities.tiles import Block, Ramp, get_all_tiles
 from scripts.entities.interactables import get_all_interactables
+from scripts.entities.decoration import get_all_decoration
 
 import pygame
 import json
@@ -37,6 +38,10 @@ def load_tilemap(name):
     interactable_classes = {}
     for interactable_class in get_all_interactables():
         interactable_classes[interactable_class[0].lower()] = interactable_class[1]
+
+    decoration_classes = {}
+    for decoration_class in get_all_decoration():
+        decoration_classes[decoration_class[0].lower()] = decoration_class[1]
 
     for tile_data in data['tiles']:
         if tile_data['tileset'] == 'flags':
@@ -110,6 +115,19 @@ def load_tilemap(name):
                 )
 
                 tiles.append(interactable)
+
+            elif tile_data['tile'] in decoration_classes.keys():
+                img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
+                img = pygame.transform.rotate(img, -tile_data['orientation'])
+
+                decoration = decoration_classes[tile_data['tile']](
+                    tile_data['position'],
+                    img,
+                    None,
+                    tile_data['strata']
+                )
+
+                tiles.append(decoration)
 
             else:
                 print(f'[LOAD_TILEMAP] Cannot resolve tile type: {tile_data["tile"]}')

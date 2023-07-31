@@ -71,6 +71,7 @@ class Player(PhysicsEntity):
 
         self.overrides = {
             'inactive': False,
+            'inactive-all': False,
             
             'ability': None,
             'ability-passive': None,
@@ -279,7 +280,7 @@ class Player(PhysicsEntity):
         scene.add_sprites(particle)
 
     def apply_movement(self, scene):
-        if self.overrides['inactive']:
+        if self.overrides['inactive'] or self.overrides['inactive-all']:
             return
         
         pressed = Inputs.pressed
@@ -322,8 +323,7 @@ class Player(PhysicsEntity):
         if self.overrides['inactive']:
             excludes.append('killbrick')
 
-        if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
-            self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=excludes))
+        self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=excludes))
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -442,7 +442,7 @@ class Player(PhysicsEntity):
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def display(self, scene, dt):
-        if self.overrides['death']:
+        if self.overrides['death'] or self.overrides['inactive-all']:
             return
     
         for key in self.timed_inputs:

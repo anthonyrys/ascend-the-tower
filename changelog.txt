@@ -690,3 +690,27 @@ v0.6.0
 
         [REWORK]
             Project layout
+
+    v0.6.0-test.2
+        [ADD]
+            Game_loop on_floor_clear function
+            Game_loop load_intro function
+            Game_loop register_player_flags function
+
+            Game_loop player_info variable
+
+            Decoration file
+                ^ Decoration baseclass
+                ^ Decoration functionality to tilemap_loader
+
+            NextFloorInteractable interactable subclass
+
+            PhysicsEntity set_override function
+            Player inactive-all override value
+
+        [CHANGE]
+            Floor-1 tilemap
+
+        [FIX]
+            Issue where PhysicsEntity would not properly clear collisions
+            Issue where Player would not properly register Ramp and Block collisions

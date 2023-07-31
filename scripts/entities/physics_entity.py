@@ -83,6 +83,9 @@ class PhysicsEntity(Entity):
 
         for collidable in collidables:
             if get_distance(self, collidable) > 100:
+                if collidable in self.collisions:
+                    self.collisions.remove(collidable)
+            
                 continue
             
             if not self.rect.colliderect(collidable.rect):
@@ -95,6 +98,9 @@ class PhysicsEntity(Entity):
                 continue
 
             if collidable in self.collision_ignore:
+                continue
+
+            if self.rect.bottom - collidable.rect.top <= self.rect.height * 0.5:
                 continue
 
             if collidable.secondary_sprite_id == 'killbrick':
@@ -137,6 +143,9 @@ class PhysicsEntity(Entity):
 
         for collidable in collidables:
             if get_distance(self, collidable) > 100:
+                if collidable in self.collisions:
+                    self.collisions.remove(collidable)
+
                 continue
 
             if not self.rect.colliderect(collidable.rect):
@@ -175,7 +184,7 @@ class PhysicsEntity(Entity):
             top = abs(self.rect.top - collidable.rect.bottom)
             bottom = abs(self.rect.bottom - collidable.rect.top)
             
-            if top < bottom and collidable.secondary_sprite_id != 'floor':
+            if top < bottom:
                 self.rect.top = collidable.rect.bottom
                 self.collide_points['top'] = True
 
@@ -195,7 +204,8 @@ class PhysicsEntity(Entity):
                 if collidable not in self.collisions:
                     self.collisions.append(collidable)
 
-                self.velocity[1] = 0
+                if self.velocity[1] > 0:
+                    self.velocity[1] = 0
 
         return callback_collision  
 
@@ -269,6 +279,10 @@ class PhysicsEntity(Entity):
                 self.movement_info[stat] = value
 
             return self.movement_info[stat]
+
+    def set_override(self, override, value):
+        if override in self.overrides:
+            self.overrides[override] = value
 
     def set_gravity(self, frames, grav=None, max_grav=None):
         if grav is None:

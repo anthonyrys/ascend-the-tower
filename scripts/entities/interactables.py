@@ -6,6 +6,7 @@ from scripts.visual_fx.particle import Circle
 from scripts.tools.spritesheet_loader import load_spritesheet
 
 from scripts.tools.bezier import presets
+from scripts.tools import get_sprite_colors
 
 import pygame
 import random
@@ -112,5 +113,41 @@ class StatCardInteractable(Interactable):
     def display(self, scene, dt):
         self.rect_offset[1] = round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
         self.sin_count += 1 * dt
+
+        super().display(scene, dt)
+
+class NextFloorInteractable(Interactable):
+    def __init__(self, position, img, dimensions, strata=None, alpha=255):
+        super().__init__(position, img, dimensions, strata, alpha)
+        self.secondary_sprite_id = 'next_floor_interactable'
+
+        self.focus_sprites = 'player'
+
+        self.sin_amplifier = 3
+        self.sin_frequency = .075
+        self.sin_count = 0
+
+        self.particle_count = [0, 25]
+
+    def on_interact(self, scene, sprite):
+        self.set_interactable()
+        scene.on_floor_clear()
+
+    def display(self, scene, dt):
+        self.rect.centery = self.original_rect.centery - round((self.sin_amplifier * math.sin(self.sin_frequency * (self.sin_count))))
+        self.sin_count += 1 * dt
+
+        self.particle_count[0] += 1 * dt
+        if self.particle_count[0] >= self.particle_count[1]:
+            self.particle_count[0] = 0
+
+            cir = Circle(self.rect.center, get_sprite_colors(self)[0], random.randint(5, 7), 0)
+            cir.set_goal(90, position=[self.rect.centerx - random.randint(-50, 50), self.rect.centery - random.randint(-100, 100)], radius=0)
+            cir.set_beziers(position=[[0, 0], [-1.5, 1.5], [1, 2], [1, 0], 0])
+            cir.glow['active'] = True
+            cir.glow['size'] = 2
+            cir.glow['intensity'] = .25
+
+            scene.add_sprites(cir)
 
         super().display(scene, dt)
