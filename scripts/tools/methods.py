@@ -54,8 +54,13 @@ def get_closest_sprite(primary_sprite, sprites):
     return None
 
 def get_sprite_colors(primary_sprite, multiplier=1):
+    if isinstance(primary_sprite, pygame.sprite.Sprite):
+        image = primary_sprite.image
+    else:
+        image = primary_sprite
+
     iteration_threshold = .1
-    iterations = int((((primary_sprite.image.get_width() + primary_sprite.image.get_height()) / 2) * iteration_threshold) * multiplier)
+    iterations = int((((image.get_width() + image.get_height()) / 2) * iteration_threshold) * multiplier)
 
     colors = []
     for _ in range(iterations):
@@ -64,12 +69,12 @@ def get_sprite_colors(primary_sprite, multiplier=1):
         y = 0
 
         while not found_pixel:
-            x = random.randint(0, primary_sprite.image.get_width() - 1)
-            y = random.randint(0, primary_sprite.image.get_height() - 1)
+            x = random.randint(0, image.get_width() - 1)
+            y = random.randint(0, image.get_height() - 1)
 
-            found_pixel = primary_sprite.image.get_at((x, y)) != ((0, 0, 0, 0))
+            found_pixel = image.get_at((x, y)) != ((0, 0, 0, 0))
                 
-        colors.append(primary_sprite.image.get_at([x, y]))
+        colors.append(image.get_at([x, y]))
 
     return colors
 

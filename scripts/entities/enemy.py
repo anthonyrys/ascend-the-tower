@@ -487,6 +487,11 @@ class Sentry(FlyerEnemy):
             if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
                 self.velocity[0] = 0
 
+            average_vel = (abs(self.velocity[0]) + abs(self.velocity[1])) *.5
+            average_vel = 1 if average_vel == 0 else average_vel
+
+            self.combat_info['base_damage'] = round(self.default_combat_info['base_damage'] * (average_vel / self.movement_info['max_movespeed']))
+
             self.rect.x += round(self.velocity[0] * dt)
             self.rect.y += round(self.velocity[1] * dt)
 

@@ -158,7 +158,7 @@ class Sprite(pygame.sprite.Sprite):
             if self.delay_timers[i][0] <= 0:
                 continue
             
-            self.delay_timers[i][0] -= 1
+            self.delay_timers[i][0] -= 1 * dt
 
             if self.delay_timers[i][0] <= 0 and self.delay_timers[i][1]:
                 self.delay_timers[i][1](*self.delay_timers[i][2])

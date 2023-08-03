@@ -99,13 +99,14 @@ class GameLoop(Scene):
         }
 
         self.enemy_info = {
-            'enemies': [0, 3],
+            'max_enemies': [0, 3],
 
             'card_death_counter': 0,
 
-            'spawn_cooldown': [105, 105],
-            'spawn_positions': {},
-            'spawn_distance': 750
+            'spawn_cooldown': [60, 60],
+            'spawns': [],
+            'spawn_distance': 500,
+            'despawn_distance': SCREEN_DIMENSIONS[0] * 1.5
         }
 
         self.player_info = {
@@ -127,7 +128,7 @@ class GameLoop(Scene):
     def on_key_down(self, event):
         super().on_key_down(event)
         
-        if self.paused:
+        if self.paused or self.player.overrides['inactive-all']:
             return
         
         if event.key == pygame.K_3:
@@ -144,17 +145,17 @@ class GameLoop(Scene):
         self.scene_fx['&dim']['bezier'] = presets['ease_out']
         self.scene_fx['&dim']['type'] = 'in'
         self.scene_fx['&dim']['amount'] = 1
-        self.scene_fx['&dim']['frames'][1] = 30
+        self.scene_fx['&dim']['frames'][1] = 60
         self.scene_fx['&dim']['threshold'] = 0
 
-        self.delay_timers.append([90, self.scene_handler.set_new_scene, [self.__class__, {}]])
+        self.delay_timers.append([150, self.scene_handler.set_new_scene, [self.__class__, {}]])
 
     def on_enemy_spawn(self):
-        self.enemy_info['enemies'][0] += 1
+        self.enemy_info['max_enemies'][0] += 1
 
     def on_enemy_death(self, enemy):
         self.enemy_info['card_death_counter'] += 1
-        self.enemy_info['enemies'][0] -= 1
+        self.enemy_info['max_enemies'][0] -= 1
 
         spawn_card = round(math.pow(self.enemy_info['card_death_counter'], 2.86))
         if spawn_card < random.randint(1, 100):
@@ -251,8 +252,8 @@ class GameLoop(Scene):
             particles.append(cir)
 
         player_particle = Circle(pos, PLAYER_COLOR, 8, 0)
-        player_particle.set_goal(90, position=[pos[0], pos[1] - 500], radius=8, width=0)
-        player_particle.set_beziers(position=[[0, 0], [-.25, 1], [0, 1], [1, 0], 0])
+        player_particle.set_goal(90, position=[pos[0], pos[1] - 600], radius=8, width=0)
+        player_particle.set_beziers(position=[[0, 0], [-.25, .25], [-.25, 0], [1, 0], 0])
 
         player_particle.glow['active'] = True
         player_particle.glow['size'] = 1.5
@@ -268,14 +269,19 @@ class GameLoop(Scene):
         self.scene_fx['&dim']['frames'][0] = 0
         self.scene_fx['&dim']['frames'][1] = 75
 
-        for frame in self.ui_elements:
-            frame.set_alpha_bezier(0, 75, presets['ease_in'])
-
-        self.delay_timers.append([120, self.load_tilemap, []])
-        self.delay_timers.append([120, self.load_intro, []])
+        self.delay_timers.append([120, self.load_tilemap, [], True])
+        self.delay_timers.append([120, self.load_intro, [], True])
 
     def register_enemy_flags(self, dt):
-        if not self.enemy_info['spawn_positions'] or self.enemy_info['enemies'][0] >= self.enemy_info['enemies'][1]:
+        for enemy in self.get_sprites('enemy'):
+            if get_distance(self.player, enemy) >= self.enemy_info['despawn_distance']:
+                self.del_sprites(enemy)
+                self.enemy_info['max_enemies'][0] -= 1
+
+        if not self.enemy_info['spawns']:
+            return
+
+        if self.enemy_info['max_enemies'][0] >= self.enemy_info['max_enemies'][1]:
             return
 
         if self.enemy_info['spawn_cooldown'][0] > 0:
@@ -284,57 +290,58 @@ class GameLoop(Scene):
         if self.enemy_info['spawn_cooldown'][0] > 0:
             return
 
-        elgible_spawns = {}
-        for spawn_type, pos_list in self.enemy_info['spawn_positions'].items():
-            for position in pos_list:
-                if get_distance(self.player.center_position, position) > self.enemy_info['spawn_distance']:
-                    continue
-                
-                if spawn_type not in elgible_spawns:
-                    elgible_spawns[spawn_type] = []
+        elgible_spawns = []
+        for spawn in self.enemy_info['spawns']:
+            if get_distance(self.player.center_position, spawn['position']) > self.enemy_info['spawn_distance']:
+                continue
+        
+            if spawn['count'][0] >= spawn['count'][1]:
+                continue
 
-                elgible_spawns[spawn_type].append(position)
+            elgible_spawns.append(spawn)
 
         if not elgible_spawns:
             return
         
-        positions = []
-        for i, v in elgible_spawns.items():
-            for p in v:
-                positions.append([i, p, get_distance(self.player.center_position, p)])
+        spawn = [s for s in elgible_spawns if s['position'] == min([p['position'] for p in elgible_spawns])][0]
 
-        min_value = min([p[2] for p in positions])
-        
-        for position in positions:
-            if position[2] != min_value:
-                continue
+        self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
+        self.enemy_info['spawns'][self.enemy_info['spawns'].index(spawn)]['count'][0] += 1
 
-            self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
+        enemy_position = [spawn['position'][0] + random.randint(-250, 250), spawn['position'][1] + random.randint(-250, 250)]
+        collide_tiles = True
+        while collide_tiles:
+            collide_tiles = []
+            for tile in self.get_sprites('tile'):
+                if tile.rect.collidepoint(enemy_position):
+                    enemy_position[1] -= tile.rect.height * 4
+                    collide_tiles.append(tile)
 
-            enemy_position = [position[1][0] + random.randint(-50, 50), position[1][1] + random.randint(-50, 50)]
-            enemy = ENEMIES[1][position[0] - 1](enemy_position, 6)
+        enemy = ENEMIES[1][spawn['enemy'] - 1](enemy_position, 6)
+        enemy.img_info['damage_frames'] = 15
+        enemy.img_info['damage_frames_max'] = 15
 
-            particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
-            particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
-            particle.set_goal(30, radius=0, width=1, alpha=0)
+        particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
+        particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
+        particle.set_goal(30, radius=0, width=1, alpha=0)
 
-            particles = []
-            for _ in range(6):
-                cir = Circle(particle_position, ENEMY_COLOR, random.randint(8, 10), 0)
-                cir.set_goal(
-                            75, 
-                            position=(particle_position[0] + random.randint(-75, 75), particle_position[1] + random.randint(-75, 75)), 
-                            radius=0, 
-                            width=0
-                        )
+        particles = []
+        for _ in range(6):
+            cir = Circle(particle_position, ENEMY_COLOR, random.randint(8, 10), 0)
+            cir.set_goal(
+                        75, 
+                        position=(particle_position[0] + random.randint(-75, 75), particle_position[1] + random.randint(-75, 75)), 
+                        radius=0, 
+                        width=0
+                    )
 
-                particles.append(cir)
+            particles.append(cir)
 
-            self.add_sprites(particle)
+        self.add_sprites(particle)
 
-            self.on_enemy_spawn()
-            self.delay_timers.append([30, self.add_sprites, [enemy], 1])
-            self.delay_timers.append([30, self.add_sprites, [particles], 1])
+        self.on_enemy_spawn()
+        self.delay_timers.append([30, self.add_sprites, [enemy], 1])
+        self.delay_timers.append([30, self.add_sprites, [particles], 1])
 
     def register_player_flags(self):
         if not self.entity_surface:
@@ -363,16 +370,26 @@ class GameLoop(Scene):
 
         self.player.overrides['inactive-all'] = True
         self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
+
+        self.enemy_info['spawns'] = []
         for flag in tilemap['flags']:
             if not flag.split('_'):
                 continue
 
             if flag.split('_')[0] + flag.split('_')[1] == 'enemyspawn':
-                self.enemy_info['spawn_positions'][int(flag.split('_')[2])] = tilemap['flags'][flag]
+                for v in tilemap['flags'][flag]:
+                    self.enemy_info['spawns'].append({
+                        'position': v,
+                        'count': [0, 2],
+                        'enemy': int(flag.split('_')[2])
+                    })
 
         self.add_sprites(self.tiles)
 
     def load_intro(self):
+        for frame in self.ui_elements:
+            frame.image.set_alpha(0)
+
         particles = []
         pos = self.player.center_position
         for _ in range(6):
@@ -399,16 +416,27 @@ class GameLoop(Scene):
         floor_text.rect.x = (SCREEN_DIMENSIONS[0] / 2) - (floor_text.image.get_width() / 2)
         floor_text.rect.y = 100
 
-        self.delay_timers.append([10, self.add_sprites, [player_particle]])
-        self.delay_timers.append([70, self.add_sprites, [particles]])
+        floor_text_sub = TextBox((0, 0), 'Caverns', color=(175, 175, 175), size=.5)
+        floor_text_sub.rect.x = (SCREEN_DIMENSIONS[0] / 2) - (floor_text_sub.image.get_width() / 2)
+        floor_text_sub.rect.y = 140
 
-        self.delay_timers.append([90, floor_text.set_alpha_bezier, [0, 45, presets['ease_out']]])
-        self.delay_timers.append([90, floor_text.set_y_bezier, [50, 45, presets['ease_out']]])
+        self.delay_timers.append([10, self.add_sprites, [player_particle], True])
+        self.delay_timers.append([70, self.add_sprites, [particles], True])
 
-        self.delay_timers.append([70, self.player.set_override, ['inactive-all', False]])
+        self.delay_timers.append([90, floor_text.set_alpha_bezier, [0, 45, presets['ease_out']], True])
+        self.delay_timers.append([90, floor_text.set_y_bezier, [floor_text.rect.y - 50, 45, presets['ease_out']], True])
+
+        self.delay_timers.append([90, floor_text_sub.set_alpha_bezier, [0, 45, presets['ease_out']], True])
+        self.delay_timers.append([90, floor_text_sub.set_y_bezier, [floor_text_sub.rect.y - 50, 45, presets['ease_out']], True])
+
+        self.delay_timers.append([70, self.player.set_override, ['inactive-all', False], True])
+
+        self.player.img_info['pulse_frames'] = 15
+        self.player.img_info['pulse_frames_max'] = 15
+        self.player.img_info['pulse_frame_color'] = PLAYER_COLOR
 
         for frame in self.ui_elements:
-            self.delay_timers.append([90, frame.set_alpha_bezier, [255, 60, presets['ease_out']]]) 
+            self.delay_timers.append([90, frame.set_alpha_bezier, [255, 60, presets['ease_out']], True]) 
 
         self.scene_fx['&dim']['type'] = 'out'
         self.scene_fx['&dim']['bezier'] = presets['ease_out']
@@ -416,7 +444,7 @@ class GameLoop(Scene):
         self.scene_fx['&dim']['frames'][1] = 60
 
         self.camera.box.center = pos
-        self.add_sprites(floor_text)
+        self.add_sprites(floor_text, floor_text_sub)
 
     def load_card_event(self, cards, flavor_text):    
         self.in_menu = True

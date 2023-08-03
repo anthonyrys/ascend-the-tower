@@ -53,19 +53,20 @@ def load_tilemap(name):
         elif tile_data['tile'].split('_')[0] == 'ramp':
             img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
             img = pygame.transform.rotate(img, -tile_data['orientation'])
+            img = pygame.transform.flip(img, tile_data['flipped'], False)
 
             direction = tile_data['tile'].split('_')[1]
             upside_down = False
 
             if direction == 'left':
-                if tile_data['orientation'] in [90, 180]:
+                if tile_data['orientation'] in [90, 180] or tile_data['flipped']:
                     direction = 'right'
 
                 if tile_data['orientation'] in [180, 270]:
                     upside_down = True
 
             elif direction == 'right':
-                if tile_data['orientation'] in [180, 270]:
+                if tile_data['orientation'] in [180, 270] or tile_data['flipped']:
                     direction = 'left'
 
                 if tile_data['orientation'] in [90, 180]:
@@ -93,6 +94,7 @@ def load_tilemap(name):
             if tile_data['tile'] in tile_classes.keys():
                 img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
                 img = pygame.transform.rotate(img, -tile_data['orientation'])
+                img = pygame.transform.flip(img, tile_data['flipped'], False)
 
                 tile = tile_classes[tile_data['tile']](
                     tile_data['position'],
@@ -106,6 +108,7 @@ def load_tilemap(name):
             elif tile_data['tile'] in interactable_classes.keys():
                 img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
                 img = pygame.transform.rotate(img, -tile_data['orientation'])
+                img = pygame.transform.flip(img, tile_data['flipped'], False)
 
                 interactable = interactable_classes[tile_data['tile']](
                     tile_data['position'],
@@ -119,6 +122,7 @@ def load_tilemap(name):
             elif tile_data['tile'] in decoration_classes.keys():
                 img = images[tile_data['tileset']]['imgs'][tile_data['index']].copy()
                 img = pygame.transform.rotate(img, -tile_data['orientation'])
+                img = pygame.transform.flip(img, tile_data['flipped'], False)
 
                 decoration = decoration_classes[tile_data['tile']](
                     tile_data['position'],

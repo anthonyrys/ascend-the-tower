@@ -714,3 +714,32 @@ v0.6.0
         [FIX]
             Issue where PhysicsEntity would not properly clear collisions
             Issue where Player would not properly register Ramp and Block collisions
+
+    v0.6.0-test.3
+        [ADD]
+            Torch-flame decoration image
+            
+            Game_loop enemy despawning
+
+            Load_tilemap Flip compatibility
+
+            DecorationBackground decoration subclass
+            DecorationTorch decoration subclass
+
+        [REWORK]
+            Game_loop enemy spawning
+
+        [CHANGE]
+            Floor-1 tilemap
+
+            Sprite delay_timers to be affected by dt
+
+            Sentry enemy base_damage to scale with velocity
+
+            NextFloorInteractable on_interact to give immunity
+
+            Get_sprite_colors function to be compatible with surface arguments
+
+        [FIX]
+            Issue where Game_loop draw card functions would be usable during floor transitions
+            Issue where PrimaryAbility would actively transfer between floor transitions

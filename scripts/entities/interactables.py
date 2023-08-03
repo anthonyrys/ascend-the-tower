@@ -131,6 +131,12 @@ class NextFloorInteractable(Interactable):
 
     def on_interact(self, scene, sprite):
         self.set_interactable()
+
+        if sprite.abilities['primary'].state == 'active':
+            sprite.abilities['primary'].end(scene)
+        
+        sprite.combat_info['immunities']['all'] = 1
+
         scene.on_floor_clear()
 
     def display(self, scene, dt):
