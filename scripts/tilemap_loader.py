@@ -10,8 +10,8 @@ import os
 
 TILEMAP_FOLDER_PATH = os.path.join('resources', 'data', 'tilemap_editor')
 
-def load_tilemap(name):
-    path = os.path.join(TILEMAP_FOLDER_PATH, name)
+def load_tilemap(area, name):
+    path = os.path.join(TILEMAP_FOLDER_PATH, area, name)
     
     with open(os.path.join(path, 'tilemap.json')) as t:
         data = json.load(t)

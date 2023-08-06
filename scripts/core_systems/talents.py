@@ -1418,3 +1418,37 @@ class FromTheShadows(Talent):
 				particles.append(cir)
 
 			scene.add_sprites(particles)    
+
+class ZeroSumGame(Talent):
+	TALENT_ID = 'zero_sum_game'
+	TALENT_CALLS = ['on_player_damaged']
+
+	DESCRIPTION = {
+		'name': 'Zero Sum Game',
+		'description': 'Taking damage causes the attacker to take the same amount of damage.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'zero-sum-game',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['hurt/death']
+			]
+		}
+
+		return card_info
+
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+	def call(self, call, scene, info):
+		register_damage(
+			scene, self.player, info['primary'],
+			{'type': 'magical', 'amount': info['amount'], 'velocity': [-info['velocity'][0], -info['velocity'][1]]}
+		)
+	

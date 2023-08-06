@@ -24,6 +24,7 @@ from scripts.tools.bezier import presets, get_bezier_point
 import pygame
 import random
 import math
+import os
 
 class GameLoop(Scene):
     def __init__(self, scene_handler, mouse, sprites=None):
@@ -113,6 +114,21 @@ class GameLoop(Scene):
             'last_ground_position': [0, 0]
         }
 
+        self.level_info = {
+            'areas': [],
+            'area': [None, 1],
+
+            'floor': 1,
+            'pattern': [1, 5]
+        }
+
+        for area in os.listdir(os.path.join('resources', 'data', 'tilemap_editor')):
+            self.level_info['areas'].append(area)
+
+        starting_area = 'caverns'
+        self.level_info['area'][0] = starting_area
+        self.level_info['areas'].remove(starting_area)
+
         self.ui_elements.extend([
             TextBox((10, 130), '3: draw regular cards', size=.5),
             TextBox((10, 160), '4: draw stat cards', size=.5),
@@ -164,7 +180,7 @@ class GameLoop(Scene):
         self.enemy_info['card_death_counter'] = 0
 
         position = [
-            enemy.center_position[0],
+            enemy.center_position[0] + random.randint(-100, 100) * 2,
             enemy.center_position[1] - random.randint(25, 50)
         ]
 
@@ -178,7 +194,7 @@ class GameLoop(Scene):
                     position[1] -= tile.rect.height * 2
                     collide_tiles.append(tile)
 
-        card.set_x_bezier(position[0] + random.randint(-100, 100) * 2, 75, [[0, 0], [.5, 1.5], [1, 0], [1, 0], 0])
+        card.set_x_bezier(position[0], 75, [[0, 0], [.5, 1.5], [1, 0], [1, 0], 0])
         card.set_y_bezier(position[1], 75, [[0, 0], [2.65, 0.6], [1.1, 0.45], [1, 0], 0])
         card.set_alpha_bezier(255, 30, [*presets['rest'], 0])
 
@@ -269,6 +285,9 @@ class GameLoop(Scene):
         self.scene_fx['&dim']['frames'][0] = 0
         self.scene_fx['&dim']['frames'][1] = 75
 
+        self.level_info['floor'] = max(1, min(self.level_info['floor'] + 1, 2))
+        self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + 1, 2))
+
         self.delay_timers.append([120, self.load_tilemap, [], True])
         self.delay_timers.append([120, self.load_intro, [], True])
 
@@ -317,7 +336,7 @@ class GameLoop(Scene):
                     enemy_position[1] -= tile.rect.height * 4
                     collide_tiles.append(tile)
 
-        enemy = ENEMIES[1][spawn['enemy'] - 1](enemy_position, 6)
+        enemy = ENEMIES[1][spawn['enemy'] - 1](enemy_position, 6, level=self.level_info['floor'])
         enemy.img_info['damage_frames'] = 15
         enemy.img_info['damage_frames_max'] = 15
 
@@ -362,7 +381,7 @@ class GameLoop(Scene):
         if self.tiles:
             self.del_sprites(self.tiles)
 
-        tilemap = load_tilemap('floor-1')
+        tilemap = load_tilemap(self.level_info['area'][0], f'floor-{self.level_info["pattern"][0]}')
 
         self.entity_surface = tilemap['surface']
         self.tiles = tilemap['tiles']
@@ -372,6 +391,8 @@ class GameLoop(Scene):
         self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
 
         self.enemy_info['spawns'] = []
+        enemy_count = round(1 + math.pow(self.level_info['floor'], .5))
+
         for flag in tilemap['flags']:
             if not flag.split('_'):
                 continue
@@ -380,7 +401,7 @@ class GameLoop(Scene):
                 for v in tilemap['flags'][flag]:
                     self.enemy_info['spawns'].append({
                         'position': v,
-                        'count': [0, 2],
+                        'count': [0, enemy_count],
                         'enemy': int(flag.split('_')[2])
                     })
 
@@ -412,11 +433,17 @@ class GameLoop(Scene):
         player_particle.glow['size'] = 1.5
         player_particle.glow['intensity'] = .4
 
-        floor_text = TextBox((0, 0), 'Floor 1')
+        self.player.img_info['pulse_frames'] = 15
+        self.player.img_info['pulse_frames_max'] = 15
+        self.player.img_info['pulse_frame_color'] = PLAYER_COLOR
+
+        self.player.combat_info['health'] = self.player.combat_info['max_health']
+
+        floor_text = TextBox((0, 0), f'Floor {self.level_info["floor"]}')
         floor_text.rect.x = (SCREEN_DIMENSIONS[0] / 2) - (floor_text.image.get_width() / 2)
         floor_text.rect.y = 100
 
-        floor_text_sub = TextBox((0, 0), 'Caverns', color=(175, 175, 175), size=.5)
+        floor_text_sub = TextBox((0, 0), self.level_info['area'][0], color=(175, 175, 175), size=.5)
         floor_text_sub.rect.x = (SCREEN_DIMENSIONS[0] / 2) - (floor_text_sub.image.get_width() / 2)
         floor_text_sub.rect.y = 140
 
@@ -430,10 +457,6 @@ class GameLoop(Scene):
         self.delay_timers.append([90, floor_text_sub.set_y_bezier, [floor_text_sub.rect.y - 50, 45, presets['ease_out']], True])
 
         self.delay_timers.append([70, self.player.set_override, ['inactive-all', False], True])
-
-        self.player.img_info['pulse_frames'] = 15
-        self.player.img_info['pulse_frames_max'] = 15
-        self.player.img_info['pulse_frame_color'] = PLAYER_COLOR
 
         for frame in self.ui_elements:
             self.delay_timers.append([90, frame.set_alpha_bezier, [255, 60, presets['ease_out']], True]) 

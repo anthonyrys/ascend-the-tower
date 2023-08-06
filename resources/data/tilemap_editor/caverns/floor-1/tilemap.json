@@ -1,7 +1,7 @@
 {
   "config": {
-    "flipped": false,
-    "grid_placing": true,
+    "flipped": true,
+    "grid_placing": false,
     "images": {
       "1a": {
         "path": "imgs\\1a.png",
@@ -24,7 +24,8 @@
           "decoration",
           "decoration",
           "decoration",
-          "decorationtorch"
+          "decorationtorch",
+          "decorationcamp"
         ]
       },
       "1e": {
@@ -51,11 +52,11 @@
     },
     "name": "floor-1",
     "offset": [
-      -8415,
-      -3522
+      -4176,
+      -4281
     ],
     "orientation": 0,
-    "strata": 5,
+    "strata": 9,
     "strata_alpha": true,
     "tile": {
       "dimensions": [
@@ -1362,70 +1363,6 @@
       "position": [
         960,
         5184
-      ],
-      "strata": 5,
-      "tile": "block",
-      "tileset": "1a"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 1,
-      "orientation": 0,
-      "position": [
-        704,
-        5120
-      ],
-      "strata": 5,
-      "tile": "block",
-      "tileset": "1a"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 0,
-      "orientation": 0,
-      "position": [
-        896,
-        5120
-      ],
-      "strata": 5,
-      "tile": "block",
-      "tileset": "1a"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 0,
-      "orientation": 0,
-      "position": [
-        832,
-        5120
-      ],
-      "strata": 5,
-      "tile": "block",
-      "tileset": "1a"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 2,
-      "orientation": 0,
-      "position": [
-        768,
-        5120
       ],
       "strata": 5,
       "tile": "block",
@@ -10608,8 +10545,8 @@
       "index": 2,
       "orientation": 0,
       "position": [
-        10176,
-        3840
+        10496,
+        3680
       ],
       "strata": 2,
       "tile": "decorationbackground",
@@ -10624,8 +10561,8 @@
       "index": 5,
       "orientation": 0,
       "position": [
-        10240,
-        3840
+        10560,
+        3680
       ],
       "strata": 2,
       "tile": "decorationbackground",
@@ -10640,28 +10577,12 @@
       "index": 4,
       "orientation": 0,
       "position": [
-        10112,
-        3840
+        10432,
+        3680
       ],
       "strata": 2,
       "tile": "decorationbackground",
       "tileset": "1e"
-    },
-    {
-      "dimensions": [
-        16,
-        72
-      ],
-      "flipped": true,
-      "index": 3,
-      "orientation": 0,
-      "position": [
-        10208,
-        3803
-      ],
-      "strata": 3,
-      "tile": "decorationtorch",
-      "tileset": "1d"
     },
     {
       "dimensions": [
@@ -10910,22 +10831,6 @@
       ],
       "flipped": true,
       "index": 1,
-      "orientation": 270,
-      "position": [
-        8576,
-        3968
-      ],
-      "strata": 5,
-      "tile": "ramp_right",
-      "tileset": "1b"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": true,
-      "index": 1,
       "orientation": 0,
       "position": [
         8640,
@@ -11062,6 +10967,422 @@
       "strata": 5,
       "tile": "ramp_right",
       "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        8576,
+        3968
+      ],
+      "strata": 5,
+      "tile": "ramp_right",
+      "tileset": "1b"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 7,
+      "orientation": 0,
+      "position": [
+        4976,
+        4192
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        5040,
+        4192
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 6,
+      "orientation": 0,
+      "position": [
+        5040,
+        4128
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        5104,
+        4128
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        704,
+        5120
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        768,
+        5120
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        832,
+        5120
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        896,
+        5120
+      ],
+      "strata": 5,
+      "tile": "block",
+      "tileset": "1a"
+    },
+    {
+      "dimensions": [
+        16,
+        72
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        10540,
+        3645
+      ],
+      "strata": 3,
+      "tile": "decorationtorch",
+      "tileset": "1d"
+    },
+    {
+      "dimensions": [
+        80,
+        72
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        10130,
+        3903
+      ],
+      "strata": 3,
+      "tile": "decorationcamp",
+      "tileset": "1d"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        10352,
+        3840
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        10288,
+        3840
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 5,
+      "orientation": 0,
+      "position": [
+        10224,
+        3840
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        7424,
+        3968
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        7488,
+        3968
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        7552,
+        3968
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        4928,
+        4096
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        4864,
+        4096
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        3776,
+        4608
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        3840,
+        4608
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": false,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        3904,
+        4608
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        4800,
+        4096
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        5248,
+        4064
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 1,
+      "orientation": 0,
+      "position": [
+        5184,
+        4064
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        5120,
+        4064
+      ],
+      "strata": 2,
+      "tile": "decorationbackground",
+      "tileset": "1e"
     }
   ]
 }

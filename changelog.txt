@@ -743,3 +743,27 @@ v0.6.0
         [FIX]
             Issue where Game_loop draw card functions would be usable during floor transitions
             Issue where PrimaryAbility would actively transfer between floor transitions
+
+    v0.6.0-test.4
+        [ADD]
+            Floor-2 tilemap
+
+            Camp-flame decoration image
+            ZeroSumGame talent icon
+
+            Game_loop level_info variable
+            Area parameter to load_tilemap function
+            
+            ZeroSumGame talent
+
+            DecorationCamp decoration subclass
+
+        [CHANGE]
+            Floor-1 tilemap
+
+            Game_loop load_intro function to restore Player health
+            Game_loop load_tilemap function to load based on the current area and floor pattern
+            Game_loop register_enemy_flags function to set enemy level based on the current floor 
+
+        [FIX]
+            Issue where Game_loop on_enemy_death would spawn cards inside of tiles
