@@ -14,12 +14,26 @@ def check_pixel_collision(primary_sprite, secondary_sprite):
 
     return collision
 
-def check_line_collision(start, end, sprites):
+def check_line_collision(start, end, sprites, width=1):
     clipped_sprites = []
 
     for sprite in sprites:
-        if sprite.rect.clipline(start, end):
-            clipped_sprites.append([sprite, sprite.rect.clipline(start, end)])
+        con = False
+        for spr in clipped_sprites:
+            if spr[0] == sprite:
+                con = True
+
+        if con:
+            continue
+
+        for i in range(width):
+            if sprite.rect.clipline([start[0], start[1] + i], [end[0], end[1] + i]):
+                clipped_sprites.append([sprite, sprite.rect.clipline([start[0], start[1] + i], [end[0], end[1] + i])])
+                continue
+
+            if sprite.rect.clipline([start[0], start[1] - i], [end[0], end[1] - i]):
+                clipped_sprites.append([sprite, sprite.rect.clipline([start[0], start[1] - i], [end[0], end[1] - i])])
+                continue
 
     return clipped_sprites
 

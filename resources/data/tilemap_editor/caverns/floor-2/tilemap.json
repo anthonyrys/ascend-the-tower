@@ -1,6 +1,6 @@
 {
   "config": {
-    "flipped": false,
+    "flipped": true,
     "grid_placing": false,
     "images": {
       "1a": {
@@ -33,6 +33,10 @@
         "path": "imgs\\1e.png",
         "tiles": "decorationbackground"
       },
+      "1f": {
+        "path": "imgs\\1f.png",
+        "tiles": "decoration"
+      },
       "flags": {
         "path": "imgs\\flags.png",
         "tiles": [
@@ -53,11 +57,11 @@
     },
     "name": "floor-2",
     "offset": [
-      -3298,
-      -2783
+      -2536,
+      -2082
     ],
-    "orientation": 0,
-    "strata": 0,
+    "orientation": 180,
+    "strata": 5,
     "strata_alpha": true,
     "tile": {
       "dimensions": [
@@ -6203,22 +6207,6 @@
     },
     {
       "dimensions": [
-        34,
-        48
-      ],
-      "flipped": true,
-      "index": 1,
-      "orientation": 0,
-      "position": [
-        3818,
-        2779
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
         26,
         48
       ],
@@ -6376,22 +6364,6 @@
       "strata": 2,
       "tile": "decorationbackground",
       "tileset": "1e"
-    },
-    {
-      "dimensions": [
-        62,
-        48
-      ],
-      "flipped": false,
-      "index": 12,
-      "orientation": 180,
-      "position": [
-        3974,
-        3023
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -6779,38 +6751,6 @@
     },
     {
       "dimensions": [
-        62,
-        48
-      ],
-      "flipped": true,
-      "index": 12,
-      "orientation": 0,
-      "position": [
-        2306,
-        2364
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        52,
-        48
-      ],
-      "flipped": false,
-      "index": 10,
-      "orientation": 180,
-      "position": [
-        2494,
-        2456
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
         36,
         48
       ],
@@ -6904,54 +6844,6 @@
       "strata": 3,
       "tile": "decorationtorch",
       "tileset": "1d"
-    },
-    {
-      "dimensions": [
-        34,
-        48
-      ],
-      "flipped": false,
-      "index": 7,
-      "orientation": 180,
-      "position": [
-        2363,
-        2619
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        26,
-        48
-      ],
-      "flipped": false,
-      "index": 11,
-      "orientation": 180,
-      "position": [
-        2461,
-        2628
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        28,
-        48
-      ],
-      "flipped": false,
-      "index": 5,
-      "orientation": 0,
-      "position": [
-        3209,
-        2524
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -7954,38 +7846,6 @@
       "index": 4,
       "orientation": 0,
       "position": [
-        3041,
-        2584
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        34,
-        48
-      ],
-      "flipped": true,
-      "index": 1,
-      "orientation": 0,
-      "position": [
-        2960,
-        2455
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        34,
-        48
-      ],
-      "flipped": true,
-      "index": 4,
-      "orientation": 0,
-      "position": [
         2891,
         2455
       ],
@@ -8004,22 +7864,6 @@
       "position": [
         3081,
         2582
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        62,
-        48
-      ],
-      "flipped": false,
-      "index": 12,
-      "orientation": 180,
-      "position": [
-        2862,
-        2877
       ],
       "strata": 4,
       "tile": "decoration",
@@ -8104,22 +7948,6 @@
       "strata": 2,
       "tile": "decorationbackground",
       "tileset": "1e"
-    },
-    {
-      "dimensions": [
-        52,
-        48
-      ],
-      "flipped": false,
-      "index": 10,
-      "orientation": 0,
-      "position": [
-        3142,
-        2571
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
     },
     {
       "dimensions": [
@@ -8255,15 +8083,239 @@
         64
       ],
       "flipped": false,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        3071,
+        2445
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_3",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        32,
+        72
+      ],
+      "flipped": false,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        3211,
+        2512
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": false,
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        3132,
+        2539
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        54,
+        72
+      ],
+      "flipped": false,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        2972,
+        2452
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        2846,
+        2861
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        2847,
+        2861
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
       "index": 2,
       "orientation": 0,
       "position": [
-        4214,
-        2813
+        2365,
+        2323
       ],
-      "strata": 0,
-      "tile": "enemy_spawn_2",
-      "tileset": "flags"
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": false,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        2501,
+        2459
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": false,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        2502,
+        2459
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        32,
+        72
+      ],
+      "flipped": false,
+      "index": 0,
+      "orientation": 180,
+      "position": [
+        2349,
+        2602
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        54,
+        72
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 180,
+      "position": [
+        2421,
+        2635
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        32,
+        72
+      ],
+      "flipped": true,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        3032,
+        2585
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        54,
+        72
+      ],
+      "flipped": false,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        3803,
+        2757
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        32,
+        72
+      ],
+      "flipped": false,
+      "index": 0,
+      "orientation": 0,
+      "position": [
+        3885,
+        2775
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        3981,
+        3023
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
     }
   ]
 }

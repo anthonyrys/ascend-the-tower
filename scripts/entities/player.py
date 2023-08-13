@@ -19,6 +19,7 @@ from scripts.tools.bezier import presets, get_bezier_point
 
 
 import pygame
+import random
 import math
 import os
 
@@ -215,24 +216,20 @@ class Player(PhysicsEntity):
             return
         
         color = HEAL_COLOR
-        offset = [0, 0]
 
         if 'color' in info:
             color = info['color']
 
-        if 'offset' in info:
-            offset = info['offset']
-        
-        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=color)
-        particle = Image((125 + offset[0], 50 + offset[1]), img, 5, 255)
+        img = TextBox.create_text_line('default', info['amount'], size=.75, color=color)
+        particle = Image(self.rect.center, img, 6, 255)
+        particle.set_beziers(radius=presets['ease_in'])
         particle.set_goal(
-            50, 
-            position=(125 + offset[0], 100 + offset[1]),
+            45, 
+            position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
-        particle.uses_ui_surface = True
-        
+
         scene.add_sprites(particle)
 
     def on_damaged(self, scene, info):
@@ -265,19 +262,19 @@ class Player(PhysicsEntity):
         self.img_info['pulse_frame_color'] = ENEMY_COLOR
         self.img_info['pulse_frame_bezier'] = [*presets['rest'], 0]
 
-        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=UI_HEALTH_COLOR)
-        particle = Image((50, 50), img, 5, 255)
+        img = TextBox.create_text_line('default', info['amount'], size=.75, color=UI_HEALTH_COLOR)
+        particle = Image(self.rect.center, img, 6, 255)
+        particle.set_beziers(radius=presets['ease_in'])
         particle.set_goal(
-            50, 
-            position=(50, 100),
+            45, 
+            position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
-        particle.uses_ui_surface = True
-
-        call_talents(scene, self, {'on_player_damaged': info})
 
         scene.add_sprites(particle)
+
+        call_talents(scene, self, {'on_player_damaged': info})
 
     def apply_movement(self, scene):
         if self.overrides['inactive'] or self.overrides['inactive-all']:

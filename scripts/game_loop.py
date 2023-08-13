@@ -1,6 +1,6 @@
 from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR, ENEMY_COLOR
 
-from scripts.core_systems.talents import get_all_talents
+from scripts.core_systems.talents import get_all_talents, get_talent
 from scripts.core_systems.abilities import get_all_abilities
 
 from scripts.entities.enemy import ENEMIES
@@ -285,8 +285,12 @@ class GameLoop(Scene):
         self.scene_fx['&dim']['frames'][0] = 0
         self.scene_fx['&dim']['frames'][1] = 75
 
-        self.level_info['floor'] = max(1, min(self.level_info['floor'] + 1, 2))
-        self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + 1, 2))
+        incr = 1
+        if self.level_info['pattern'][0] == 2:
+            incr = 2
+
+        self.level_info['floor'] = max(1, min(self.level_info['floor'] + incr, 2))
+        self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + incr, 2))
 
         self.delay_timers.append([120, self.load_tilemap, [], True])
         self.delay_timers.append([120, self.load_intro, [], True])
@@ -680,6 +684,10 @@ class GameLoop(Scene):
 
         cards = []
         count = len(self.card_info['stat_info'])
+        has_temperance = get_talent(self.player, 'temperance')
+
+        if has_temperance:
+            count -= 1
 
         x = (SCREEN_DIMENSIONS[0] * .5) - 80
         y = (SCREEN_DIMENSIONS[1] * .5) - 100
@@ -691,6 +699,9 @@ class GameLoop(Scene):
             i = -math.floor(count / 2)
 
         for stat in self.card_info['stat_info']:
+            if has_temperance and stat['name'] == 'Dexterity':
+                continue
+                
             cards.append(StatCard((x + (i * 200), y), stat, spawn='y'))
             i += 1
 

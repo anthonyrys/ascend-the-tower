@@ -100,7 +100,7 @@ class Enemy(PhysicsEntity):
             pos = self.center_position
             particles = []
 
-            for color in get_sprite_colors(self, .75):
+            for color in get_sprite_colors(self, .35):
                 radius = round(((self.image.get_width() + self.image.get_height()) / 2) * round(random.uniform(.05, .1), 2))
 
                 cir = Circle(pos, color, radius, 0)
@@ -399,7 +399,7 @@ class Sentry(FlyerEnemy):
             'damage_multiplier': 1.0,
             'healing_multiplier': 1.0,
 
-            'base_damage': 20,
+            'base_damage': 30,
             'crit_strike_chance': 0,
             'crit_strike_multiplier': 0,
 
@@ -415,7 +415,7 @@ class Sentry(FlyerEnemy):
             'level': level,
 
             'max_health_scaling': .55,
-            'base_damage_scaling': .15,
+            'base_damage_scaling': .25,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }
@@ -658,8 +658,8 @@ class Elemental(FloaterEnemy):
         self.movement_info = self.default_movement_info.copy()
 
         self.default_combat_info = {
-            'max_health': 30,
-            'health': 30,
+            'max_health': 75,
+            'health': 75,
             
             'health_regen_amount': 0,
             'health_regen_tick': 0,
@@ -684,7 +684,7 @@ class Elemental(FloaterEnemy):
             'level': level,
 
             'max_health_scaling': .55,
-            'base_damage_scaling': .1,
+            'base_damage_scaling': .2,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }

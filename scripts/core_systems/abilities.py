@@ -208,7 +208,7 @@ class PrimaryAttack(Ability):
         
         pos = overlap.center
         
-        for _ in range(8):
+        for _ in range(5):
             cir = Circle(pos, self.ability_info['color'], random.randint(4, 8), 0)
             cir.set_goal(
                         75, 
@@ -397,7 +397,7 @@ class PrimaryAttack(Ability):
                 pos = self.character.center_position
                 particles = []
 
-                for _ in range(8):
+                for _ in range(3):
                     cir = Circle(pos, self.ability_info['color'], 8, 0)
                     cir.set_goal(
                                 125, 
@@ -896,7 +896,7 @@ class HolyJavelin(Ability):
         super().call(scene, keybind)
         
         self.character.overrides['ability-passive'] = self
-        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.25
+        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.5
 
         particle = Circle(
             [0, 0],

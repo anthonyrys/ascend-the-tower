@@ -5,7 +5,7 @@ from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debu
 
 from scripts.entities.entity import Entity
 from scripts.visual_fx.particle import Image, Circle
-from scripts.entities.projectile import ProjectileStandard
+from scripts.entities.projectile import ProjectileHoming
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
@@ -255,13 +255,16 @@ class StingLikeABee(Talent):
 
 		player.abilities['primary'].max_charges += 1
 
+	def call(self, call, scene, info):
+		info.ability_info['cooldown'] = info.ability_info['cooldown_timer'] * .4
+
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
 	TALENT_CALLS = ['on_@primary_collide']
 
 	DESCRIPTION = {
 		'name': 'Marksman',
-		'description': 'Your primary attack deals more damage the farther your target is.'
+		'description': 'Your primary attack deals more damage the further you travel.'
 	}
 	
 	@staticmethod
@@ -416,7 +419,7 @@ class WheelOfFortune(Talent):
 		self.talent_info['cooldown_timer'] = 300
 
 	def display_text(self, scene, stat):
-		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=HEAL_COLOR)
+		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=PLAYER_COLOR)
 		particle = Image(self.player.rect.center, img, 6, 255)
 		particle.set_beziers(alpha=presets['ease_in'])
 		particle.set_goal(
@@ -1076,12 +1079,14 @@ class Reprisal(Talent):
 				multiplier = self.combat_info['speed'] / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
 				vel = [direction[0] * multiplier, direction[1] * multiplier]
 
-				proj = ProjectileStandard(
+				proj = ProjectileHoming(
 					self.center_position, self.color, self.combat_info['size'], self.strata,
 					self.combat_info['projectile_info'],
 					velocity=vel,
 					duration=90,
-					settings={'player': True}
+					settings={'player': True},
+					speed=self.combat_info['speed'],
+					target=enemy
 				)
 
 				scene.add_sprites(proj)
@@ -1279,6 +1284,22 @@ class Shadowstep(Talent):
 			for col in collision:
 				if col[0] == sprite:
 					position = col[1][0][0] - (self.talent_info['min_dash_distance'] * direction)
+
+		collision = check_line_collision(
+			self.player.center_position, 
+			[position, self.player.rect.centery], 
+			[t for t in scene.get_sprites('interactable') if get_distance(self.player, t) <= self.talent_info['dash_distance'] * 2],
+			width=20
+		)
+
+		if collision:
+			sprite = get_closest_sprite(self.player, [c[0] for c in collision])
+			if get_distance(self.player, sprite) <= self.talent_info['min_dash_distance'] * .5:
+				return
+			
+			for col in collision:
+				if col[0] == sprite:
+					position = col[1][0][0]
 
 		self.talent_info['position'] = position
 

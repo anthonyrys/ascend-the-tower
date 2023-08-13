@@ -767,3 +767,39 @@ v0.6.0
 
         [FIX]
             Issue where Game_loop on_enemy_death would spawn cards inside of tiles
+
+    v0.6.0-test.5
+        [ADD]
+            Floor-2 1f spritesheet
+
+            ProjectileHoming projectile subclass
+
+            Check_line_collision width parameter
+
+        [CHANGE]
+            Floor-2 tilemap
+
+            Game_loop to no longer give Dexterity card option when Player has Temperance talent
+
+            Marksman talent description
+            StingLikeABee talent to reduce PrimaryAbility cooldown by 60% on hit
+            WheelOfFortune talent display_text color to PLAYER_COLOR from HEAL_COLOR
+            Reprisal talent projectile type to ProjectileHoming
+            Shadowstep talent to consider interactables for collision
+
+            Player damage and healing indicators to be on player character
+
+        [INCREASE]
+            HolyJavelin initial jump to to 1.5 from 1.25
+
+            Flyer enemy base_damage to 30 from 20
+            Flyer enemy base_damage_scaling to .25 from .15
+            
+            Elemental enemy max_health to 75 from 30
+            Elemental enemy base_damage_scaling to .2 from .1
+
+        [REDUCE]
+            PrimaryAbility enemy collision particles to 5 from 8
+            PrimaryAbility non collision particles to 3 from 8
+
+            Enemy on_damaged particles scale to .35 from .75
