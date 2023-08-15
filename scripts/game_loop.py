@@ -14,6 +14,7 @@ from scripts.scene import Scene
 
 from scripts.tilemap_loader import load_tilemap
 
+from scripts.ui.button import Button
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
 
@@ -129,11 +130,7 @@ class GameLoop(Scene):
         self.level_info['area'][0] = starting_area
         self.level_info['areas'].remove(starting_area)
 
-        self.ui_elements.extend([
-            TextBox((10, 130), '3: draw regular cards', size=.5),
-            TextBox((10, 160), '4: draw stat cards', size=.5),
-            TextBox((10, 190), '0: fullscreen', size=.5)
-        ])
+        self.ui_elements.append(TextBox((10, 130), '0: fullscreen', size=.5))
 
         self.add_sprites(self.ui_elements)
         self.add_sprites(self.player)
@@ -148,14 +145,14 @@ class GameLoop(Scene):
             return
         
         if event.key == pygame.K_3:
-            cards, text = self.generate_standard_cards()
+            cards, text, discard = self.generate_standard_cards()
             if cards and text:
-                self.load_card_event(cards, text)
+                self.load_card_event(cards, text, discard)
 
         elif event.key == pygame.K_4:
-            cards, text = self.generate_stat_cards()
+            cards, text, discard = self.generate_stat_cards()
             if cards and text:
-                self.load_card_event(cards, text)
+                self.load_card_event(cards, text, discard)
 
     def on_scene_end(self):
         self.scene_fx['&dim']['bezier'] = presets['ease_out']
@@ -473,7 +470,7 @@ class GameLoop(Scene):
         self.camera.box.center = pos
         self.add_sprites(floor_text, floor_text_sub)
 
-    def load_card_event(self, cards, flavor_text):    
+    def load_card_event(self, cards, flavor_text, discard):    
         self.in_menu = True
         self.paused = True
 
@@ -490,8 +487,9 @@ class GameLoop(Scene):
 
         self.add_sprites(cards)
         self.add_sprites(flavor_text)
+        self.add_sprites(discard)
 
-    def remove_cards(self, selected_card, cards, flavor_text):
+    def remove_cards(self, selected_card, cards, flavor_text, discard):
         for card in cards:
             if card == selected_card:
                 card.set_y_bezier(SCREEN_DIMENSIONS[1] * 1.1, 20, presets['ease_out'])
@@ -502,19 +500,26 @@ class GameLoop(Scene):
 
             card.on_del_sprite(self, 20)
 
+        discard.set_flag('del')
+        discard.set_y_bezier(0 - discard.rect.height * 1.1, 20, presets['ease_out'])
+        discard.set_alpha_bezier(0, 20, presets['ease_out'])
+
+        self.delay_timers.append([20, self.del_sprites, [discard]])
+
         flavor_text.set_y_bezier(0, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(0, 25, [*presets['rest'], 0])
 
         flavor_text.on_del_sprite(self, 25)
 
         if self.card_info['overflow']:
-            new_cards, new_flavor_text = self.card_info['overflow'][0][0](*self.card_info['overflow'][0][1])
+            new_cards, new_flavor_text, new_discard = self.card_info['overflow'][0][0](*self.card_info['overflow'][0][1])
 
             if new_cards:
                 del self.card_info['overflow'][0]
 
                 self.add_sprites(new_cards)
                 self.add_sprites(new_flavor_text)
+                self.add_sprites(new_discard)
                 
                 return False
 
@@ -530,7 +535,11 @@ class GameLoop(Scene):
             frame.set_alpha_bezier(255, 30, presets['ease_out'])
 
         return True
-    
+
+    def on_discard(self, cards, flavor_text, discard):
+        # print(f'discarded card options')
+        self.remove_cards(None, cards, flavor_text, discard)
+
     def generate_standard_cards(self, count=3):
         def on_select(selected_card, cards, flavor_text):
             if selected_card.draw.DRAW_TYPE == 'TALENT':
@@ -550,7 +559,7 @@ class GameLoop(Scene):
 
                 # print(f'selected ability card: {selected_card.draw.DESCRIPTION["name"]}')
 
-            self.remove_cards(selected_card, cards, flavor_text)
+            self.remove_cards(selected_card, cards, flavor_text, discard)
 
         if count <= 0:
             return None, None
@@ -617,12 +626,25 @@ class GameLoop(Scene):
         flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
+        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'discard.png')).convert_alpha()
+        img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+        
+        discard = Button([cards[-1].rect.right + img.get_width() * 1.5, 0], img, 3, 0)
+        discard.flag = 'init'
+        discard.hover_info['color'] = cards[-1].hover_info['color']
+        
+        discard.delay_timers.append([30, discard.set_flag, [None]])
+        discard.set_alpha_bezier(255, 30, presets['ease_out'])
+        discard.set_y_bezier(225, 30, presets['ease_out'])
+
+        discard.on_select = [self.on_discard, [cards, flavor_text, discard]]
+
         for card in cards:
             card.cards = cards
             card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards, flavor_text
+        return cards, flavor_text, discard
 
     def generate_ability_fail_cards(self, previous_selected_card):
         def on_select(selected_card, cards, flavor_text):
@@ -637,7 +659,7 @@ class GameLoop(Scene):
 
             # print(f'replaced ability card: {selected_card.draw.DESCRIPTION["name"]} -> {previous_selected_card.draw.DESCRIPTION["name"]}')
 
-            self.remove_cards(selected_card, cards, flavor_text)
+            self.remove_cards(selected_card, cards, flavor_text, discard)
 
         existing_abilities = [a for a in self.player.abilities.values() if a.ABILITY_ID[0] != '@']
         draw_count = len(existing_abilities)
@@ -666,12 +688,25 @@ class GameLoop(Scene):
         flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
+        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'discard.png')).convert_alpha()
+        img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+        
+        discard = Button([cards[-1].rect.right + img.get_width() * 1.5, 0], img, 3, 0)
+        discard.flag = 'init'
+        discard.hover_info['color'] = cards[-1].hover_info['color']
+        
+        discard.delay_timers.append([30, discard.set_flag, [None]])
+        discard.set_alpha_bezier(255, 30, presets['ease_out'])
+        discard.set_y_bezier(225, 30, presets['ease_out'])
+
+        discard.on_select = [self.on_discard, [cards, flavor_text, discard]]
+
         for card in cards:
             card.cards = cards
             card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards, flavor_text
+        return cards, flavor_text, discard
 
     def generate_stat_cards(self):
         def on_select(selected_card, cards, flavor_text):
@@ -680,7 +715,7 @@ class GameLoop(Scene):
             for i in range(len(selected_card.stat['stat'])):
                 self.player.set_stat(selected_card.stat['stat'][i], selected_card.stat['value'][i], True)
 
-            self.remove_cards(selected_card, cards, flavor_text)
+            self.remove_cards(selected_card, cards, flavor_text, discard)
 
         cards = []
         count = len(self.card_info['stat_info'])
@@ -713,12 +748,25 @@ class GameLoop(Scene):
         flavor_text.set_y_bezier(y - 150, 30, presets['ease_out'])
         flavor_text.set_alpha_bezier(255, 45, [*presets['rest'], 0])
 
+        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'discard.png')).convert_alpha()
+        img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+
+        discard = Button([cards[-1].rect.right + img.get_width() * 1.5, 0], img, 3, 0)
+        discard.flag = 'init'
+        discard.hover_info['color'] = cards[-1].hover_info['color']
+        
+        discard.delay_timers.append([30, discard.set_flag, [None]])
+        discard.set_alpha_bezier(255, 30, presets['ease_out'])
+        discard.set_y_bezier(225, 30, presets['ease_out'])
+
+        discard.on_select = [self.on_discard, [cards, flavor_text, discard]]
+
         for card in cards:
             card.cards = cards
             card.flavor_text = flavor_text
             card.on_select = on_select
 
-        return cards, flavor_text
+        return cards, flavor_text, discard
 
     def apply_scene_fx(self, dt):
         entity_display = pygame.Surface(SCREEN_DIMENSIONS).convert_alpha()

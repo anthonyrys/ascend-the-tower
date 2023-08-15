@@ -340,13 +340,13 @@ class Temperance(Talent):
 
 	DESCRIPTION = {
 		'name': 'Temperance',
-		'description': 'You can no longer critical strike but gain a permanent damage increase.'
+		'description': 'You can no longer critical strike but gain a permanent 50 percent damage increase.'
 	}
 
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['damage_multiplier'] = 0.75
+		self.talent_info['damage_multiplier'] = 0.5
 
 		damage_buff = Buff(self.player, 'temperance', 'damage_multiplier', self.talent_info['damage_multiplier'], None)
 		crit_chance_debuff = Debuff(self.player, 'temperance', 'crit_strike_chance', -100, None)
@@ -955,8 +955,8 @@ class Reprisal(Talent):
 
 			self.combat_info = {
 				'max_distance': 600,
-				'damage_multiplier': .35,
-				'cooldown': [0, 20],
+				'damage_multiplier': .2,
+				'cooldown': [0, 30],
 				'speed': 20,
 				'size': 7,
 
@@ -1259,8 +1259,6 @@ class Shadowstep(Talent):
 
 		self.talent_info['dash_color'] = (120, 80, 140)
 
-		self.player.abilities['dash'].ability_info['cooldown_timer'] *= 1.5
-
 	def call(self, call, scene, info):
 		self.talent_info['position'] = 0
 
@@ -1470,6 +1468,7 @@ class ZeroSumGame(Talent):
 	def call(self, call, scene, info):
 		register_damage(
 			scene, self.player, info['primary'],
-			{'type': 'magical', 'amount': info['amount'], 'velocity': [-info['velocity'][0], -info['velocity'][1]]}
+			{'type': 'magical', 'amount': info['amount'], 'velocity': [-info['velocity'][0], -info['velocity'][1]]},
+			flags={'cant_crit': True, 'no_variation': True, 'bypass_mitigation': True}
 		)
 	

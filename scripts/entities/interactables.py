@@ -65,7 +65,7 @@ class StandardCardInteractable(Interactable):
         self.delay_timers.append([30, self.set_interactable, []])
 
     def on_interact(self, scene, sprite):
-        cards, text = scene.generate_standard_cards()
+        cards, text, discard = scene.generate_standard_cards()
 
         particle = Circle([0, 0], (255, 255, 255), 0, 5, self)
         particle.set_goal(15, position=[0, 0], radius=40, width=1, alpha=0)
@@ -74,7 +74,7 @@ class StandardCardInteractable(Interactable):
         scene.add_sprites(particle)
 
         if cards and text:
-            scene.load_card_event(cards, text)
+            scene.load_card_event(cards, text, discard)
 
         scene.del_sprites(self)
 
@@ -97,7 +97,7 @@ class StatCardInteractable(Interactable):
         self.sin_count = 0
 
     def on_interact(self, scene, sprite):
-        cards, text = scene.generate_stat_cards()
+        cards, text, discard = scene.generate_stat_cards()
 
         particle = Circle([0, 0], PLAYER_COLOR, 0, 5, self)
         particle.set_goal(15, position=[0, 0], radius=40, width=1, alpha=0)
@@ -106,7 +106,7 @@ class StatCardInteractable(Interactable):
         scene.add_sprites(particle)
 
         if cards and text:
-            scene.load_card_event(cards, text)
+            scene.load_card_event(cards, text, discard)
 
         scene.del_sprites(self)
 

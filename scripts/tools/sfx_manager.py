@@ -7,6 +7,9 @@ class Sfx:
 
     def init():
         for file in os.listdir(os.path.join('resources', 'sound_fx')):
+            if file.split('.')[0] == 'placeholder':
+                continue
+            
             Sfx.SOUNDS[file.split('.')[0]] = pygame.mixer.Sound(os.path.join('resources', 'sound_fx', file))
 
     def play(sound):

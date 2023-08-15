@@ -803,3 +803,38 @@ v0.6.0
             PrimaryAbility non collision particles to 3 from 8
 
             Enemy on_damaged particles scale to .35 from .75
+
+    v0.6.0-test.6
+        [ADD]
+            Placeholder sfx
+            Discard card image file
+
+            Game_loop discard button
+
+            Flags parameter to register_damage function
+            Flags parameter to register_heal function
+
+            Button ui class
+
+        [CHANGE]
+            Floor-2 tilemap
+
+            Temperance talent description
+
+            ZeroSumGame talent to no longer be able to critical strike
+            ZeroSumGame talent to no longer vary in damage
+            ZeroSumGame talent to bypass mitigation
+
+            Shadowstep talent to no longer increase dash cooldown
+
+        [INCREASE]
+            Reprisal talent familiar cooldown to 30 from 20
+
+        [DECREASE]
+            Temperance talent damage increase to .5 from .75
+            Reprisal talent familiar damage_multiplier to .2 from .35
+
+        [REMOVE]
+            Game_loop generate_standard_cards keybinding and ui
+            Game_loop generate_stat_cards keybinding and ui
+    

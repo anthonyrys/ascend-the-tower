@@ -57,11 +57,11 @@
     },
     "name": "floor-2",
     "offset": [
-      -2536,
-      -2082
+      -3237,
+      -2311
     ],
     "orientation": 180,
-    "strata": 5,
+    "strata": 0,
     "strata_alpha": true,
     "tile": {
       "dimensions": [
@@ -8079,22 +8079,6 @@
     },
     {
       "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 3,
-      "orientation": 0,
-      "position": [
-        3071,
-        2445
-      ],
-      "strata": 0,
-      "tile": "enemy_spawn_3",
-      "tileset": "flags"
-    },
-    {
-      "dimensions": [
         32,
         72
       ],
@@ -8316,6 +8300,22 @@
       "strata": 4,
       "tile": "decoration",
       "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 180,
+      "position": [
+        3864,
+        2603
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_3",
+      "tileset": "flags"
     }
   ]
 }
