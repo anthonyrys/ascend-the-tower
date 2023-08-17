@@ -416,7 +416,35 @@ class WheelOfFortune(Talent):
 		self.talent_info['current_stat'] = None
 		
 		self.talent_info['buff_signature'] = 'wheel_of_fortune'
-		self.talent_info['cooldown_timer'] = 300
+		self.talent_info['cooldown_timer'] = 360
+
+		self.talent_info['image'] = pygame.image.load(os.path.join('resources', 'images', 'entities', 'visuals', 'wheel-of-fortune.png')).convert_alpha()
+		self.talent_info['image'] = pygame.transform.scale(self.talent_info['image'], (self.talent_info['image'].get_width() * 2.5, self.talent_info['image'].get_height() * 2.5))
+
+		self.talent_info['tick_info'] = {
+			'radius': 18,
+			'angle_speed': 360 / self.talent_info['cooldown_timer'],
+			'angle': 0,
+			'color': PLAYER_COLOR,
+			'position': [0, 0],
+			'visual': pygame.Surface((self.talent_info['image'].get_width() * 2, self.talent_info['image'].get_height() * 2)).convert_alpha()
+		}
+		self.talent_info['tick_info']['visual'].set_colorkey((0, 0, 0))
+
+		self.sin_info = {
+			'amplifier': 2,
+			'frequency': .05,
+			'count': 0
+		}
+
+		self.direction_info = {
+			'previous_direction': self.player.movement_info['direction'],
+			'standard_offset': 35,
+			'offset': 35,
+			'b_offset': [0, 35],
+			'bezier': presets['ease_out'],
+			'frames': [0, 0]
+		}
 
 	def display_text(self, scene, stat):
 		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=PLAYER_COLOR)
@@ -431,8 +459,64 @@ class WheelOfFortune(Talent):
 
 		scene.add_sprites(particle)
 
+	def set_position(self, dt):
+		if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
+			self.direction_info['previous_direction'] = self.player.movement_info['direction']
+			self.direction_info['b_offset'] = [self.direction_info['offset'], self.direction_info['standard_offset'] * self.player.movement_info['direction']]
+			self.direction_info['frames'][1] = 10
+
+		if self.direction_info['frames'][1] != 0:
+			abs_prog = self.direction_info['frames'][0] / self.direction_info['frames'][1]
+
+			self.direction_info['offset'] = (
+				self.direction_info['b_offset'][0] + 
+				((self.direction_info['b_offset'][1] - self.direction_info['b_offset'][0]) * get_bezier_point(abs_prog, *self.direction_info['bezier']))
+			)
+
+			self.direction_info['frames'][0] += 1 * dt
+
+			if self.direction_info['frames'][0] >= self.direction_info['frames'][1]:
+				self.direction_info['frames'] = [0, 0]
+
+		pos = [
+			self.player.previous_center_position[0] - self.direction_info['offset'],
+			self.player.previous_center_position[1] - 20
+		]
+
+		if self.player.velocity[0] != 0 and (round(self.player.velocity[0]) ^ self.player.movement_info['direction']) < 0:
+			pos[0] += round(self.player.velocity[0] * .75)
+
+		self.talent_info['tick_info']['position'][0] = pos[0]
+		self.talent_info['tick_info']['position'][1] = pos[1] - round((self.sin_info['amplifier'] * math.sin(self.sin_info['frequency'] * (self.sin_info['count']))))
+
+		self.sin_info['count'] += 1 * dt
+
+	def set_visual(self, scene, dt):
+		a = (self.talent_info['tick_info']['angle'] - 90) * math.pi / 180
+		x = self.talent_info['tick_info']['radius'] * math.cos(a)
+		y = self.talent_info['tick_info']['radius'] * math.sin(a)
+
+		visual = self.talent_info['tick_info']['visual']
+		visual.fill((0, 0, 0))
+
+		pos = [
+			visual.get_rect().centerx + x,
+			visual.get_rect().centery + y
+		]
+
+		visual.blit(self.talent_info['image'], self.talent_info['image'].get_rect(center=visual.get_rect().center))
+		pygame.draw.line(visual, self.talent_info['tick_info']['color'], visual.get_rect().center, pos, 4)
+
+		visual.set_alpha(200 - 155 * (self.talent_info['cooldown'] / self.talent_info['cooldown_timer']))
+		self.set_position(dt)
+
+		scene.entity_surface.blit(visual, visual.get_rect(center=self.talent_info['tick_info']['position']))
+
 	def update(self, scene, dt):
 		super().update(scene, dt)
+
+		self.talent_info['tick_info']['angle'] +=self.talent_info['tick_info']['angle_speed'] * dt
+		self.set_visual(scene, dt)
 
 		if self.talent_info['cooldown'] > 0:
 			return
@@ -467,6 +551,21 @@ class WheelOfFortune(Talent):
 		self.display_text(scene, stat)
 		self.talent_info['current_stat'] = stat
 	
+		particles = []
+		pos = self.talent_info['tick_info']['position']
+		for _ in range(4):
+			cir = Circle(pos, PLAYER_COLOR, random.randint(8, 9), 0)
+			cir.set_goal(
+						60, 
+						position=(pos[0] + random.randint(-50, 50), pos[1] + random.randint(-50, 50)), 
+						radius=0, 
+						width=0
+					)
+
+			particles.append(cir)
+
+		scene.add_sprites(particles)    
+
 class Recuperation(Talent):
 	TALENT_ID = 'recuperation'
 	TALENT_CALLS = ['on_player_damaged']
@@ -702,7 +801,7 @@ class Ignition(Talent):
 
 	DESCRIPTION = {
 		'name': 'Ignition',
-		'description': 'Your attacks sets enemies ablaze.'
+		'description': 'Your attacks set enemies ablaze.'
 	}
 
 	@staticmethod
@@ -978,8 +1077,9 @@ class Reprisal(Talent):
 
 			self.direction_info = {
 				'previous_direction': self.player.movement_info['direction'],
-				'offset': 25,
-				'b_offset': [0, 25],
+				'standard_offset': -30,
+				'offset': -30,
+				'b_offset': [0, -30],
 				'bezier': presets['ease_out'],
 				'frames': [0, 0]
 			}
@@ -1031,7 +1131,7 @@ class Reprisal(Talent):
 		def set_position(self, dt):
 			if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
 				self.direction_info['previous_direction'] = self.player.movement_info['direction']
-				self.direction_info['b_offset'] = [self.direction_info['offset'], 25 * self.player.movement_info['direction']]
+				self.direction_info['b_offset'] = [self.direction_info['offset'], self.direction_info['standard_offset'] * self.player.movement_info['direction']]
 				self.direction_info['frames'][1] = 10
 
 			if self.direction_info['frames'][1] != 0:

@@ -1,5 +1,7 @@
 from scripts import PLAYER_COLOR
 
+from scripts.sprite import Sprite
+
 from scripts.core_systems.talents import call_talents, get_talent
 from scripts.core_systems.combat_handler import register_damage
 
@@ -241,6 +243,19 @@ class PrimaryAttack(Ability):
 
         tiles = scene.get_sprites('tile', exclude=['platform'])
         tile_col = check_line_collision(self.start, self.destination, tiles)
+
+        remove_tile_cols = []
+        collide_sprite = Sprite((0, 0), (255, 0, 0), (5, 5), 4)
+        collide_sprite.rect.center = self.character.rect.center
+
+        for tile in tile_col:
+            if tile[0].secondary_sprite_id == 'ramp' and tile[0].rect.colliderect(self.character.rect):
+                if not check_pixel_collision(collide_sprite, tile[0]):
+                    remove_tile_cols.append(tile)
+
+        for tile in remove_tile_cols:
+            tile_col.remove(tile)
+
         if tile_col != []:
             self.destination = list(tile_col[0][1][0])
 
@@ -351,7 +366,25 @@ class PrimaryAttack(Ability):
         ]
 
         for collidable in collidables:
-            line_col = check_line_collision(self.character.center_position, vel_pos, collidables)
+            if collidable.secondary_sprite_id == 'ramp':
+                collide_sprite = Sprite((0, 0), (255, 0, 0), (5, 5), 4)
+                collide_sprite.rect.center = vel_pos
+
+                if not check_pixel_collision(collide_sprite, collidable):
+                    continue
+
+                pos = [
+                    round(self.character.center_position[0] - self.character.velocity[0] * .5),
+                    round(self.character.center_position[1] - self.character.velocity[1] * .5)
+                ]
+
+                self.character.collision_ignore.append(collidable)
+                self.character.rect.center = pos
+
+                collision = collidable
+                break
+
+            line_col = check_line_collision(self.character.center_position, vel_pos, collidable)
 
             if line_col:
                 pos = [

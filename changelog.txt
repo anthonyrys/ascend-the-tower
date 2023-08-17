@@ -838,3 +838,25 @@ v0.6.0
             Game_loop generate_standard_cards keybinding and ui
             Game_loop generate_stat_cards keybinding and ui
     
+    v0.6.0-test.7
+        [ADD]
+            Wheel-of-fortune visual image file
+
+            WheelOfFortune talent sin_info and direction_info variables
+            WheelOfFortune talent set_position and set_visual functions
+
+        [CHANGE]
+            Floor-1 interactable image
+            Floor-2 interactable image
+
+            Ignition talent description
+            Reprisal talent direction_info variable
+
+        [INCREASE]
+            WheelOfFortune cooldown_timer to 360 from 300
+
+        [FIX]
+            Issue where PrimaryAbility would not activate if Player is standing on ramps
+            Issue where Reprisal familiar offset would not properly update
+            
+            Issue where check_line_collision method would not accept single sprite arguments

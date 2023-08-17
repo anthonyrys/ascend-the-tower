@@ -17,6 +17,9 @@ def check_pixel_collision(primary_sprite, secondary_sprite):
 def check_line_collision(start, end, sprites, width=1):
     clipped_sprites = []
 
+    if not isinstance(sprites, list):
+        sprites = [sprites]
+
     for sprite in sprites:
         con = False
         for spr in clipped_sprites:
