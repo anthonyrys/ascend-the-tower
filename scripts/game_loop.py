@@ -46,6 +46,10 @@ class GameLoop(Scene):
                 'threshold': 0
             },
 
+            'player_dim': {
+                'amount': 1.0,
+            },
+
             'entity_zoom': {
                 'type': None, 
                 'amount': 0.0,
@@ -74,14 +78,14 @@ class GameLoop(Scene):
                     'name': 'Vitality', 
                     'description': '+ Max Health',
                     'stat': ['max_health', 'health'],
-                    'value': [20, 20]
+                    'value': [10, 10]
                 },
 
                 {
                     'name': 'Potency', 
                     'description': '+ Damage',
                     'stat': ['base_damage'],
-                    'value': [10]
+                    'value': [5]
                 },
 
                 {
@@ -95,7 +99,7 @@ class GameLoop(Scene):
                     'name': 'Dexterity', 
                     'description': '+ Critical Strike',
                     'stat': ['crit_strike_chance', 'crit_strike_multiplier'],
-                    'value': [.05, .15]
+                    'value': [.05, .1]
                 },
             ]
         }
@@ -170,7 +174,10 @@ class GameLoop(Scene):
         self.enemy_info['card_death_counter'] += 1
         self.enemy_info['max_enemies'][0] -= 1
 
-        spawn_card = round(math.pow(self.enemy_info['card_death_counter'], 2.86))
+        if self.enemy_info['card_death_counter'] <= 2:
+            return
+
+        spawn_card = round(math.pow(self.enemy_info['card_death_counter'] - 2, 4) + 24)
         if spawn_card < random.randint(1, 100):
             return
         
@@ -370,7 +377,14 @@ class GameLoop(Scene):
         if self.player.collide_points['bottom']:
             self.player_info['last_ground_position'] = self.player.true_position
 
-        if self.player.rect.y >= self.entity_surface.get_height() - 250:
+        position = self.entity_surface.get_height() - 250
+
+        if self.player.rect.y >= position - 500:
+            self.scene_fx['player_dim']['amount'] = (1 - (position - self.player.rect.y) / 500)
+        else:
+            self.scene_fx['player_dim']['amount'] = 0
+
+        if self.player.rect.y >= position:
             self.player.rect.x = self.player_info['last_ground_position'][0]
             self.player.rect.y = self.player_info['last_ground_position'][1] - 25
 
@@ -587,7 +601,7 @@ class GameLoop(Scene):
             drawables.append(talent)    
 
         if len(drawables) < draw_count:
-            return None, None
+            return None, None, None
         
         for ability in get_all_abilities():
             if ability.ABILITY_ID in ability_exclude_list:
@@ -880,6 +894,11 @@ class GameLoop(Scene):
         if display_list[3] and self.scene_fx['&dim']['threshold'] == 1:
             screen.blit(display_list[3], (0, 0))
             
+        player_dim = pygame.Surface(SCREEN_DIMENSIONS)
+        player_dim.fill((0, 0, 0))
+        player_dim.set_alpha(255 * (self.scene_fx['player_dim']['amount']))                          
+        screen.blit(player_dim, (0, 0))
+
         screen.blit(self.ui_surface, (0, 0))
         if display_list[3] and self.scene_fx['&dim']['threshold'] == 0:
             screen.blit(display_list[3], (0, 0))

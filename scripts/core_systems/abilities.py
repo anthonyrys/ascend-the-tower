@@ -78,10 +78,22 @@ class Ability:
 
         call_talents(scene, self.character, {'on_ability': self})
     
+    def on_primary(self, damage_done):
+        ratio = damage_done / self.character.combat_info['base_damage']
+
+        if self.ability_info['cooldown'] > 0:
+            self.ability_info['cooldown'] -= 1 * ratio
+
+        if self.ability_info['cooldown'] < 0:
+            self.ability_info['cooldown'] = 0
+
     def end(self):
         ...
 
     def update(self, scene, dt):
+        if self.ABILITY_ID[0] != '@':
+            return
+        
         if self.ability_info['cooldown'] > 0:
             self.ability_info['cooldown'] -= 1 * dt
 
@@ -199,6 +211,9 @@ class PrimaryAttack(Ability):
         
         self.character.on_attack(scene, info)
         call_talents(scene, self.character, {f'on_{self.ABILITY_ID}_attack': info})
+
+        for ability in [a for a in self.character.abilities.values() if a]:
+            ability.on_primary(self.ability_info['damage'])
 
         overlap_offset = [
             self.character.center_position[0] - enemy.center_position[0],
@@ -518,7 +533,7 @@ class RainOfArrows(Ability):
         img.set_colorkey((0, 0, 0))
 
         self.ability_info['active'] = False
-        self.ability_info['cooldown_timer'] = 300
+        self.ability_info['cooldown_timer'] = 5
         self.ability_info['damage_percentage'] = .5
         self.ability_info['projectile_duration'] = 45
 
@@ -643,7 +658,7 @@ class IntangibleShroud(Ability):
         super().__init__(character)
 
         self.ability_info['active'] = False
-        self.ability_info['cooldown_timer'] = 150
+        self.ability_info['cooldown_timer'] = 2
 
         self.ability_info['frames'] = 0
         self.ability_info['frames_max'] = 45
@@ -758,7 +773,7 @@ class HolyJavelin(Ability):
         IMG_SCALE = 2.5
         img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'projectiles', 'holy-javelin.png')).convert_alpha()
 
-        self.ability_info['cooldown_timer'] = 250
+        self.ability_info['cooldown_timer'] = 4
 
         self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
@@ -929,7 +944,7 @@ class HolyJavelin(Ability):
         super().call(scene, keybind)
         
         self.character.overrides['ability-passive'] = self
-        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.5
+        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.35
 
         particle = Circle(
             [0, 0],
