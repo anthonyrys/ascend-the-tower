@@ -862,28 +862,28 @@ v0.6.0
             Issue where check_line_collision method would not accept single sprite arguments
 
     v0.6.0-test.8
-[ADD]
-    Game_loop scene_fx player_dim value
+        [ADD]
+            Game_loop scene_fx player_dim value
 
-    Ability on_primary function
+            Ability on_primary function
 
-[REWORK]
-    Game_loop on_enemy_death card spawning equation
+        [REWORK]
+            Game_loop on_enemy_death card spawning equation
 
-    RainOfArrows ability cooldown to now be based on Primary damage
-    IntangibleShroud ability cooldown to now be based on Primary damage
-    HolyJavelin ability cooldown to now be based on Primary damage
+            RainOfArrows ability cooldown to now be based on Primary damage
+            IntangibleShroud ability cooldown to now be based on Primary damage
+            HolyJavelin ability cooldown to now be based on Primary damage
 
-[DECREASE]
-    Game_loop stat Vitality value to 10 from 20
-    Game_loop stat Potency value to 5 from 10
-    Game_loop stat Dexterity value to .05 / .1 from .05 / .15
+        [DECREASE]
+            Game_loop stat Vitality value to 10 from 20
+            Game_loop stat Potency value to 5 from 10
+            Game_loop stat Dexterity value to .05 / .1 from .05 / .15
 
-    RainOfArrows ability cooldown_timer to 5 from 300
-    IntangibleShroud ability cooldown_timer to 2 from 150
+            RainOfArrows ability cooldown_timer to 5 from 300
+            IntangibleShroud ability cooldown_timer to 2 from 150
 
-    HolyJavelin initial jump to to 1.35 from 1.5
-    HolyJavelin ability cooldown_timer to 4 from 250
+            HolyJavelin initial jump to to 1.35 from 1.5
+            HolyJavelin ability cooldown_timer to 4 from 250
 
-[FIX]
-    Game_loop generate_standard_cards crash issue
+        [FIX]
+            Game_loop generate_standard_cards crash issue
