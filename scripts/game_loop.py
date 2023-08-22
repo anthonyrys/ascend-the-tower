@@ -148,6 +148,9 @@ class GameLoop(Scene):
         if self.paused or self.player.overrides['inactive-all']:
             return
         
+        if not pygame.key.get_mods() & pygame.KMOD_ALT:
+            return
+
         if event.key == pygame.K_3:
             cards, text, discard = self.generate_standard_cards()
             if cards and text:
@@ -293,7 +296,7 @@ class GameLoop(Scene):
         if self.level_info['pattern'][0] == 2:
             incr = 2
 
-        self.level_info['floor'] = max(1, min(self.level_info['floor'] + incr, 2))
+        self.level_info['floor'] += 1
         self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + incr, 2))
 
         self.delay_timers.append([120, self.load_tilemap, [], True])

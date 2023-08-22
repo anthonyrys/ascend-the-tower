@@ -12,24 +12,6 @@ class AiTemplate:
     def update(self, scene, dt, target):
         ...
 
-class HumanoidAi(AiTemplate):
-    def __init__(self, sprite):
-        super().__init__('humanoid', sprite)
-
-    def update(self, scene, dt, target):
-        if self.sprite.rect.x < target.rect.x:
-            self.sprite.velocity[0] += (self.sprite.movement_info['per_frame_movespeed']) if self.sprite.velocity[0] < self.sprite.movement_info['max_movespeed'] else 0
-        
-        if self.sprite.rect.x > target.rect.x:
-           self.sprite.velocity[0] -= (self.sprite.movement_info['per_frame_movespeed']) if self.sprite.velocity[0] > -(self.sprite.movement_info['max_movespeed']) else 0
-
-        if get_distance(self.sprite, target) < 200:
-            if self.sprite.rect.y - target.rect.y > self.sprite.movement_info['jump_power'] * 3:
-                if self.sprite.movement_info['jumps'] > 0 and self.sprite.cooldowns['jump'] <= 0:
-                    self.sprite.cooldowns['jump'] = self.sprite.cooldown_timers['jump']
-                    self.sprite.movement_info['jumps'] -= 1
-                    self.sprite.velocity[1] = -(self.sprite.movement_info['jump_power'])
-
 class FlyerAi(AiTemplate):
     def __init__(self, sprite):
         super().__init__('flyer', sprite)

@@ -887,3 +887,35 @@ v0.6.0
 
         [FIX]
             Game_loop generate_standard_cards crash issue
+
+    v0.6.0-test.9
+        [ADD]
+            Elemental Blast ability_info size value
+            Elemental Blast ability_info projectile_spread value
+
+        [CHANGE]
+            Floor-2 tilemap
+
+            Floor-1 tilemap interactables image
+            Floor-2 tilemap interactables image
+
+            Game_loop on_floor_clear to no longer cap floor value
+
+            Elemental Blast ability to now fire 3 projectiles
+
+        [INCREASE]
+            Sentry enemy per_frame_movespeed to .5 from .4
+
+        [DECREASE]
+            Elemental Blast size to 8 from 10
+            Elemental max_health to 60 from 75
+            Elemental activation_frames to 75 from 90
+
+        [REMOVE]
+            HumanoidAi ai class
+
+            HumanoidEnemy enemy class
+            Golem enemy class
+
+        [FIX]
+            Issue where RunItBack talent incorrectly resets ability cooldowns

@@ -639,10 +639,21 @@ class Holdfast(Talent):
 		self.talent_info['mitigation_amount'] = .5
 		self.talent_info['mitigation_time'] = 60
 	
+		self.talent_info['type'] = None
+
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
+		self.talent_info['type'] = info['type']
 		self.player.combat_info['mitigations'][info['type']][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]
+
+	def update(self, scene, dt):
+		if not self.talent_info['type']:
+			return
+		
+		if self.player.combat_info['mitigations'][self.talent_info['type']][self.TALENT_ID][1] <= 0:
+			self.talent_info['type'] = None
+			return
 
 class GuardianAngel(Talent):
 	TALENT_ID = 'guardian_angel'
@@ -866,6 +877,8 @@ class RunItBack(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
+		self.talent_info['abilities'] = []
+
 	@staticmethod
 	def check_draw_condition(player):
 		if get_talent(player, 'temperance'):
@@ -884,8 +897,14 @@ class RunItBack(Talent):
 			return
 
 		super().call(call, scene, info)
-		
-		info.ability_info['cooldown'] = 1
+		self.talent_info['abilities'].append(info)
+
+	def update(self, scene, dt):
+		for ability in self.talent_info['abilities']:
+			ability.ability_info['cooldown'] = 0
+
+		if self.talent_info['abilities']:
+			self.talent_info['abilities'] = []
 
 class LingeringShroud(Talent):
 	TALENT_ID = 'lingering_shroud'

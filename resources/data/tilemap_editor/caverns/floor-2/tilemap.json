@@ -57,10 +57,10 @@
     },
     "name": "floor-2",
     "offset": [
-      -3237,
-      -2311
+      -3179,
+      -2455
     ],
-    "orientation": 180,
+    "orientation": 0,
     "strata": 0,
     "strata_alpha": true,
     "tile": {
@@ -4975,54 +4975,6 @@
     },
     {
       "dimensions": [
-        28,
-        48
-      ],
-      "flipped": true,
-      "index": 5,
-      "orientation": 0,
-      "position": [
-        5775,
-        3798
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        36,
-        48
-      ],
-      "flipped": true,
-      "index": 9,
-      "orientation": 0,
-      "position": [
-        5892,
-        3735
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
-        52,
-        48
-      ],
-      "flipped": false,
-      "index": 10,
-      "orientation": 180,
-      "position": [
-        5898,
-        3987
-      ],
-      "strata": 4,
-      "tile": "decoration",
-      "tileset": "1c"
-    },
-    {
-      "dimensions": [
         80,
         72
       ],
@@ -8047,38 +7999,6 @@
     },
     {
       "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 2,
-      "orientation": 0,
-      "position": [
-        5761,
-        3700
-      ],
-      "strata": 0,
-      "tile": "enemy_spawn_2",
-      "tileset": "flags"
-    },
-    {
-      "dimensions": [
-        64,
-        64
-      ],
-      "flipped": false,
-      "index": 2,
-      "orientation": 0,
-      "position": [
-        5762,
-        3700
-      ],
-      "strata": 0,
-      "tile": "enemy_spawn_2",
-      "tileset": "flags"
-    },
-    {
-      "dimensions": [
         32,
         72
       ],
@@ -8303,15 +8223,111 @@
     },
     {
       "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        4001,
+        2784
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 2,
+      "orientation": 0,
+      "position": [
+        5850,
+        3758
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": true,
+      "index": 4,
+      "orientation": 0,
+      "position": [
+        5914,
+        3716
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        44,
+        72
+      ],
+      "flipped": false,
+      "index": 4,
+      "orientation": 180,
+      "position": [
+        5905,
+        3982
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
+        54,
+        72
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        5785,
+        3770
+      ],
+      "strata": 4,
+      "tile": "decoration",
+      "tileset": "1f"
+    },
+    {
+      "dimensions": [
         64,
         64
       ],
       "flipped": true,
-      "index": 2,
-      "orientation": 180,
+      "index": 3,
+      "orientation": 0,
       "position": [
-        3864,
-        2603
+        5745,
+        3670
+      ],
+      "strata": 0,
+      "tile": "enemy_spawn_3",
+      "tileset": "flags"
+    },
+    {
+      "dimensions": [
+        64,
+        64
+      ],
+      "flipped": true,
+      "index": 3,
+      "orientation": 0,
+      "position": [
+        3911,
+        2631
       ],
       "strata": 0,
       "tile": "enemy_spawn_3",
