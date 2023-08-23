@@ -124,6 +124,16 @@ class Player(PhysicsEntity):
 
         return ui_elements
 
+    def get_ability(self, ability_id):
+        for ability in self.abilities.values():
+            if not ability:
+                continue
+            
+            if ability.ABILITY_ID == ability_id:
+                return ability
+        
+        return None
+
     def on_key_down(self, scene, key):
         if scene.paused:
             return
@@ -234,6 +244,17 @@ class Player(PhysicsEntity):
 
     def on_damaged(self, scene, info):
         if 'minor' in info:
+            img = TextBox.create_text_line('default', info['amount'], size=.75, color=UI_HEALTH_COLOR)
+            particle = Image(self.rect.center, img, 6, 255)
+            particle.set_beziers(radius=presets['ease_in'])
+            particle.set_goal(
+                45, 
+                position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
+                alpha=0,
+                dimensions=(img.get_width(), img.get_height())
+            )
+
+            scene.add_sprites(particle)
             return
         
         sprite = info['primary']

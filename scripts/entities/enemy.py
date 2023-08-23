@@ -251,7 +251,8 @@ class Sentry(FlyerEnemy):
         }
 
         self.img_info['imgs'] = load_spritesheet(os.path.join('resources', 'images', 'entities', 'enemies', self.secondary_sprite_id, f'{self.secondary_sprite_id}.png'))
-    
+        self.combat_info['#sentry_original_base_damage'] = self.combat_info['base_damage']
+
     def set_images(self, scene, dt):
         self.image.fill((0, 0, 0, 0))
 
@@ -308,7 +309,7 @@ class Sentry(FlyerEnemy):
             average_vel = (abs(self.velocity[0]) + abs(self.velocity[1])) *.5
             average_vel = 1 if average_vel == 0 else average_vel
 
-            self.combat_info['base_damage'] = round(self.default_combat_info['base_damage'] * (average_vel / self.movement_info['max_movespeed']))
+            self.combat_info['base_damage'] = round(self.combat_info['#sentry_original_base_damage'] * (average_vel / self.movement_info['max_movespeed']))
 
             self.rect.x += round(self.velocity[0] * dt)
             self.rect.y += round(self.velocity[1] * dt)

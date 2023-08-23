@@ -932,7 +932,7 @@ class LingeringShroud(Talent):
 	
 	@staticmethod
 	def check_draw_condition(player):
-		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID == 'intangible_shroud']:
+		if player.get_ability('intangible_shroud'):
 			return True
 		
 		return False

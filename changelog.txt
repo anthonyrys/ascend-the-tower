@@ -919,3 +919,24 @@ v0.6.0
 
         [FIX]
             Issue where RunItBack talent incorrectly resets ability cooldowns
+
+    v0.6.0-test.10
+        [ADD]
+            HolyJavelin jump_power_multiplier value
+            
+            Player get_ability function
+            
+        [CHANGE]    
+            Floor-2 tilemap
+
+            HolyJavelin update to now display ability image during wind-up
+
+            Player on_damaged to now display minor damage numbers
+
+        [DECREASE]
+            HolyJavelin jump_power_multiplier to .3 from .35
+
+        [FIX]
+            Issue where PrimaryAbility active state would last indefinitely
+            
+            Issue where Sentry base_damage would not correctly scale with level

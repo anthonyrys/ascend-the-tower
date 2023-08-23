@@ -11,7 +11,7 @@ from scripts.visual_fx.particle import Circle
 from scripts.ui.card import Card
 
 from scripts.tools import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
-from scripts.tools.bezier import presets
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import random
@@ -169,6 +169,8 @@ class PrimaryAttack(Ability):
 
         self.ability_info['duration'] = 0
 
+        self.ability_info['timer'] = [0, 20]
+
     @staticmethod
     def check_draw_condition(player):
         return False
@@ -281,6 +283,8 @@ class PrimaryAttack(Ability):
         
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['damage'] = self.character.combat_info['base_damage']
+        self.ability_info['timer'][0] = self.ability_info['timer'][1]
+
         self.charges -= 1
 
         super().call(scene, keybind)
@@ -432,7 +436,8 @@ class PrimaryAttack(Ability):
                 
             collision = enemy
         
-        if get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None:
+        self.ability_info['timer'][0] -= 1 * dt
+        if get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None or self.ability_info['timer'][0] <= 0:
             self.character.apply_collision_x(scene)
             self.character.apply_collision_y(scene, dt)
             self.character.set_gravity(self.ability_info['gravity_frames'], 1, 5)
@@ -793,6 +798,8 @@ class HolyJavelin(Ability):
         
         self.ability_info['countdown'] = [0, 0]
 
+        self.ability_info['jump_power_multiplier'] = 1.3
+
     def collide_default(self, scene, projectile, sprite):
         enemies = []
 
@@ -865,12 +872,6 @@ class HolyJavelin(Ability):
             return
         
         self.ability_info['countdown'][0] -= 1 * dt
-        if self.ability_info['countdown'][0] > 0:
-            return
-        
-        self.ability_info['countdown'][1] = 0
-
-        pos = self.character.center_position
         
         direction = [
             scene.mouse.entity_pos[0] - self.character.center_position[0],
@@ -882,6 +883,22 @@ class HolyJavelin(Ability):
         img = self.ability_info['image'].copy()
         angle = (180 / math.pi) * math.atan2(vel[0], vel[1]) - 180
 
+        if self.ability_info['countdown'][0] > 0:
+            percen = 1 - 1 * (self.ability_info['countdown'][0] / self.ability_info['countdown'][1])
+
+            rotate_img = pygame.transform.rotate(img, (angle + (self.character.movement_info['direction'] * (360 * (percen + .75) if (percen + .75) <= 1 else 1))))
+            rotate_img.set_alpha(255 * get_bezier_point(percen, *presets['ease_out']))
+            rotate_position = [
+                self.character.center_position[0] - vel[0] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0),
+                self.character.center_position[1] - vel[1] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0)
+            ]
+
+            scene.entity_surface.blit(rotate_img, rotate_img.get_rect(center=rotate_position))
+            return
+        
+        self.ability_info['countdown'][1] = 0
+
+        pos = self.character.center_position
         projectile = ProjectileStandard(
             pos,
             pygame.transform.rotate(img, angle),
@@ -944,7 +961,7 @@ class HolyJavelin(Ability):
         super().call(scene, keybind)
         
         self.character.overrides['ability-passive'] = self
-        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.35
+        self.character.velocity[1] = -self.character.get_stat('jump_power') * self.ability_info['jump_power_multiplier']
 
         particle = Circle(
             [0, 0],

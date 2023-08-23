@@ -1,4 +1,7 @@
 from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR, ENEMY_COLOR
+from scripts.camera import BoxCamera
+from scripts.tilemap_loader import load_tilemap
+from scripts.scene import Scene
 
 from scripts.core_systems.talents import get_all_talents, get_talent
 from scripts.core_systems.abilities import get_all_abilities
@@ -7,20 +10,16 @@ from scripts.entities.enemy import ENEMIES
 from scripts.entities.entity import Entity
 from scripts.entities.tiles import Tile
 from scripts.entities.player import Player
-from scripts.visual_fx.particle import Circle
 from scripts.entities.interactables import StandardCardInteractable
 
-from scripts.scene import Scene
-
-from scripts.tilemap_loader import load_tilemap
+from scripts.tools import get_sprite_colors, get_distance
+from scripts.tools.bezier import presets, get_bezier_point
 
 from scripts.ui.button import Button
 from scripts.ui.card import StandardCard, StatCard
 from scripts.ui.text_box import TextBox
 
-from scripts.tools import get_sprite_colors, get_distance
-from scripts.camera import BoxCamera
-from scripts.tools.bezier import presets, get_bezier_point
+from scripts.visual_fx.particle import Circle
 
 import pygame
 import random
