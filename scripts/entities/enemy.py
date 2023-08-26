@@ -2,7 +2,7 @@ from scripts import ENEMY_COLOR, CRIT_COLOR
 
 from scripts.core_systems.abilities import Ability
 from scripts.core_systems.combat_handler import get_immunity_dict, get_mitigation_dict, register_damage
-from scripts.core_systems.enemy_ai import FlyerAi, FloaterAi
+from scripts.core_systems.enemy_ai import FlyerAi, FloaterAi, EncircleAi
 from scripts.core_systems.status_effects import OnFire, get_debuff
 
 from scripts.entities.physics_entity import PhysicsEntity
@@ -23,11 +23,14 @@ import math
 import os
 
 class Enemy(PhysicsEntity):
+    ENEMY_FLAGS = {}
+
     def __init__(self, position, img, dimensions, strata, alpha):
         super().__init__(position, img, dimensions, strata, alpha)
         self.sprite_id = 'enemy'
 
         self.ai = None
+        self.swarm = False
         self.healthbar = EnemyBar(self)
 
         self.level_info = {
@@ -174,21 +177,11 @@ class Enemy(PhysicsEntity):
             self.img_info['damage_frames'] -= 1 * dt
 
 
-class FlyerEnemy(Enemy):
-    def __init__(self, position, img, dimensions, strata, alpha):
-        super().__init__(position, img, dimensions, strata, alpha)
-        self.ai = FlyerAi(self)
-
-class FloaterEnemy(Enemy):
-    def __init__(self, position, img, dimensions, strata, alpha):
-        super().__init__(position, img, dimensions, strata, alpha)
-        self.ai = FloaterAi(self)
-
-
-class Sentry(FlyerEnemy):
+class Sentry(Enemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((96, 96)).convert_alpha(), None, strata, None)
         self.secondary_sprite_id = 'sentry'
+        self.ai = FlyerAi(self)
 
         self.default_movement_info = {
             'direction': 0,
@@ -318,7 +311,129 @@ class Sentry(FlyerEnemy):
         self.apply_afterimages(scene, dt)
         super().display(scene, dt)
 
-class Elemental(FloaterEnemy):
+class Sentinel(Enemy):
+    ENEMY_FLAGS = {'swarm': 2}
+
+    def __init__(self, position, strata, level=1):
+        super().__init__(position, pygame.Surface((32, 32)).convert_alpha(), None, strata, None)
+        self.secondary_sprite_id = 'sentinel'
+        self.ai = EncircleAi(self)
+
+        self.default_movement_info = {
+            'direction': 0,
+
+            'friction': 2,
+            'friction_frames': 0,
+
+            'per_frame_movespeed': .75,
+            'max_movespeed': 15,
+
+            'jump_power': 24,
+            'jumps': 0,
+            'max_jumps': 1
+        }
+
+        self.movement_info = self.default_movement_info.copy()
+
+        self.default_combat_info = {
+            'max_health': 25,
+            'health': 25,
+            
+            'health_regen_amount': 0,
+            'health_regen_tick': 0,
+            'health_regen_timer': 0,
+
+            'damage_multiplier': 1.0,
+            'healing_multiplier': 1.0,
+
+            'base_damage': 10,
+            'crit_strike_chance': 0,
+            'crit_strike_multiplier': 0,
+
+            'knockback_resistance': .5,
+            
+            'immunities': get_immunity_dict(),
+            'mitigations': get_mitigation_dict()
+        }
+
+        self.combat_info = self.default_combat_info.copy()
+
+        self.level_info = {
+            'level': level,
+
+            'max_health_scaling': .35,
+            'base_damage_scaling': .15,
+            'crit_strike_chance_scaling': 1.0,
+            'crit_strike_multiplier_scaling': 1.0
+        }
+
+        self.set_stats()
+
+        self.img_info = {
+            'scale': 1.5,
+
+            'damage_frames': 0,
+            'damage_frames_max': 0,
+
+            'afterimage_frames': [0, 1],
+            'base_img': []
+        }
+
+        img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'enemies', 'sentinel', 'sentinel.png'))
+        self.img_info['base_img'] = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale']))
+
+    def set_images(self, scene, dt):
+        self.image.fill((0, 0, 0, 0))
+
+        pos_x = self.center_position[0] + self.velocity[0] * 10
+        pos_y = self.center_position[1] + self.velocity[1] * 10
+
+        angle = (180 / math.pi) * math.atan2(pos_x - self.center_position[0], pos_y - self.center_position[1])
+
+        img = self.img_info['base_img'].copy()
+        img = pygame.transform.rotate(img, angle)
+
+        img = pygame.transform.scale(img, (img.get_width() * self.img_info['scale'], img.get_height() * self.img_info['scale']))
+
+        self.image.blit(img, img.get_rect(center=self.image.get_rect().center))
+
+    def apply_afterimages(self, scene, dt, visuals=True):
+        average_vel = (abs(self.velocity[0]) + abs(self.velocity[1])) *.5
+        average_vel = 1 if average_vel == 0 else average_vel
+        
+        if average_vel < 5:
+            return
+
+        self.img_info['afterimage_frames'][0] += 1 * dt
+        if self.img_info['afterimage_frames'][0] < self.img_info['afterimage_frames'][1]:
+            return
+        
+        self.img_info['afterimage_frames'][0] = 0
+        
+        afterimage = Image(
+            self.center_position,
+            self.image.copy(), self.strata - 1, 50
+        )
+        
+        afterimage.set_goal(5, alpha=0, dimensions=self.image.get_size())
+
+        scene.add_sprites(afterimage)
+
+    def display(self, scene, dt):
+        if not scene.paused:
+            self.ai.update(scene, dt, scene.player)
+
+            if abs(self.velocity[0]) < self.movement_info['per_frame_movespeed']:
+                self.velocity[0] = 0
+
+            self.rect.x += round(self.velocity[0] * dt)
+            self.rect.y += round(self.velocity[1] * dt)
+
+        self.set_images(scene, dt)
+        self.apply_afterimages(scene, dt)
+        super().display(scene, dt)
+
+class Elemental(Enemy):
     class Blast(Ability):
         def __init__(self, character):
             super().__init__(character)
@@ -477,7 +592,8 @@ class Elemental(FloaterEnemy):
     def __init__(self, position, strata, level=1):
         super().__init__(position, pygame.Surface((40, 40)).convert_alpha(), None, strata, None)
         self.secondary_sprite_id = 'elemental'
-
+        self.ai = FloaterAi(self)
+        
         self.glow['active'] = True
         self.glow['intensity'] = .25
         self.glow['size'] = 1.15
@@ -633,5 +749,5 @@ class Elemental(FloaterEnemy):
 
 
 ENEMIES = {
-    1: [None, Sentry, Elemental]
+    1: [Sentinel, Sentry, Elemental]
 }

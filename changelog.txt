@@ -940,3 +940,40 @@ v0.6.0
             Issue where PrimaryAbility active state would last indefinitely
             
             Issue where Sentry base_damage would not correctly scale with level
+
+    v0.6.0-test.11
+        [ADD]
+            Sentinel enemy image file
+
+            EncircleAi ai class
+            
+            Enemy ENEMY_FLAGS variable
+            Enemy swarm variable
+
+            Sentinel enemy class
+
+        [CHANGE]
+            Floor-1 tilemap
+            Floor-2 tilemap
+
+            Game_loop register_enemy_flags to now consider ENEMY_FLAGS
+            Game_loop on_enemy_death to now consider ENEMY_FLAGS
+
+            Recuperation talent description
+            Recuperation talent to now provide health_regen_amount
+
+        [INCREASE]
+            Game_loop enemy_info despawn_distance to 2.5x from 1.5x
+
+            Recupration tick_reduction to 55 from 50
+
+        [DECREASE]
+            PhysicsEntity -> Player health_regen_amount to 0 from 0.01
+
+            Recupration buff_duration to 30 from 60
+
+        [REMOVE]
+            Golem enemy image files
+
+            FlyerEnemy enemy class
+            FloaterEnemy enemy class

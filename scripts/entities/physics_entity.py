@@ -54,7 +54,7 @@ class PhysicsEntity(Entity):
             'max_health': 100,
             'health': 100,
 
-            'health_regen_amount': .01,
+            'health_regen_amount': 0,
             'health_regen_tick': 60,
             'health_regen_timer': 0,
 

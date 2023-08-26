@@ -572,7 +572,7 @@ class Recuperation(Talent):
 
 	DESCRIPTION = {
 		'name': 'Recuperation',
-		'description': 'Gain increased health regeneration upon taking damage.'
+		'description': 'Gain temporary health regeneration upon taking damage.'
 	}
 
 	@staticmethod
@@ -593,21 +593,27 @@ class Recuperation(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['tick_reduction'] = 50
+		self.talent_info['tick_reduction'] = 55
+		self.talent_info['regen_amount'] = .01
 
-		self.talent_info['buff_duration'] = 60
+		self.talent_info['buff_duration'] = 30
 		self.talent_info['buff_signature'] = 'recuperation'
 
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
-		current_buff = get_buff(self.player, self.talent_info['buff_signature'])
-		if current_buff:
-			current_buff.duration = self.talent_info['buff_duration']
+		current_buff_tick = get_buff(self.player, self.talent_info['buff_signature'] + '_tick')
+		if current_buff_tick:
+			current_buff_tick.duration = self.talent_info['buff_duration']
+			get_buff(self.player, self.talent_info['buff_signature'] + '_amount').duration = self.talent_info['buff_duration']
+
 			return
 		
-		buff = Buff(self.player, self.talent_info['buff_signature'], 'health_regen_tick', -self.talent_info['tick_reduction'], self.talent_info['buff_duration'])
-		self.player.buffs.append(buff)
+		tick_buff = Buff(self.player, self.talent_info['buff_signature'] + '_tick', 'health_regen_tick', -self.talent_info['tick_reduction'], self.talent_info['buff_duration'])
+		amount_buff = Buff(self.player, self.talent_info['buff_signature'] + '_amount', 'health_regen_amount', self.talent_info['regen_amount'], self.talent_info['buff_duration'])
+
+		self.player.buffs.append(tick_buff)
+		self.player.buffs.append(amount_buff)
 
 class Holdfast(Talent):
 	TALENT_ID = 'holdfast'

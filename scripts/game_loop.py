@@ -111,7 +111,7 @@ class GameLoop(Scene):
             'spawn_cooldown': [60, 60],
             'spawns': [],
             'spawn_distance': 500,
-            'despawn_distance': SCREEN_DIMENSIONS[0] * 1.5
+            'despawn_distance': SCREEN_DIMENSIONS[0] * 2.5
         }
 
         self.player_info = {
@@ -173,8 +173,9 @@ class GameLoop(Scene):
         self.enemy_info['max_enemies'][0] += 1
 
     def on_enemy_death(self, enemy):
-        self.enemy_info['card_death_counter'] += 1
-        self.enemy_info['max_enemies'][0] -= 1
+        if not enemy.swarm:
+            self.enemy_info['card_death_counter'] += 1
+            self.enemy_info['max_enemies'][0] -= 1
 
         if self.enemy_info['card_death_counter'] <= 2:
             return
@@ -337,40 +338,54 @@ class GameLoop(Scene):
         self.enemy_info['spawn_cooldown'][0] = self.enemy_info['spawn_cooldown'][1]
         self.enemy_info['spawns'][self.enemy_info['spawns'].index(spawn)]['count'][0] += 1
 
-        enemy_position = [spawn['position'][0] + random.randint(-250, 250), spawn['position'][1] + random.randint(-250, 250)]
-        collide_tiles = True
-        while collide_tiles:
-            collide_tiles = []
-            for tile in self.get_sprites('tile'):
-                if tile.rect.collidepoint(enemy_position):
-                    enemy_position[1] -= tile.rect.height * 4
-                    collide_tiles.append(tile)
+        selected_enemy = ENEMIES[1][spawn['enemy'] - 1]
 
-        enemy = ENEMIES[1][spawn['enemy'] - 1](enemy_position, 6, level=self.level_info['floor'])
-        enemy.img_info['damage_frames'] = 15
-        enemy.img_info['damage_frames_max'] = 15
+        def spawn_enemy(swarm=False):
+            enemy_position = [spawn['position'][0] + random.randint(-250, 250), spawn['position'][1] + random.randint(-250, 250)]
+            collide_tiles = True
+            while collide_tiles:
+                collide_tiles = []
+                for tile in self.get_sprites('tile'):
+                    if tile.rect.collidepoint(enemy_position):
+                        enemy_position[1] -= tile.rect.height * 4
+                        collide_tiles.append(tile)
 
-        particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
-        particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
-        particle.set_goal(30, radius=0, width=1, alpha=0)
+            enemy = selected_enemy(enemy_position, 6, level=self.level_info['floor'])
+            enemy.img_info['damage_frames'] = 15
+            enemy.img_info['damage_frames_max'] = 15
+            enemy.swarm = swarm
 
-        particles = []
-        for _ in range(6):
-            cir = Circle(particle_position, ENEMY_COLOR, random.randint(8, 10), 0)
-            cir.set_goal(
-                        75, 
-                        position=(particle_position[0] + random.randint(-75, 75), particle_position[1] + random.randint(-75, 75)), 
-                        radius=0, 
-                        width=0
-                    )
+            particle_position = [enemy_position[0] + enemy.image.get_width() * .5, enemy_position[1] + enemy.image.get_height() * .5]
+            particle = Circle(particle_position, ENEMY_COLOR, 60, 2)
+            particle.set_goal(30, radius=0, width=1, alpha=0)
 
-            particles.append(cir)
+            particles = []
+            for _ in range(6):
+                cir = Circle(particle_position, ENEMY_COLOR, random.randint(8, 10), 0)
+                cir.set_goal(
+                            75, 
+                            position=(particle_position[0] + random.randint(-75, 75), particle_position[1] + random.randint(-75, 75)), 
+                            radius=0, 
+                            width=0
+                        )
 
-        self.add_sprites(particle)
+                particles.append(cir)
 
-        self.on_enemy_spawn()
-        self.delay_timers.append([30, self.add_sprites, [enemy], 1])
-        self.delay_timers.append([30, self.add_sprites, [particles], 1])
+            self.add_sprites(particle)
+
+            if not swarm:
+                self.on_enemy_spawn()
+
+            self.delay_timers.append([30, self.add_sprites, [enemy], 1])
+            self.delay_timers.append([30, self.add_sprites, [particles], 1])
+
+        if 'swarm' in selected_enemy.ENEMY_FLAGS:
+            spawn_enemy()
+            for _ in range(selected_enemy.ENEMY_FLAGS['swarm'] - 1):
+                spawn_enemy(swarm=True)
+
+        else:
+            spawn_enemy()
 
     def register_player_flags(self):
         if not self.entity_surface:
