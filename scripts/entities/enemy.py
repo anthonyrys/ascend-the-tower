@@ -225,8 +225,8 @@ class Sentry(Enemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .55,
-            'base_damage_scaling': .25,
+            'max_health_scaling': .45,
+            'base_damage_scaling': .15,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }
@@ -361,8 +361,8 @@ class Sentinel(Enemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .35,
-            'base_damage_scaling': .15,
+            'max_health_scaling': .25,
+            'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }
@@ -640,8 +640,8 @@ class Elemental(Enemy):
         self.level_info = {
             'level': level,
 
-            'max_health_scaling': .55,
-            'base_damage_scaling': .2,
+            'max_health_scaling': .4,
+            'base_damage_scaling': .1,
             'crit_strike_chance_scaling': 1.0,
             'crit_strike_multiplier_scaling': 1.0
         }

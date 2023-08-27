@@ -20,7 +20,6 @@ if __name__ == '__main__':
     from scripts.scene_handler import SceneHandler
     
     from scripts.tools.sfx_manager import Sfx
-
     from scripts.tools.fonts import Fonts
     from scripts.tools.inputs import Inputs
 

@@ -977,3 +977,33 @@ v0.6.0
 
             FlyerEnemy enemy class
             FloaterEnemy enemy class
+
+    v0.6.0-test.12
+        [ADD]
+            Floor-4 tilemap
+            Afterstrike talent image file
+
+            Slowed debuff
+
+            Afterstrike talent
+
+            Polygon particle class
+
+        [CHANGE]
+            Game_loop card spawn threshold to scale with enemy spawn counter
+
+            Holdfast talent to now have visual indicators when activated
+
+        [DECREASE]
+            Sentry max_health_scaling to .45 from .55
+            Sentry base_damage_scaling to .15 from .25
+
+            Sentinel max_health_scaling to .25 from .35
+            Sentinel base_damage_scaling to .1 from .15
+
+            Elemental max_health_scaling to .4 from .55
+            Elemental base_damage_scaling to .1 from .2
+
+        [FIX]
+            Issue where HolyJavelin wind-up image would update while the game is paused
+    

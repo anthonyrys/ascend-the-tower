@@ -800,6 +800,8 @@ class HolyJavelin(Ability):
 
         self.ability_info['jump_power_multiplier'] = 1.3
 
+        self.ability_info['rotate_info'] = []
+
     def collide_default(self, scene, projectile, sprite):
         enemies = []
 
@@ -886,14 +888,19 @@ class HolyJavelin(Ability):
         if self.ability_info['countdown'][0] > 0:
             percen = 1 - 1 * (self.ability_info['countdown'][0] / self.ability_info['countdown'][1])
 
-            rotate_img = pygame.transform.rotate(img, (angle + (self.character.movement_info['direction'] * (360 * (percen + .75) if (percen + .75) <= 1 else 1))))
-            rotate_img.set_alpha(255 * get_bezier_point(percen, *presets['ease_out']))
-            rotate_position = [
-                self.character.center_position[0] - vel[0] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0),
-                self.character.center_position[1] - vel[1] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0)
-            ]
+            if dt != 0:
+                self.ability_info['rotate_info'] = [
+                    (angle + (self.character.movement_info['direction'] * (360 * (percen + .75) if (percen + .75) <= 1 else 1))),
+                    [
+                        self.character.center_position[0] - vel[0] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0),
+                        self.character.center_position[1] - vel[1] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0)
+                    ]
+                ]
 
-            scene.entity_surface.blit(rotate_img, rotate_img.get_rect(center=rotate_position))
+            rotate_img = pygame.transform.rotate(img, self.ability_info['rotate_info'][0])
+            rotate_img.set_alpha(255 * get_bezier_point(percen, *presets['ease_out']))
+
+            scene.entity_surface.blit(rotate_img, rotate_img.get_rect(center=self.ability_info['rotate_info'][1]))
             return
         
         self.ability_info['countdown'][1] = 0

@@ -1,16 +1,16 @@
-from scripts import HEAL_COLOR, PLAYER_COLOR
+from scripts import HEAL_COLOR, PLAYER_COLOR, ENEMY_COLOR
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
-from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
+from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire, Slowed
 
 from scripts.entities.entity import Entity
-from scripts.visual_fx.particle import Image, Circle
+from scripts.visual_fx.particle import Image, Circle, Polygon
 from scripts.entities.projectile import ProjectileHoming
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
 
-from scripts.tools import get_distance, get_closest_sprite, check_line_collision
+from scripts.tools import get_distance, get_closest_sprite, check_line_collision, create_outline_full
 from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
@@ -647,16 +647,37 @@ class Holdfast(Talent):
 	
 		self.talent_info['type'] = None
 
+		self.talent_info['type_colors'] = {
+			'contact': ENEMY_COLOR,
+			'physical': (75, 90, 255),
+			'magical': (205, 75, 255), 
+			'special': PLAYER_COLOR
+		}
+
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
 		self.talent_info['type'] = info['type']
 		self.player.combat_info['mitigations'][info['type']][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]
 
+		particle = Circle(
+			[0, 0],
+			self.talent_info['type_colors'][self.talent_info['type']],
+			0,
+			5,
+			self.player
+		)
+
+		particle.set_goal(12, position=[0, 0], radius=60, width=1, alpha=0)
+		particle.set_beziers(alpha=[*presets['rest'], 0])
+		
+		scene.add_sprites(particle)
+
 	def update(self, scene, dt):
 		if not self.talent_info['type']:
 			return
 		
+		create_outline_full(self.player, self.talent_info['type_colors'][self.talent_info['type']], scene.entity_surface, 2)
 		if self.player.combat_info['mitigations'][self.talent_info['type']][self.TALENT_ID][1] <= 0:
 			self.talent_info['type'] = None
 			return
@@ -1596,4 +1617,107 @@ class ZeroSumGame(Talent):
 			{'type': 'magical', 'amount': info['amount'], 'velocity': [-info['velocity'][0], -info['velocity'][1]]},
 			flags={'cant_crit': True, 'no_variation': True, 'bypass_mitigation': True}
 		)
+
+class Afterstrike(Talent):
+	TALENT_ID = 'afterstrike'
+	TALENT_CALLS = ['on_@primary_attack']
+
+	DESCRIPTION = {
+		'name': 'Afterstrike',
+		'description': 'Inflict a slow-inducing secondary strike shortly after your primary attack.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'afterstrike',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
 	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['queues'] = []
+
+		self.talent_info['queue_timer'] = 15
+		self.talent_info['damage_multiplier'] = .2
+
+		self.talent_info['signature'] = 'afterstrike'
+		self.talent_info['duration'] = 60
+		self.talent_info['slowed_percentage'] = .5
+
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+
+		self.talent_info['queues'].append([self.talent_info['queue_timer'], info])
+
+	def update(self, scene, dt):
+		super().update(scene, dt)
+
+		del_queue = []
+		for queue in self.talent_info['queues']:
+			if queue[1]['target'].combat_info['health'] <= 0:
+				del_queue.append(queue)
+				continue
+			
+			queue[0] -= 1 * dt
+
+			if queue[0] <= 0:
+				del_queue.append(queue)
+
+				amount = queue[1]['amount'] * self.talent_info['damage_multiplier']
+				vel = [queue[1]['velocity'][0] * .5, queue[1]['velocity'][1] * .5]
+				self.player.delay_timers.append([3, register_damage, [scene, self.player, queue[1]['target'], {'type': 'physical', 'amount': amount, 'velocity': vel}]])
+
+				value = queue[1]['target'].movement_info['max_movespeed'] * self.talent_info['slowed_percentage']
+				debuff = Slowed(queue[1]['target'], self.talent_info['signature'], value, self.talent_info['duration'])
+				has_debuff = get_debuff(queue[1]['target'], self.talent_info['signature'])
+
+				if has_debuff:
+					has_debuff.duration = self.talent_info['duration']
+				else:
+					self.player.delay_timers.append([3, queue[1]['target'].debuffs.append, [debuff]])
+
+				center = queue[1]['target'].center_position
+				direction = [
+					(center[0] + vel[0]) - (center[0] - vel[0]),
+					(center[1] + vel[1]) - (center[1] - vel[1])
+				]
+				multiplier = 50 / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+				vel = [direction[0] * multiplier, direction[1] * multiplier]
+
+				start_pos = [
+					queue[1]['target'].center_position[0] - vel[0],
+					queue[1]['target'].center_position[1] + vel[1]
+				]
+
+				end_pos = [
+					queue[1]['target'].center_position[0] + vel[0],
+					queue[1]['target'].center_position[1] - vel[1]
+				]
+				
+				direction = [end_pos[0] - start_pos[0], end_pos[1] - start_pos[1]]
+				vel = [direction[0], direction[1]]
+				angle = (180 / math.pi) * math.atan2(vel[0], vel[1]) - 90
+	
+				particle = Polygon(start_pos, (255, 255, 255), 15, 5, angle)
+				particle.set_goal(10, position=end_pos, width=25, height=0, alpha=0)
+				particle.set_beziers(
+					position=presets['ease_out'],
+					width=presets['ease_out'],
+					height=presets['ease_out'],
+					alpha=presets['ease_in']
+				)
+
+				scene.add_sprites(particle)
+
+		for queue in del_queue:
+			self.talent_info['queues'].remove(queue)

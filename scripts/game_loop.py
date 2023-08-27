@@ -105,6 +105,7 @@ class GameLoop(Scene):
 
         self.enemy_info = {
             'max_enemies': [0, 3],
+            'count': 0,
 
             'card_death_counter': 0,
 
@@ -177,10 +178,10 @@ class GameLoop(Scene):
             self.enemy_info['card_death_counter'] += 1
             self.enemy_info['max_enemies'][0] -= 1
 
-        if self.enemy_info['card_death_counter'] <= 2:
+        if self.enemy_info['card_death_counter'] <= self.enemy_info['count']:
             return
 
-        spawn_card = round(math.pow(self.enemy_info['card_death_counter'] - 2, 4) + 24)
+        spawn_card = round(math.pow(self.enemy_info['card_death_counter'] - self.enemy_info['count'], 4) + 24)
         if spawn_card < random.randint(1, 100):
             return
         
@@ -296,8 +297,8 @@ class GameLoop(Scene):
         if self.level_info['pattern'][0] == 2:
             incr = 2
 
-        self.level_info['floor'] += 1
-        self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + incr, 2))
+        self.level_info['floor'] += incr
+        self.level_info['pattern'][0] = max(1, min(self.level_info['pattern'][0] + incr, 4))
 
         self.delay_timers.append([120, self.load_tilemap, [], True])
         self.delay_timers.append([120, self.load_intro, [], True])
@@ -423,7 +424,7 @@ class GameLoop(Scene):
         self.player.rect.x, self.player.rect.y = tilemap['flags']['player_spawn'][0]
 
         self.enemy_info['spawns'] = []
-        enemy_count = round(1 + math.pow(self.level_info['floor'], .5))
+        self.enemy_info['count'] = round(1 + math.pow(self.level_info['floor'], .5))
 
         for flag in tilemap['flags']:
             if not flag.split('_'):
@@ -433,7 +434,7 @@ class GameLoop(Scene):
                 for v in tilemap['flags'][flag]:
                     self.enemy_info['spawns'].append({
                         'position': v,
-                        'count': [0, enemy_count],
+                        'count': [0, self.enemy_info['count']],
                         'enemy': int(flag.split('_')[2])
                     })
 
