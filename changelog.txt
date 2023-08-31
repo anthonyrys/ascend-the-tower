@@ -1007,3 +1007,5 @@ v0.6.0
         [FIX]
             Issue where HolyJavelin wind-up image would update while the game is paused
     
+v0.6.0.1
+    ...
