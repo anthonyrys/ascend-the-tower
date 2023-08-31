@@ -27,7 +27,7 @@ def get_mitigation_dict():
 
     return mitigation_dict
 
-def register_damage(scene, primary_sprite, secondary_sprite, info):
+def register_damage(scene, primary_sprite, secondary_sprite, info, flags={}):
     if info['type'] not in DAMAGE_TYPES:
         return False
         
@@ -44,33 +44,36 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     info['primary'] = primary_sprite
     info['target'] = secondary_sprite
         
-    info['amount'] = random.uniform(
-        info['amount'] * (1 - DAMAGE_VARIATION_PERCENTAGE), 
-        info['amount'] * (1 + DAMAGE_VARIATION_PERCENTAGE)
-        )
+    if 'no_variation' not in flags:
+        info['amount'] = random.uniform(
+            info['amount'] * (1 - DAMAGE_VARIATION_PERCENTAGE), 
+            info['amount'] * (1 + DAMAGE_VARIATION_PERCENTAGE)
+            )
 
-    info['amount'] *= primary_sprite.combat_info['damage_multiplier']
+        info['amount'] *= primary_sprite.combat_info['damage_multiplier']
 
     info['crit'] = False
-    if primary_sprite.combat_info['crit_strike_chance'] > 0 and round(random.uniform(0, 1), 2) <= primary_sprite.combat_info['crit_strike_chance']:
-        info['amount'] *= primary_sprite.combat_info['crit_strike_multiplier']
-        info['crit'] = True
+    if 'cant_crit' not in flags:
+        if primary_sprite.combat_info['crit_strike_chance'] > 0 and round(random.uniform(0, 1), 2) <= primary_sprite.combat_info['crit_strike_chance']:
+            info['amount'] *= primary_sprite.combat_info['crit_strike_multiplier']
+            info['crit'] = True
 
     mitigated_amount = 0
-    for val in secondary_sprite.combat_info['mitigations'][info['type'] + '&'].values():
-        mitigated_amount += val
+    if 'bypass_mitigation' not in flags:
+        for val in secondary_sprite.combat_info['mitigations'][info['type'] + '&'].values():
+            mitigated_amount += val
 
-    for val in secondary_sprite.combat_info['mitigations'][info['type']].values():
-        mitigated_amount += val[0]
+        for val in secondary_sprite.combat_info['mitigations'][info['type']].values():
+            mitigated_amount += val[0]
 
-    for val in secondary_sprite.combat_info['mitigations']['all&'].values():
-        mitigated_amount += val
+        for val in secondary_sprite.combat_info['mitigations']['all&'].values():
+            mitigated_amount += val
 
-    for val in secondary_sprite.combat_info['mitigations']['all'].values():
-        mitigated_amount += val[0]
+        for val in secondary_sprite.combat_info['mitigations']['all'].values():
+            mitigated_amount += val[0]
 
-    if mitigated_amount > 1:
-        mitigated_amount = 1
+        if mitigated_amount > 1:
+            mitigated_amount = 1
 
     info['amount'] = info['amount'] * (1 - mitigated_amount)
     info['amount'] = round(info['amount'])
@@ -96,7 +99,7 @@ def register_damage(scene, primary_sprite, secondary_sprite, info):
     # print(f'{primary_sprite} damage >> {secondary_sprite}; ({info["type"]}, {info["amount"]}, {info["crit"]})')
     return info
 
-def register_heal(scene, primary_sprite, info):
+def register_heal(scene, primary_sprite, info, flags={}):
     if info['type'] not in HEAL_TYPES:
         return
         

@@ -1,9 +1,9 @@
 from scripts import UI_HEALTH_COLOR
 
 from scripts.ui.text_box import TextBox 
-from scripts.prefabs.frame import Frame
+from scripts.ui.frame import Frame
 
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import os
@@ -16,7 +16,7 @@ class InfoBar(Frame):
 class HealthBar(InfoBar):
     def __init__(self, player):
         img_scale = 3
-        img = pygame.image.load(os.path.join('imgs', 'ui', 'player', 'player-frame.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'player', 'player-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale))
 
         super().__init__((0, 0), pygame.Surface((img.get_width(), img.get_height())).convert_alpha(), None, 2)
@@ -98,7 +98,7 @@ class HealthBar(InfoBar):
 class EnemyBar(InfoBar):
     def __init__(self, sprite):
         img_scale = 1.25
-        img = pygame.image.load(os.path.join('imgs', 'ui', 'enemies', 'enemy-frame.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'enemies', 'enemy-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale))
 
         super().__init__((0, 0), pygame.Surface((img.get_width(), img.get_height())).convert_alpha(), None, 2)

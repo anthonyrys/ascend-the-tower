@@ -1,17 +1,17 @@
-from scripts import HEAL_COLOR, PLAYER_COLOR
+from scripts import HEAL_COLOR, PLAYER_COLOR, ENEMY_COLOR
 
 from scripts.core_systems.combat_handler import register_heal, register_damage
-from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire
+from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire, Slowed
 
-from scripts.prefabs.entity import Entity
-from scripts.visual_fx.particle import Image, Circle
-from scripts.entities.projectile import ProjectileStandard
+from scripts.entities.entity import Entity
+from scripts.visual_fx.particle import Image, Circle, Polygon
+from scripts.entities.projectile import ProjectileHoming
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox
 
-from scripts.utils import get_distance, get_closest_sprite, check_line_collision
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools import get_distance, get_closest_sprite, check_line_collision, create_outline_full
+from scripts.tools.bezier import presets, get_bezier_point
 
 import pygame
 import inspect
@@ -255,13 +255,16 @@ class StingLikeABee(Talent):
 
 		player.abilities['primary'].max_charges += 1
 
+	def call(self, call, scene, info):
+		info.ability_info['cooldown'] = info.ability_info['cooldown_timer'] * .4
+
 class Marksman(Talent):
 	TALENT_ID = 'marksman'
 	TALENT_CALLS = ['on_@primary_collide']
 
 	DESCRIPTION = {
 		'name': 'Marksman',
-		'description': 'Your primary attack deals more damage the farther your target is.'
+		'description': 'Your primary attack deals more damage the further you travel.'
 	}
 	
 	@staticmethod
@@ -299,7 +302,7 @@ class Marksman(Talent):
 class Temperance(Talent):
 	class TemperanceHalo(Entity):
 		def __init__(self, strata):
-			img = pygame.image.load(os.path.join('imgs', 'entities', 'visuals', 'temperance.png')).convert_alpha()
+			img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'visuals', 'temperance.png')).convert_alpha()
 			img_scale = 1.5
 
 			img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
@@ -337,13 +340,13 @@ class Temperance(Talent):
 
 	DESCRIPTION = {
 		'name': 'Temperance',
-		'description': 'You can no longer critical strike but gain a permanent damage increase.'
+		'description': 'You can no longer critical strike but gain a permanent 50 percent damage increase.'
 	}
 
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['damage_multiplier'] = 0.75
+		self.talent_info['damage_multiplier'] = 0.5
 
 		damage_buff = Buff(self.player, 'temperance', 'damage_multiplier', self.talent_info['damage_multiplier'], None)
 		crit_chance_debuff = Debuff(self.player, 'temperance', 'crit_strike_chance', -100, None)
@@ -413,10 +416,38 @@ class WheelOfFortune(Talent):
 		self.talent_info['current_stat'] = None
 		
 		self.talent_info['buff_signature'] = 'wheel_of_fortune'
-		self.talent_info['cooldown_timer'] = 300
+		self.talent_info['cooldown_timer'] = 360
+
+		self.talent_info['image'] = pygame.image.load(os.path.join('resources', 'images', 'entities', 'visuals', 'wheel-of-fortune.png')).convert_alpha()
+		self.talent_info['image'] = pygame.transform.scale(self.talent_info['image'], (self.talent_info['image'].get_width() * 2.5, self.talent_info['image'].get_height() * 2.5))
+
+		self.talent_info['tick_info'] = {
+			'radius': 18,
+			'angle_speed': 360 / self.talent_info['cooldown_timer'],
+			'angle': 0,
+			'color': PLAYER_COLOR,
+			'position': [0, 0],
+			'visual': pygame.Surface((self.talent_info['image'].get_width() * 2, self.talent_info['image'].get_height() * 2)).convert_alpha()
+		}
+		self.talent_info['tick_info']['visual'].set_colorkey((0, 0, 0))
+
+		self.sin_info = {
+			'amplifier': 2,
+			'frequency': .05,
+			'count': 0
+		}
+
+		self.direction_info = {
+			'previous_direction': self.player.movement_info['direction'],
+			'standard_offset': 35,
+			'offset': 35,
+			'b_offset': [0, 35],
+			'bezier': presets['ease_out'],
+			'frames': [0, 0]
+		}
 
 	def display_text(self, scene, stat):
-		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=HEAL_COLOR)
+		img = TextBox.create_text_line('default', '+ ' + self.talent_info['names'][stat], size=.5, color=PLAYER_COLOR)
 		particle = Image(self.player.rect.center, img, 6, 255)
 		particle.set_beziers(alpha=presets['ease_in'])
 		particle.set_goal(
@@ -428,8 +459,64 @@ class WheelOfFortune(Talent):
 
 		scene.add_sprites(particle)
 
+	def set_position(self, dt):
+		if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
+			self.direction_info['previous_direction'] = self.player.movement_info['direction']
+			self.direction_info['b_offset'] = [self.direction_info['offset'], self.direction_info['standard_offset'] * self.player.movement_info['direction']]
+			self.direction_info['frames'][1] = 10
+
+		if self.direction_info['frames'][1] != 0:
+			abs_prog = self.direction_info['frames'][0] / self.direction_info['frames'][1]
+
+			self.direction_info['offset'] = (
+				self.direction_info['b_offset'][0] + 
+				((self.direction_info['b_offset'][1] - self.direction_info['b_offset'][0]) * get_bezier_point(abs_prog, *self.direction_info['bezier']))
+			)
+
+			self.direction_info['frames'][0] += 1 * dt
+
+			if self.direction_info['frames'][0] >= self.direction_info['frames'][1]:
+				self.direction_info['frames'] = [0, 0]
+
+		pos = [
+			self.player.previous_center_position[0] - self.direction_info['offset'],
+			self.player.previous_center_position[1] - 20
+		]
+
+		if self.player.velocity[0] != 0 and (round(self.player.velocity[0]) ^ self.player.movement_info['direction']) < 0:
+			pos[0] += round(self.player.velocity[0] * .75)
+
+		self.talent_info['tick_info']['position'][0] = pos[0]
+		self.talent_info['tick_info']['position'][1] = pos[1] - round((self.sin_info['amplifier'] * math.sin(self.sin_info['frequency'] * (self.sin_info['count']))))
+
+		self.sin_info['count'] += 1 * dt
+
+	def set_visual(self, scene, dt):
+		a = (self.talent_info['tick_info']['angle'] - 90) * math.pi / 180
+		x = self.talent_info['tick_info']['radius'] * math.cos(a)
+		y = self.talent_info['tick_info']['radius'] * math.sin(a)
+
+		visual = self.talent_info['tick_info']['visual']
+		visual.fill((0, 0, 0))
+
+		pos = [
+			visual.get_rect().centerx + x,
+			visual.get_rect().centery + y
+		]
+
+		visual.blit(self.talent_info['image'], self.talent_info['image'].get_rect(center=visual.get_rect().center))
+		pygame.draw.line(visual, self.talent_info['tick_info']['color'], visual.get_rect().center, pos, 4)
+
+		visual.set_alpha(200 - 155 * (self.talent_info['cooldown'] / self.talent_info['cooldown_timer']))
+		self.set_position(dt)
+
+		scene.entity_surface.blit(visual, visual.get_rect(center=self.talent_info['tick_info']['position']))
+
 	def update(self, scene, dt):
 		super().update(scene, dt)
+
+		self.talent_info['tick_info']['angle'] +=self.talent_info['tick_info']['angle_speed'] * dt
+		self.set_visual(scene, dt)
 
 		if self.talent_info['cooldown'] > 0:
 			return
@@ -464,13 +551,28 @@ class WheelOfFortune(Talent):
 		self.display_text(scene, stat)
 		self.talent_info['current_stat'] = stat
 	
+		particles = []
+		pos = self.talent_info['tick_info']['position']
+		for _ in range(4):
+			cir = Circle(pos, PLAYER_COLOR, random.randint(8, 9), 0)
+			cir.set_goal(
+						60, 
+						position=(pos[0] + random.randint(-50, 50), pos[1] + random.randint(-50, 50)), 
+						radius=0, 
+						width=0
+					)
+
+			particles.append(cir)
+
+		scene.add_sprites(particles)    
+
 class Recuperation(Talent):
 	TALENT_ID = 'recuperation'
 	TALENT_CALLS = ['on_player_damaged']
 
 	DESCRIPTION = {
 		'name': 'Recuperation',
-		'description': 'Gain increased health regeneration upon taking damage.'
+		'description': 'Gain temporary health regeneration upon taking damage.'
 	}
 
 	@staticmethod
@@ -491,21 +593,27 @@ class Recuperation(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
-		self.talent_info['tick_reduction'] = 50
+		self.talent_info['tick_reduction'] = 55
+		self.talent_info['regen_amount'] = .01
 
-		self.talent_info['buff_duration'] = 60
+		self.talent_info['buff_duration'] = 30
 		self.talent_info['buff_signature'] = 'recuperation'
 
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
-		current_buff = get_buff(self.player, self.talent_info['buff_signature'])
-		if current_buff:
-			current_buff.duration = self.talent_info['buff_duration']
+		current_buff_tick = get_buff(self.player, self.talent_info['buff_signature'] + '_tick')
+		if current_buff_tick:
+			current_buff_tick.duration = self.talent_info['buff_duration']
+			get_buff(self.player, self.talent_info['buff_signature'] + '_amount').duration = self.talent_info['buff_duration']
+
 			return
 		
-		buff = Buff(self.player, self.talent_info['buff_signature'], 'health_regen_tick', -self.talent_info['tick_reduction'], self.talent_info['buff_duration'])
-		self.player.buffs.append(buff)
+		tick_buff = Buff(self.player, self.talent_info['buff_signature'] + '_tick', 'health_regen_tick', -self.talent_info['tick_reduction'], self.talent_info['buff_duration'])
+		amount_buff = Buff(self.player, self.talent_info['buff_signature'] + '_amount', 'health_regen_amount', self.talent_info['regen_amount'], self.talent_info['buff_duration'])
+
+		self.player.buffs.append(tick_buff)
+		self.player.buffs.append(amount_buff)
 
 class Holdfast(Talent):
 	TALENT_ID = 'holdfast'
@@ -537,10 +645,42 @@ class Holdfast(Talent):
 		self.talent_info['mitigation_amount'] = .5
 		self.talent_info['mitigation_time'] = 60
 	
+		self.talent_info['type'] = None
+
+		self.talent_info['type_colors'] = {
+			'contact': ENEMY_COLOR,
+			'physical': (75, 90, 255),
+			'magical': (205, 75, 255), 
+			'special': PLAYER_COLOR
+		}
+
 	def call(self, call, scene, info):
 		super().call(call, scene, info)
 
+		self.talent_info['type'] = info['type']
 		self.player.combat_info['mitigations'][info['type']][self.TALENT_ID] = [self.talent_info['mitigation_amount'], self.talent_info['mitigation_time']]
+
+		particle = Circle(
+			[0, 0],
+			self.talent_info['type_colors'][self.talent_info['type']],
+			0,
+			5,
+			self.player
+		)
+
+		particle.set_goal(12, position=[0, 0], radius=60, width=1, alpha=0)
+		particle.set_beziers(alpha=[*presets['rest'], 0])
+		
+		scene.add_sprites(particle)
+
+	def update(self, scene, dt):
+		if not self.talent_info['type']:
+			return
+		
+		create_outline_full(self.player, self.talent_info['type_colors'][self.talent_info['type']], scene.entity_surface, 2)
+		if self.player.combat_info['mitigations'][self.talent_info['type']][self.TALENT_ID][1] <= 0:
+			self.talent_info['type'] = None
+			return
 
 class GuardianAngel(Talent):
 	TALENT_ID = 'guardian_angel'
@@ -699,7 +839,7 @@ class Ignition(Talent):
 
 	DESCRIPTION = {
 		'name': 'Ignition',
-		'description': 'Your attacks sets enemies ablaze.'
+		'description': 'Your attacks set enemies ablaze.'
 	}
 
 	@staticmethod
@@ -764,6 +904,8 @@ class RunItBack(Talent):
 	def __init__(self, scene, player):
 		super().__init__(scene, player)
 
+		self.talent_info['abilities'] = []
+
 	@staticmethod
 	def check_draw_condition(player):
 		if get_talent(player, 'temperance'):
@@ -782,8 +924,14 @@ class RunItBack(Talent):
 			return
 
 		super().call(call, scene, info)
-		
-		info.ability_info['cooldown'] = 1
+		self.talent_info['abilities'].append(info)
+
+	def update(self, scene, dt):
+		for ability in self.talent_info['abilities']:
+			ability.ability_info['cooldown'] = 0
+
+		if self.talent_info['abilities']:
+			self.talent_info['abilities'] = []
 
 class LingeringShroud(Talent):
 	TALENT_ID = 'lingering_shroud'
@@ -811,7 +959,7 @@ class LingeringShroud(Talent):
 	
 	@staticmethod
 	def check_draw_condition(player):
-		if [ability for ability in [a for a in player.abilities.values() if a] if ability.ABILITY_ID == 'intangible_shroud']:
+		if player.get_ability('intangible_shroud'):
 			return True
 		
 		return False
@@ -952,8 +1100,8 @@ class Reprisal(Talent):
 
 			self.combat_info = {
 				'max_distance': 600,
-				'damage_multiplier': .35,
-				'cooldown': [0, 20],
+				'damage_multiplier': .2,
+				'cooldown': [0, 30],
 				'speed': 20,
 				'size': 7,
 
@@ -975,8 +1123,9 @@ class Reprisal(Talent):
 
 			self.direction_info = {
 				'previous_direction': self.player.movement_info['direction'],
-				'offset': 25,
-				'b_offset': [0, 25],
+				'standard_offset': -30,
+				'offset': -30,
+				'b_offset': [0, -30],
 				'bezier': presets['ease_out'],
 				'frames': [0, 0]
 			}
@@ -1028,7 +1177,7 @@ class Reprisal(Talent):
 		def set_position(self, dt):
 			if self.player.movement_info['direction'] != self.direction_info['previous_direction']:
 				self.direction_info['previous_direction'] = self.player.movement_info['direction']
-				self.direction_info['b_offset'] = [self.direction_info['offset'], 25 * self.player.movement_info['direction']]
+				self.direction_info['b_offset'] = [self.direction_info['offset'], self.direction_info['standard_offset'] * self.player.movement_info['direction']]
 				self.direction_info['frames'][1] = 10
 
 			if self.direction_info['frames'][1] != 0:
@@ -1076,12 +1225,14 @@ class Reprisal(Talent):
 				multiplier = self.combat_info['speed'] / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
 				vel = [direction[0] * multiplier, direction[1] * multiplier]
 
-				proj = ProjectileStandard(
+				proj = ProjectileHoming(
 					self.center_position, self.color, self.combat_info['size'], self.strata,
 					self.combat_info['projectile_info'],
 					velocity=vel,
 					duration=90,
-					settings={'player': True}
+					settings={'player': True},
+					speed=self.combat_info['speed'],
+					target=enemy
 				)
 
 				scene.add_sprites(proj)
@@ -1254,8 +1405,6 @@ class Shadowstep(Talent):
 
 		self.talent_info['dash_color'] = (120, 80, 140)
 
-		self.player.abilities['dash'].ability_info['cooldown_timer'] *= 1.5
-
 	def call(self, call, scene, info):
 		self.talent_info['position'] = 0
 
@@ -1279,6 +1428,22 @@ class Shadowstep(Talent):
 			for col in collision:
 				if col[0] == sprite:
 					position = col[1][0][0] - (self.talent_info['min_dash_distance'] * direction)
+
+		collision = check_line_collision(
+			self.player.center_position, 
+			[position, self.player.rect.centery], 
+			[t for t in scene.get_sprites('interactable') if get_distance(self.player, t) <= self.talent_info['dash_distance'] * 2],
+			width=20
+		)
+
+		if collision:
+			sprite = get_closest_sprite(self.player, [c[0] for c in collision])
+			if get_distance(self.player, sprite) <= self.talent_info['min_dash_distance'] * .5:
+				return
+			
+			for col in collision:
+				if col[0] == sprite:
+					position = col[1][0][0]
 
 		self.talent_info['position'] = position
 
@@ -1418,3 +1583,141 @@ class FromTheShadows(Talent):
 				particles.append(cir)
 
 			scene.add_sprites(particles)    
+
+class ZeroSumGame(Talent):
+	TALENT_ID = 'zero_sum_game'
+	TALENT_CALLS = ['on_player_damaged']
+
+	DESCRIPTION = {
+		'name': 'Zero Sum Game',
+		'description': 'Taking damage causes the attacker to take the same amount of damage.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'zero-sum-game',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['hurt/death']
+			]
+		}
+
+		return card_info
+
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+	def call(self, call, scene, info):
+		register_damage(
+			scene, self.player, info['primary'],
+			{'type': 'magical', 'amount': info['amount'], 'velocity': [-info['velocity'][0], -info['velocity'][1]]},
+			flags={'cant_crit': True, 'no_variation': True, 'bypass_mitigation': True}
+		)
+
+class Afterstrike(Talent):
+	TALENT_ID = 'afterstrike'
+	TALENT_CALLS = ['on_@primary_attack']
+
+	DESCRIPTION = {
+		'name': 'Afterstrike',
+		'description': 'Inflict a slow-inducing secondary strike shortly after your primary attack.'
+	}
+
+	@staticmethod
+	def fetch():
+		card_info = {
+			'type': 'talent',
+			
+			'icon': 'afterstrike',
+			'symbols': [				
+				Card.SYMBOLS['type']['talent'],
+				Card.SYMBOLS['action']['damage'],
+				Card.SYMBOLS['talent']['ability']
+			]
+		}
+
+		return card_info
+	
+	def __init__(self, scene, player):
+		super().__init__(scene, player)
+
+		self.talent_info['queues'] = []
+
+		self.talent_info['queue_timer'] = 15
+		self.talent_info['damage_multiplier'] = .2
+
+		self.talent_info['signature'] = 'afterstrike'
+		self.talent_info['duration'] = 60
+		self.talent_info['slowed_percentage'] = .5
+
+	def call(self, call, scene, info):
+		super().call(call, scene, info)
+
+		self.talent_info['queues'].append([self.talent_info['queue_timer'], info])
+
+	def update(self, scene, dt):
+		super().update(scene, dt)
+
+		del_queue = []
+		for queue in self.talent_info['queues']:
+			if queue[1]['target'].combat_info['health'] <= 0:
+				del_queue.append(queue)
+				continue
+			
+			queue[0] -= 1 * dt
+
+			if queue[0] <= 0:
+				del_queue.append(queue)
+
+				amount = queue[1]['amount'] * self.talent_info['damage_multiplier']
+				vel = [queue[1]['velocity'][0] * .5, queue[1]['velocity'][1] * .5]
+				self.player.delay_timers.append([3, register_damage, [scene, self.player, queue[1]['target'], {'type': 'physical', 'amount': amount, 'velocity': vel}]])
+
+				value = queue[1]['target'].movement_info['max_movespeed'] * self.talent_info['slowed_percentage']
+				debuff = Slowed(queue[1]['target'], self.talent_info['signature'], value, self.talent_info['duration'])
+				has_debuff = get_debuff(queue[1]['target'], self.talent_info['signature'])
+
+				if has_debuff:
+					has_debuff.duration = self.talent_info['duration']
+				else:
+					self.player.delay_timers.append([3, queue[1]['target'].debuffs.append, [debuff]])
+
+				center = queue[1]['target'].center_position
+				direction = [
+					(center[0] + vel[0]) - (center[0] - vel[0]),
+					(center[1] + vel[1]) - (center[1] - vel[1])
+				]
+				multiplier = 50 / math.sqrt(math.pow(direction[0], 2) + math.pow(direction[1], 2))
+				vel = [direction[0] * multiplier, direction[1] * multiplier]
+
+				start_pos = [
+					queue[1]['target'].center_position[0] - vel[0],
+					queue[1]['target'].center_position[1] + vel[1]
+				]
+
+				end_pos = [
+					queue[1]['target'].center_position[0] + vel[0],
+					queue[1]['target'].center_position[1] - vel[1]
+				]
+				
+				direction = [end_pos[0] - start_pos[0], end_pos[1] - start_pos[1]]
+				vel = [direction[0], direction[1]]
+				angle = (180 / math.pi) * math.atan2(vel[0], vel[1]) - 90
+	
+				particle = Polygon(start_pos, (255, 255, 255), 15, 5, angle)
+				particle.set_goal(10, position=end_pos, width=25, height=0, alpha=0)
+				particle.set_beziers(
+					position=presets['ease_out'],
+					width=presets['ease_out'],
+					height=presets['ease_out'],
+					alpha=presets['ease_in']
+				)
+
+				scene.add_sprites(particle)
+
+		for queue in del_queue:
+			self.talent_info['queues'].remove(queue)

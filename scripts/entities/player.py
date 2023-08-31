@@ -3,29 +3,30 @@ from scripts import ENEMY_COLOR, HEAL_COLOR, UI_HEALTH_COLOR, SCREEN_DIMENSIONS
 from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
-from scripts.prefabs.entity import Entity
-from scripts.entities.game_entity import GameEntity
+from scripts.entities.entity import Entity
+from scripts.entities.physics_entity import PhysicsEntity
 from scripts.visual_fx.particle import Circle, Image
 
-from scripts.services import load_spritesheet
-from scripts.services.sfx_manager import Sfx
+from scripts.tools.spritesheet_loader import load_spritesheet
+from scripts.tools.sfx_manager import Sfx
 
 from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar
 from scripts.ui.hotbar import Hotbar
 
-from scripts.utils.inputs import Inputs
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.inputs import Inputs
+from scripts.tools.bezier import presets, get_bezier_point
 
 
 import pygame
+import random
 import math
 import os
 
-class Player(GameEntity):
+class Player(PhysicsEntity):
     class Halo(Entity):
         def __init__(self, strata):
-            img = pygame.image.load(os.path.join('imgs', 'entities', 'player', 'halo.png')).convert_alpha()
+            img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'player', 'halo.png')).convert_alpha()
             img_scale = 1.5
             img = pygame.transform.scale(img, (img.get_width() * img_scale, img.get_height() * img_scale)).convert_alpha()
             img.set_colorkey((0, 0, 0))
@@ -71,6 +72,7 @@ class Player(GameEntity):
 
         self.overrides = {
             'inactive': False,
+            'inactive-all': False,
             
             'ability': None,
             'ability-passive': None,
@@ -100,7 +102,7 @@ class Player(GameEntity):
         }
         
         for name in ['idle', 'run', 'jump', 'fall']:
-            self.img_info['imgs'][name] = load_spritesheet(os.path.join('imgs', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
+            self.img_info['imgs'][name] = load_spritesheet(os.path.join('resources', 'images', 'entities', 'player', f'player-{name}.png'), self.img_info['frame_info'][name])
             self.img_info['frames'][name] = 0
             self.img_info['frames_raw'][name] = 0
 
@@ -121,6 +123,16 @@ class Player(GameEntity):
         ui_elements.append(Hotbar(self, (SCREEN_DIMENSIONS[0] * .5, SCREEN_DIMENSIONS[1] - 70), 3))
 
         return ui_elements
+
+    def get_ability(self, ability_id):
+        for ability in self.abilities.values():
+            if not ability:
+                continue
+            
+            if ability.ABILITY_ID == ability_id:
+                return ability
+        
+        return None
 
     def on_key_down(self, scene, key):
         if scene.paused:
@@ -214,28 +226,35 @@ class Player(GameEntity):
             return
         
         color = HEAL_COLOR
-        offset = [0, 0]
 
         if 'color' in info:
             color = info['color']
 
-        if 'offset' in info:
-            offset = info['offset']
-        
-        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=color)
-        particle = Image((125 + offset[0], 50 + offset[1]), img, 5, 255)
+        img = TextBox.create_text_line('default', info['amount'], size=.75, color=color)
+        particle = Image(self.rect.center, img, 6, 255)
+        particle.set_beziers(radius=presets['ease_in'])
         particle.set_goal(
-            50, 
-            position=(125 + offset[0], 100 + offset[1]),
+            45, 
+            position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
-        particle.uses_ui_surface = True
-        
+
         scene.add_sprites(particle)
 
     def on_damaged(self, scene, info):
         if 'minor' in info:
+            img = TextBox.create_text_line('default', info['amount'], size=.75, color=UI_HEALTH_COLOR)
+            particle = Image(self.rect.center, img, 6, 255)
+            particle.set_beziers(radius=presets['ease_in'])
+            particle.set_goal(
+                45, 
+                position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
+                alpha=0,
+                dimensions=(img.get_width(), img.get_height())
+            )
+
+            scene.add_sprites(particle)
             return
         
         sprite = info['primary']
@@ -264,22 +283,22 @@ class Player(GameEntity):
         self.img_info['pulse_frame_color'] = ENEMY_COLOR
         self.img_info['pulse_frame_bezier'] = [*presets['rest'], 0]
 
-        img = TextBox.create_text_line('default', info['amount'], size=1.0, color=UI_HEALTH_COLOR)
-        particle = Image((50, 50), img, 5, 255)
+        img = TextBox.create_text_line('default', info['amount'], size=.75, color=UI_HEALTH_COLOR)
+        particle = Image(self.rect.center, img, 6, 255)
+        particle.set_beziers(radius=presets['ease_in'])
         particle.set_goal(
-            50, 
-            position=(50, 100),
+            45, 
+            position=(self.rect.centerx + random.randint(-50, 50), particle.rect.centery + random.randint(-50, 50)),
             alpha=0,
             dimensions=(img.get_width(), img.get_height())
         )
-        particle.uses_ui_surface = True
-
-        call_talents(scene, self, {'on_player_damaged': info})
 
         scene.add_sprites(particle)
 
+        call_talents(scene, self, {'on_player_damaged': info})
+
     def apply_movement(self, scene):
-        if self.overrides['inactive']:
+        if self.overrides['inactive'] or self.overrides['inactive-all']:
             return
         
         pressed = Inputs.pressed
@@ -322,8 +341,7 @@ class Player(GameEntity):
         if self.overrides['inactive']:
             excludes.append('killbrick')
 
-        if not [c for c in self.collisions if c.secondary_sprite_id == 'ramp']:
-            self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=excludes))
+        self.apply_collision_x_default(scene, scene.get_sprites('tile', exclude=excludes))
 
     def apply_collision_y(self, scene, dt):
         pressed = Inputs.pressed
@@ -442,7 +460,7 @@ class Player(GameEntity):
         self.image = pygame.transform.flip(self.image, True, False).convert_alpha() if self.movement_info['direction'] < 0 else self.image
 
     def display(self, scene, dt):
-        if self.overrides['death']:
+        if self.overrides['death'] or self.overrides['inactive-all']:
             return
     
         for key in self.timed_inputs:
