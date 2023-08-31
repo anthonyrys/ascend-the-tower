@@ -1,6 +1,7 @@
-from scripts.prefabs.entity import Entity
+from scripts.entities.entity import Entity
 
-from scripts.utils.bezier import presets, get_bezier_point
+from scripts.tools.bezier import presets, get_bezier_point
+
 import pygame
 
 class Particle(Entity):
@@ -135,6 +136,74 @@ class Image(Particle):
         else:
             self.rect = self.image.get_rect(center = [self.x[0], self.y[0]])
 
+        if 'alpha' in self.goal_info:
+            self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * get_bezier_point(abs_prog, *self.beziers['alpha'])))
+
+        super().display(scene, dt)
+        self.frames[0] += 1 * dt
+
+class Polygon(Particle):
+    def __init__(self, position, color, width, height, rotation=None, attach=None):
+        super().__init__(position, (0, 0, 0), (width * 2, width * 2), None)
+        self.secondary_sprite_id = 'polygon'
+
+        self.alpha = self.image.get_alpha()
+        self.width = [width, width]
+        self.height = [height, height]
+        self.x = [position[0], position[0]]
+        self.y = [position[1], position[1]]
+
+        self.color = color
+        self.rotation = rotation
+        self.attach = attach
+
+        self.set_beziers(
+            width=[*presets['rest'], 0],
+            height=[*presets['rest'], 0],
+            alpha=[*presets['rest'], 0]
+        )
+
+    def display(self, scene, dt):
+        if self.frames[0] > self.frames[1]:
+            scene.del_sprites(self)
+            return
+
+        abs_prog = self.frames[0] / self.frames[1]
+
+        self.width[1] = self.width[0] + round((self.goal_info['width'] - self.width[0]) * get_bezier_point(abs_prog, *self.beziers['width']))
+        self.height[1] = self.height[0] + round((self.goal_info['height'] - self.height[0]) * get_bezier_point(abs_prog, *self.beziers['height']))
+        
+        self.image = pygame.transform.scale(self.image, (self.width[1] * 2, self.width[1] * 2))
+        self.image.set_colorkey((0, 0, 0))
+        self.image.fill((0, 0, 0))
+
+        center = self.image.get_rect().center
+        points = [
+            [center[0] + self.width[1], center[1]], [center[0], center[1] + self.height[1]],
+            [center[0] - self.width[1], center[1]], [center[0], center[1] - self.height[1]]
+        ]
+
+        pygame.draw.polygon(
+            self.image,
+            self.color,
+            points
+        )
+
+        if self.rotation:
+            self.image = pygame.transform.rotate(self.image, self.rotation)
+            self.image.set_colorkey((0, 0, 0)) 
+
+        if 'position' in self.goal_info:
+            self.rect = self.image.get_rect(center=(
+                self.x[0] + (self.goal_info['position'][0] - self.x[0]) * get_bezier_point(abs_prog, *self.beziers['position']),
+                self.y[0] + (self.goal_info['position'][1] - self.y[0]) * get_bezier_point(abs_prog, *self.beziers['position']))
+            )
+        else:
+            self.rect = self.image.get_rect(center=(self.x[0], self.y[0]))
+
+        if self.gravity:
+            self.rect.y += self.gravity * self.frames[0]
+        
         if 'alpha' in self.goal_info:
             self.image.set_alpha(self.alpha + ((self.goal_info['alpha'] - self.alpha) * get_bezier_point(abs_prog, *self.beziers['alpha'])))
 
