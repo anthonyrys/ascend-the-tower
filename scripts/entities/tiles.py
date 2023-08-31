@@ -1,6 +1,6 @@
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 
-from scripts.tools.spritesheet_loader import load_spritesheet
+from scripts.services import load_spritesheet
 
 import pygame
 import inspect

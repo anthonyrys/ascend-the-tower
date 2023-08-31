@@ -1,8 +1,8 @@
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 from scripts.ui.text_box import TextBox 
 from scripts.ui.card import Card
 
-from scripts.tools.inputs import Inputs
+from scripts.utils.inputs import Inputs
 
 import pygame
 import os
@@ -11,7 +11,7 @@ class AbilityFrame(Frame):
     def __init__(self, player, key):
         IMG_SCALE = 2.5
     
-        img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'hotbar', 'ability-frame.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('imgs', 'ui', 'hotbar', 'ability-frame.png')).convert_alpha()
         img = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
         super().__init__((0, 0), pygame.Surface(img.get_size()).convert_alpha(), None, 3, None)

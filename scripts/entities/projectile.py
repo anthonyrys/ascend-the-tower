@@ -1,12 +1,11 @@
 from scripts import ENEMY_COLOR
 
 from scripts.visual_fx.particle import Image
-from scripts.entities.entity import Entity
+from scripts.prefabs.entity import Entity
 
-from scripts.tools import check_pixel_collision, check_line_collision, get_distance
+from scripts.utils import check_pixel_collision, check_line_collision, get_distance
 
 import pygame
-import math
 
 class Projectile(Entity):
     def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], duration=0, settings={}):
@@ -123,62 +122,5 @@ class ProjectileStandard(Projectile):
 
                     self.on_collision(scene, sprite)
                     break
-
-        super().display(scene, dt)
-
-class ProjectileHoming(Projectile):
-    def __init__(self, position, img, dimensions, strata, info, alpha=None, velocity=[0, 0], duration=0, settings={}, speed=10, target=None):
-        super().__init__(position, img, dimensions, strata, info, alpha, velocity, duration, settings)
-
-        self.secondary_sprite_id = 'homing_projectile'
-        
-        self.target = target
-        self.speed = speed
-
-    def display(self, scene, dt):
-        if self.info:
-            if self.info['collision'] == 'pixel':
-                for sprite in scene.get_sprites(self.info['collisions']):
-                    if get_distance(self, sprite) > 100:
-                        continue
-
-                    if sprite.sprite_id == 'player' and self.prev_player_position:
-                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
-                            self.on_collision(scene, sprite)
-                            break
-
-                    if not check_pixel_collision(self, sprite):
-                        continue
-
-                    self.on_collision(scene, sprite)
-                    break
-
-            if self.info['collision'] == 'rect':
-                for sprite in scene.get_sprites(self.info['collisions']):
-                    if get_distance(self, sprite) > 100:
-                        continue
-
-                    if sprite.sprite_id == 'player' and self.prev_player_position:
-                        if check_line_collision(self.prev_player_position, scene.player.rect.center, [self]):
-                            self.on_collision(scene, sprite)
-                            break
-
-                    if not self.rect.colliderect(sprite.rect):
-                        continue
-
-                    self.on_collision(scene, sprite)
-                    break
-        
-        if self.target.combat_info['health'] > 0:
-            rel_x, rel_y = [
-                self.target.center_position[0] - self.center_position[0], 
-                self.target.center_position[1] - self.center_position[1]
-            ]
-            angle = (180 / math.pi) * -math.atan2(rel_y, rel_x)
-
-            self.velocity = [
-                self.speed * math.cos(math.radians(angle)),
-                self.speed * -math.sin(math.radians(angle))
-            ]
 
         super().display(scene, dt)

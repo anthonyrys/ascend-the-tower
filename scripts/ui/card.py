@@ -1,12 +1,12 @@
 from scripts import SCREEN_DIMENSIONS, PLAYER_COLOR
 
-from scripts.tools.spritesheet_loader import load_spritesheet
+from scripts.services.spritesheet_loader import load_spritesheet
 
 from scripts.ui.text_box import TextBox
-from scripts.ui.frame import Frame
+from scripts.prefabs.frame import Frame
 
-from scripts.tools import create_outline_edge
-from scripts.tools.bezier import presets, get_bezier_point
+from scripts.utils import create_outline_edge
+from scripts.utils.bezier import presets, get_bezier_point
 
 import pygame
 import os
@@ -56,27 +56,27 @@ class Card(Frame):
 
     @staticmethod
     def init():
-        base = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'card-base.png'))
+        base = pygame.image.load(os.path.join('imgs', 'ui', 'card', 'card-base.png'))
         Card.BASE = pygame.transform.scale(base, (base.get_width() * Card.IMG_SCALE, base.get_height() * Card.IMG_SCALE)).convert_alpha()
 
-        for icon in os.listdir(os.path.join('resources', 'images', 'ui', 'card', 'talents')):
-            img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'talents', icon)).convert_alpha()                 
+        for icon in os.listdir(os.path.join('imgs', 'ui', 'card', 'talents')):
+            img = pygame.image.load(os.path.join('imgs', 'ui', 'card', 'talents', icon)).convert_alpha()                 
             img = pygame.transform.scale(img, (img.get_width() * Card.IMG_SCALE, img.get_height() * Card.IMG_SCALE)).convert_alpha()
             Card.ICONS['talent'][icon.split('.')[0]] = img
 
-        for icon in os.listdir(os.path.join('resources', 'images', 'ui', 'card', 'abilities')):
-            img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'abilities', icon)).convert_alpha()
+        for icon in os.listdir(os.path.join('imgs', 'ui', 'card', 'abilities')):
+            img = pygame.image.load(os.path.join('imgs', 'ui', 'card', 'abilities', icon)).convert_alpha()
             img = pygame.transform.scale(img, (img.get_width() * Card.IMG_SCALE, img.get_height() * Card.IMG_SCALE)).convert_alpha()
             Card.ICONS['ability'][icon.split('.')[0]] = img
 
-        for icon in os.listdir(os.path.join('resources', 'images', 'ui', 'card', 'stats')):
-            img = pygame.image.load(os.path.join('resources', 'images', 'ui', 'card', 'stats', icon)).convert_alpha()
+        for icon in os.listdir(os.path.join('imgs', 'ui', 'card', 'stats')):
+            img = pygame.image.load(os.path.join('imgs', 'ui', 'card', 'stats', icon)).convert_alpha()
             img = pygame.transform.scale(img, (img.get_width() * Card.IMG_SCALE, img.get_height() * Card.IMG_SCALE)).convert_alpha()
             Card.ICONS['stats'][icon.split('.')[0]] = img
 
-        for symbol in os.listdir(os.path.join('resources', 'images', 'ui', 'card', 'symbols')):
+        for symbol in os.listdir(os.path.join('imgs', 'ui', 'card', 'symbols')):
             name = symbol.split('-')[1].split('.')[0]
-            for index, img in enumerate(load_spritesheet(os.path.join('resources', 'images', 'ui', 'card', 'symbols', symbol))):
+            for index, img in enumerate(load_spritesheet(os.path.join('imgs', 'ui', 'card', 'symbols', symbol))):
                 keys = list(Card.SYMBOLS[name].keys())
                 img = pygame.transform.scale(img, (img.get_width() * Card.IMG_SCALE, img.get_height() * Card.IMG_SCALE)).convert_alpha()
                 Card.SYMBOLS[name][keys[index]] = img

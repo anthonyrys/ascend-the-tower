@@ -127,10 +127,3 @@ class OnFire(Debuff):
         if self.tick_rate[0] >= self.tick_rate[1]:
             self.tick_rate[0] = 0
             register_damage(scene, self.primary_entity, self.entity, {'type': 'magical', 'amount': self.per_damage, 'minor': True, 'velocity': None})
-
-class Slowed(Debuff):
-    def __init__(self, entity, signature, value, duration):
-        super().__init__(entity, signature, 'max_movespeed', -value, duration)
-
-    def update(self, scene, dt):
-        super().update(scene, dt)

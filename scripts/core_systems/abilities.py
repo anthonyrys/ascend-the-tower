@@ -1,7 +1,5 @@
 from scripts import PLAYER_COLOR
 
-from scripts.sprite import Sprite
-
 from scripts.core_systems.talents import call_talents, get_talent
 from scripts.core_systems.combat_handler import register_damage
 
@@ -10,8 +8,8 @@ from scripts.visual_fx.particle import Circle
 
 from scripts.ui.card import Card
 
-from scripts.tools import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
-from scripts.tools.bezier import presets, get_bezier_point
+from scripts.utils import check_line_collision, check_pixel_collision, get_distance, get_sprite_colors
+from scripts.utils.bezier import presets
 
 import pygame
 import random
@@ -78,22 +76,10 @@ class Ability:
 
         call_talents(scene, self.character, {'on_ability': self})
     
-    def on_primary(self, damage_done):
-        ratio = damage_done / self.character.combat_info['base_damage']
-
-        if self.ability_info['cooldown'] > 0:
-            self.ability_info['cooldown'] -= 1 * ratio
-
-        if self.ability_info['cooldown'] < 0:
-            self.ability_info['cooldown'] = 0
-
     def end(self):
         ...
 
     def update(self, scene, dt):
-        if self.ABILITY_ID[0] != '@':
-            return
-        
         if self.ability_info['cooldown'] > 0:
             self.ability_info['cooldown'] -= 1 * dt
 
@@ -169,8 +155,6 @@ class PrimaryAttack(Ability):
 
         self.ability_info['duration'] = 0
 
-        self.ability_info['timer'] = [0, 20]
-
     @staticmethod
     def check_draw_condition(player):
         return False
@@ -214,9 +198,6 @@ class PrimaryAttack(Ability):
         self.character.on_attack(scene, info)
         call_talents(scene, self.character, {f'on_{self.ABILITY_ID}_attack': info})
 
-        for ability in [a for a in self.character.abilities.values() if a]:
-            ability.on_primary(self.ability_info['damage'])
-
         overlap_offset = [
             self.character.center_position[0] - enemy.center_position[0],
             self.character.center_position[1] - enemy.center_position[1]
@@ -227,7 +208,7 @@ class PrimaryAttack(Ability):
         
         pos = overlap.center
         
-        for _ in range(5):
+        for _ in range(8):
             cir = Circle(pos, self.ability_info['color'], random.randint(4, 8), 0)
             cir.set_goal(
                         75, 
@@ -260,19 +241,6 @@ class PrimaryAttack(Ability):
 
         tiles = scene.get_sprites('tile', exclude=['platform'])
         tile_col = check_line_collision(self.start, self.destination, tiles)
-
-        remove_tile_cols = []
-        collide_sprite = Sprite((0, 0), (255, 0, 0), (5, 5), 4)
-        collide_sprite.rect.center = self.character.rect.center
-
-        for tile in tile_col:
-            if tile[0].secondary_sprite_id == 'ramp' and tile[0].rect.colliderect(self.character.rect):
-                if not check_pixel_collision(collide_sprite, tile[0]):
-                    remove_tile_cols.append(tile)
-
-        for tile in remove_tile_cols:
-            tile_col.remove(tile)
-
         if tile_col != []:
             self.destination = list(tile_col[0][1][0])
 
@@ -283,8 +251,6 @@ class PrimaryAttack(Ability):
         
         self.ability_info['cooldown'] = self.ability_info['cooldown_timer']
         self.ability_info['damage'] = self.character.combat_info['base_damage']
-        self.ability_info['timer'][0] = self.ability_info['timer'][1]
-
         self.charges -= 1
 
         super().call(scene, keybind)
@@ -385,25 +351,7 @@ class PrimaryAttack(Ability):
         ]
 
         for collidable in collidables:
-            if collidable.secondary_sprite_id == 'ramp':
-                collide_sprite = Sprite((0, 0), (255, 0, 0), (5, 5), 4)
-                collide_sprite.rect.center = vel_pos
-
-                if not check_pixel_collision(collide_sprite, collidable):
-                    continue
-
-                pos = [
-                    round(self.character.center_position[0] - self.character.velocity[0] * .5),
-                    round(self.character.center_position[1] - self.character.velocity[1] * .5)
-                ]
-
-                self.character.collision_ignore.append(collidable)
-                self.character.rect.center = pos
-
-                collision = collidable
-                break
-
-            line_col = check_line_collision(self.character.center_position, vel_pos, collidable)
+            line_col = check_line_collision(self.character.center_position, vel_pos, collidables)
 
             if line_col:
                 pos = [
@@ -436,8 +384,7 @@ class PrimaryAttack(Ability):
                 
             collision = enemy
         
-        self.ability_info['timer'][0] -= 1 * dt
-        if get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None or self.ability_info['timer'][0] <= 0:
+        if get_distance(self.character.center_position, self.destination) <= self.ability_info['speed'] * 2 or collision is not None:
             self.character.apply_collision_x(scene)
             self.character.apply_collision_y(scene, dt)
             self.character.set_gravity(self.ability_info['gravity_frames'], 1, 5)
@@ -450,7 +397,7 @@ class PrimaryAttack(Ability):
                 pos = self.character.center_position
                 particles = []
 
-                for _ in range(3):
+                for _ in range(8):
                     cir = Circle(pos, self.ability_info['color'], 8, 0)
                     cir.set_goal(
                                 125, 
@@ -534,11 +481,11 @@ class RainOfArrows(Ability):
         super().__init__(character)
 
         IMG_SCALE = 1.5
-        img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'projectiles', 'rain-of-arrows.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'rain-of-arrows.png')).convert_alpha()
         img.set_colorkey((0, 0, 0))
 
         self.ability_info['active'] = False
-        self.ability_info['cooldown_timer'] = 5
+        self.ability_info['cooldown_timer'] = 300
         self.ability_info['damage_percentage'] = .5
         self.ability_info['projectile_duration'] = 45
 
@@ -663,7 +610,7 @@ class IntangibleShroud(Ability):
         super().__init__(character)
 
         self.ability_info['active'] = False
-        self.ability_info['cooldown_timer'] = 2
+        self.ability_info['cooldown_timer'] = 150
 
         self.ability_info['frames'] = 0
         self.ability_info['frames_max'] = 45
@@ -776,9 +723,9 @@ class HolyJavelin(Ability):
         super().__init__(character)
 
         IMG_SCALE = 2.5
-        img = pygame.image.load(os.path.join('resources', 'images', 'entities', 'projectiles', 'holy-javelin.png')).convert_alpha()
+        img = pygame.image.load(os.path.join('imgs', 'entities', 'projectiles', 'holy-javelin.png')).convert_alpha()
 
-        self.ability_info['cooldown_timer'] = 4
+        self.ability_info['cooldown_timer'] = 250
 
         self.ability_info['image'] = pygame.transform.scale(img, (img.get_width() * IMG_SCALE, img.get_height() * IMG_SCALE))
 
@@ -797,10 +744,6 @@ class HolyJavelin(Ability):
         self.ability_info['explosion_intensity'] = 30
         
         self.ability_info['countdown'] = [0, 0]
-
-        self.ability_info['jump_power_multiplier'] = 1.3
-
-        self.ability_info['rotate_info'] = []
 
     def collide_default(self, scene, projectile, sprite):
         enemies = []
@@ -874,6 +817,12 @@ class HolyJavelin(Ability):
             return
         
         self.ability_info['countdown'][0] -= 1 * dt
+        if self.ability_info['countdown'][0] > 0:
+            return
+        
+        self.ability_info['countdown'][1] = 0
+
+        pos = self.character.center_position
         
         direction = [
             scene.mouse.entity_pos[0] - self.character.center_position[0],
@@ -885,27 +834,6 @@ class HolyJavelin(Ability):
         img = self.ability_info['image'].copy()
         angle = (180 / math.pi) * math.atan2(vel[0], vel[1]) - 180
 
-        if self.ability_info['countdown'][0] > 0:
-            percen = 1 - 1 * (self.ability_info['countdown'][0] / self.ability_info['countdown'][1])
-
-            if dt != 0:
-                self.ability_info['rotate_info'] = [
-                    (angle + (self.character.movement_info['direction'] * (360 * (percen + .75) if (percen + .75) <= 1 else 1))),
-                    [
-                        self.character.center_position[0] - vel[0] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0),
-                        self.character.center_position[1] - vel[1] * get_bezier_point(percen, [0, 0], [0, 0], [-1.5, 0], [1, 0], 0)
-                    ]
-                ]
-
-            rotate_img = pygame.transform.rotate(img, self.ability_info['rotate_info'][0])
-            rotate_img.set_alpha(255 * get_bezier_point(percen, *presets['ease_out']))
-
-            scene.entity_surface.blit(rotate_img, rotate_img.get_rect(center=self.ability_info['rotate_info'][1]))
-            return
-        
-        self.ability_info['countdown'][1] = 0
-
-        pos = self.character.center_position
         projectile = ProjectileStandard(
             pos,
             pygame.transform.rotate(img, angle),
@@ -968,7 +896,7 @@ class HolyJavelin(Ability):
         super().call(scene, keybind)
         
         self.character.overrides['ability-passive'] = self
-        self.character.velocity[1] = -self.character.get_stat('jump_power') * self.ability_info['jump_power_multiplier']
+        self.character.velocity[1] = -self.character.get_stat('jump_power') * 1.25
 
         particle = Circle(
             [0, 0],

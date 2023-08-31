@@ -17,11 +17,12 @@ if __name__ == '__main__':
         SCREEN_COLOR
     )
     
-    from scripts.scene_handler import SceneHandler
+    from scripts.scenes.scene_handler import SceneHandler
     
-    from scripts.tools.sfx_manager import Sfx
-    from scripts.tools.fonts import Fonts
-    from scripts.tools.inputs import Inputs
+    from scripts.services.sfx_manager import Sfx
+
+    from scripts.utils.fonts import Fonts
+    from scripts.utils.inputs import Inputs
 
     import pygame
     import sys
@@ -35,6 +36,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(SCREEN_DIMENSIONS)
     clock = pygame.time.Clock()
     
+    # Initializes custom classes for the game
     Sfx.init()
 
     Fonts.init()
