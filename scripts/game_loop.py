@@ -9,6 +9,8 @@ from scripts.core_systems.abilities import get_all_abilities
 from scripts.entities.enemy import ENEMIES
 from scripts.entities.entity import Entity
 from scripts.entities.tiles import Tile
+from scripts.entities.player import Player
+from scripts.entities.interactables import StandardCardInteractable
 
 from scripts.tools import get_sprite_colors, get_distance
 from scripts.tools.bezier import presets, get_bezier_point

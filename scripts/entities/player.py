@@ -4,6 +4,11 @@ from scripts.core_systems.abilities import Dash, PrimaryAttack
 from scripts.core_systems.talents import call_talents
 
 from scripts.entities.entity import Entity
+from scripts.entities.physics_entity import PhysicsEntity
+from scripts.visual_fx.particle import Circle, Image
+
+from scripts.tools.spritesheet_loader import load_spritesheet
+from scripts.tools.sfx_manager import Sfx
 
 from scripts.ui.text_box import TextBox
 from scripts.ui.info_bar import HealthBar

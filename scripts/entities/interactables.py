@@ -1,10 +1,7 @@
 from scripts import PLAYER_COLOR
 
 from scripts.entities.entity import Entity
-
 from scripts.visual_fx.particle import Circle
-
-from scripts.entities.particle_fx import Circle
 
 from scripts.tools.spritesheet_loader import load_spritesheet
 
