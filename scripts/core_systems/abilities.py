@@ -6,7 +6,7 @@ from scripts.core_systems.talents import call_talents, get_talent
 from scripts.core_systems.combat_handler import register_damage
 
 from scripts.entities.projectile import ProjectileStandard
-from scripts.visual_fx.particle import Circle
+from scripts.entities.particle_fx import Circle
 
 from scripts.ui.card import Card
 

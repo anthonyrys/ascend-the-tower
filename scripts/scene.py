@@ -1,6 +1,6 @@
 from scripts import SCREEN_DIMENSIONS
 
-from scripts.visual_fx.particle import Particle
+from scripts.entities.particle_fx import Particle
 
 from scripts.ui.text_box import TextBox
 

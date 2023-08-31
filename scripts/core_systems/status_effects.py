@@ -1,6 +1,6 @@
 from scripts.core_systems.combat_handler import register_damage
 
-from scripts.visual_fx.particle import Circle
+from scripts.entities.particle_fx import Circle
 
 import pygame
 import random

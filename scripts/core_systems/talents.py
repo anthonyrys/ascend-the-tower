@@ -4,8 +4,8 @@ from scripts.core_systems.combat_handler import register_heal, register_damage
 from scripts.core_systems.status_effects import get_buff, get_debuff, Buff, Debuff, OnFire, Slowed
 
 from scripts.entities.entity import Entity
-from scripts.visual_fx.particle import Image, Circle, Polygon
-from scripts.entities.projectile import ProjectileHoming
+from scripts.entities.particle_fx import Image, Circle
+from scripts.entities.projectile import ProjectileStandard
 
 from scripts.ui.card import Card
 from scripts.ui.text_box import TextBox

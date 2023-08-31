@@ -27,7 +27,6 @@ if __name__ == '__main__':
     import sys
     
     pygame.init()
-    pygame.mixer.init()
 
     pygame.display.set_caption(f'{TITLE} [{VERSION}]')
     pygame.mouse.set_visible(False)
@@ -43,6 +42,4 @@ if __name__ == '__main__':
     main(screen, clock, SceneHandler(screen, clock))
     
     pygame.quit()
-    pygame.mixer.quit()
-
     sys.exit()

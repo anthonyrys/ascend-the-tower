@@ -1,8 +1,5 @@
 from scripts import ENEMY_COLOR
 
-from scripts.visual_fx.particle import Image
-from scripts.entities.entity import Entity
-
 from scripts.tools import check_pixel_collision, check_line_collision, get_distance
 
 import pygame
